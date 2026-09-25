@@ -1682,7 +1682,11 @@
       li.textContent = "尚無紀錄。開局時輸入名字，和電腦下完一局就會自動登上計分板（兩人對下不計分）";
       list.appendChild(li);
     }
-    for (const r of records) {
+    // 顯示順序：先看勝負（勝、和、敗），再看難易度（最強、強、中、弱），最後新的在前（保留的仍是最近 50 局）
+    const rank = { win: 0, draw: 1, lose: 2, expert: 0, hard: 1, normal: 2, easy: 3 };
+    const by = k => (x, y) => (rank[x[k]] ?? 9) - (rank[y[k]] ?? 9);
+    const shown = records.slice().sort((x, y) => by("result")(x, y) || by("level")(x, y) || y.at - x.at);
+    for (const r of shown) {
       // 一局一行：名字、勝方、難易度、比分（玩家:電腦）、結束時間、對局長度；玩家執哪色只放在滑鼠停留提示
       const li = document.createElement("li");
       const cell = (tag, cls, text) => {
