@@ -166,7 +166,7 @@
   /* 左：計分板　中：棋盤　右：側欄；窄一點時計分板移到棋盤下方，手機則全部直排 */
   .game {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr) 264px;
+    grid-template-columns: 320px minmax(0, 1fr) 300px;
     grid-template-areas: "tally stage ref" "tally stage panel";
     grid-template-rows: auto 1fr;
     gap: 16px 30px;
@@ -178,7 +178,7 @@
   .tally { grid-area: tally; }
   @media (max-width: 1100px) {
     .game {
-      grid-template-columns: minmax(0, 1fr) 264px;
+      grid-template-columns: minmax(0, 1fr) 300px;
       grid-template-areas: "stage ref" "stage panel" "tally panel";
       grid-template-rows: auto auto 1fr;
     }
@@ -306,11 +306,11 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--rule);
   }
-  .turn-row #hint { flex: none; padding: 6px 12px; font-size: 13px; }
+  .turn-row #hint { flex: none; padding: 6px 9px; font-size: 13px; letter-spacing: .02em; }
   .turn-line {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
     margin: 0;
   }
@@ -329,7 +329,7 @@
   .count-row .share-note { margin: 0 0 0 auto; white-space: nowrap; }
   .ref .tip { margin-top: 10px; }
   .turn-line .pip { flex: none; }
-  .turn-line small { margin-left: 6px; font: 500 12px var(--sans); letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; }
+  .turn-line small { margin-left: 4px; font: 500 12px var(--sans); letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; }
   .turn-line strong {
     font-family: var(--serif);
     font-size: 16px;
@@ -337,12 +337,19 @@
     letter-spacing: .05em;
   }
 
+  /* 棋盤區：預設不顯示座標，棋盤佔滿整欄（最寬 600 px）；
+     按棋譜欄的「顯示座標」才在上方與左側加上 A–F、1–6 */
   .board-area {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+    max-width: 600px;
+  }
+  .board-area:not(.coords) .board { grid-column: 1; grid-row: 1; }
+  .board-area:not(.coords) .files, .board-area:not(.coords) .ranks { display: none; }
+  .board-area.coords {
     grid-template-columns: 18px minmax(0, 1fr);
     grid-template-rows: 18px auto;
-    gap: 5px;
-    max-width: 520px;
   }
   .files, .ranks {
     display: grid;
@@ -605,7 +612,6 @@
   .opt input:focus-visible { outline: 2px solid var(--brass-line); outline-offset: 2px; }
   .opt input:disabled { cursor: default; }
   .opt.on { color: var(--ink); }
-  .opt.sub { margin-top: 0; padding-left: 24px; }
   .levels {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -658,6 +664,37 @@
   .ai-row .levels.show span { padding: 5px 0; font-size: 11px; white-space: nowrap; }
   .ai-row + .levels-note { margin-left: 0; }
   .now-player { font-size: 13px; }
+  /* 參考欄「輪到白棋」旁的玩家名字：空間不夠時以刪節號收尾，不擠掉建議一手 */
+  .turn-line .now-player {
+    margin: 0 0 0 2px;
+    padding-left: 6px;
+    border-left: 1px solid var(--rule);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .turn-line strong { flex: none; }
+  /* 卡片標題列：左邊標題，右邊小按鈕（棋譜＞顯示座標） */
+  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .card-head h2.big-title { margin: 0; }
+  button.smallbtn {
+    font: 700 12px var(--sans);
+    letter-spacing: .04em;
+    padding: 5px 10px;
+    color: var(--surface);
+    background: var(--brass);
+    border: 1px solid var(--brass);
+    cursor: pointer;
+    transition: opacity .15s, background .15s, color .15s;
+  }
+  /* 「顯示座標」實心；已顯示時「隱藏座標」改為空心框 */
+  button.smallbtn:hover { opacity: .84; }
+  button.smallbtn[aria-pressed="true"] { color: var(--brass); background: transparent; border-color: var(--brass-line); }
+  button.smallbtn[aria-pressed="true"]:hover { opacity: 1; background: var(--brass); color: var(--surface); }
+  /* 玩家名字：黃色粗體，比旁邊小字大一點 */
+  .turn-line .now-player b { font-family: var(--sans); font-size: 15px; font-weight: 700; color: var(--brass); letter-spacing: .04em; }
   .now-player b { color: var(--ink); font-family: var(--mono); letter-spacing: .05em; }
   .levels.pick { margin: 0; }
   .levels.pick label { font-size: 14px; padding: 8px 0; }
@@ -787,9 +824,9 @@
     </aside>
 
     <div class="stage">
-      <div class="board-area">
-        <div class="files" id="files"></div>
-        <div class="ranks" id="ranks"></div>
+      <div class="board-area" id="boardArea">
+        <div class="files" id="files" aria-hidden="true"></div>
+        <div class="ranks" id="ranks" aria-hidden="true"></div>
         <div class="board" id="board">
           <div class="result" id="result" hidden>
             <div class="result-card">
@@ -821,6 +858,7 @@
         <p class="turn-line" aria-live="polite">
           <span class="pip" id="turnDisc" data-side="W"></span>
           <strong id="turnTitle">輪到白棋</strong>
+          <span class="now-player" id="playerTag" title="玩家"><b id="playerName">玩家</b></span>
         </p>
         <button class="ghostbtn" id="hint">建議一手</button>
       </div>
@@ -857,8 +895,7 @@
             </div>
           </div>
           <p class="levels-note">難易度在開局視窗選定，對局中不能更改</p>
-          <p class="now-player">玩家　<b id="playerName">玩家</b></p>
-          <label class="opt sub on" id="stepOpt">
+          <label class="opt on" id="stepOpt">
             <input type="checkbox" id="aiStep" checked autocomplete="off">
             <span>逐步進行（手動確認）</span>
           </label>
@@ -868,16 +905,16 @@
       <section class="card">
         <h2 class="big-title">提示</h2>
         <div class="controls">
-          <label class="opt on" id="flipOpt">
-            <input type="checkbox" id="showFlip" checked autocomplete="off">
+          <label class="opt" id="flipOpt">
+            <input type="checkbox" id="showFlip" autocomplete="off">
             <span>被翻子的黃線</span>
           </label>
-          <label class="opt on" id="hintOpt">
-            <input type="checkbox" id="showHint" checked autocomplete="off">
+          <label class="opt" id="hintOpt">
+            <input type="checkbox" id="showHint" autocomplete="off">
             <span>落子提示</span>
           </label>
-          <label class="opt on" id="rateOpt">
-            <input type="checkbox" id="showRate" checked autocomplete="off">
+          <label class="opt" id="rateOpt">
+            <input type="checkbox" id="showRate" autocomplete="off">
             <span>滑鼠移到落點（或點選）時顯示勝率</span>
           </label>
           <label class="opt on" id="slowOpt">
@@ -892,7 +929,10 @@
       </section>
 
       <section class="card">
-        <h2 class="big-title">棋譜</h2>
+        <div class="card-head">
+          <h2 class="big-title">棋譜</h2>
+          <button class="smallbtn" id="coordBtn" type="button" aria-pressed="false">顯示座標</button>
+        </div>
         <ul class="log" id="log"><li class="empty">尚未落子</li></ul>
       </section>
     </div>
@@ -936,11 +976,11 @@
         </li>
         <li>
           <h3>開始遊戲</h3>
-          <p>按「開始」後，點棋盤上有提示點的格子，會先預覽落子和會被翻的棋子；在同一格再點一下才確定落子，點別格可以改選。白棋先下，預設你執白、電腦執黑。</p>
+          <p>按「開始」後，點棋盤上可以下的格子（必須夾住對方的棋子），會先預覽落子和會被翻的棋子；在同一格再點一下才確定落子，點別格可以改選。白棋先下，預設你執白、電腦執黑。</p>
         </li>
         <li class="opt">
           <h3>可選想要的<b class="hl">提示</b>（非必要）</h3>
-          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率、翻面慢一點、聲音。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置。</p>
+          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率（這三項預設關閉，想要再打開），以及翻面慢一點、聲音。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置。</p>
         </li>
       </ol>
       <section class="help-rules" aria-labelledby="rulesTitle">
@@ -970,7 +1010,7 @@
   const hintBtn = document.getElementById("hint");
 
   let board, turn, pending, moves, over, log;
-  let showHint = true; // 落子提示：顯示可落子位置的提示點（預設開啟）
+  let showHint = false; // 提示＞落子提示：顯示可落子位置的提示點（預設關閉）
   let aiOn = true, aiStep = true, thinking = false, gen = 0;
   let aiLevel = "normal";
   let passed = null; // 上一手後被跳過的一方，跳過視窗用來顯示「某方無處可下」
@@ -978,8 +1018,8 @@
   let helpOpen = false;  // 說明頁開著：電腦暫停，關掉後才繼續
   let setupWait = false; // 開局視窗開著：輸入名字、選好難易度按「開始」後才開始下
   let tip = null;
-  let showFlip = true; // 提示＞被翻子的黃線
-  let showRate = true; // 提示＞滑鼠移到落點時顯示勝率
+  let showFlip = false; // 提示＞被翻子的黃線（預設關閉）
+  let showRate = false; // 提示＞滑鼠移到落點時顯示勝率（預設關閉）
   let slowFlip = true; // 提示＞翻面慢一點（翻面動畫 1.5 秒）
   let soundOn = true;  // 提示＞聲音
   let hoverIdx = null; // 滑鼠（或鍵盤焦點）目前停在哪一格
@@ -1954,6 +1994,7 @@
 
     const resultEl = document.getElementById("result");
     resultEl.hidden = !over;
+    document.getElementById("playerTag").hidden = over;
     const doneEl = document.getElementById("entryDone");
     doneEl.hidden = !(over && saved);
     doneEl.textContent = `已登上計分板（${playerName}）`;
@@ -2032,6 +2073,24 @@
     document.getElementById("playerName").textContent = playerName;
   }
 
+  // 棋譜＞顯示座標：棋盤旁的 A–F、1–6，預設不顯示讓棋盤大一點；選擇記在這台瀏覽器
+  const COORD_KEY = "othello6.coords";
+  const boardArea = document.getElementById("boardArea");
+  const coordBtn = document.getElementById("coordBtn");
+  function applyCoords(on) {
+    boardArea.classList.toggle("coords", on);
+    coordBtn.setAttribute("aria-pressed", String(on));
+    coordBtn.textContent = on ? "隱藏座標" : "顯示座標";
+  }
+  let coordsOn = false;
+  try { coordsOn = localStorage.getItem(COORD_KEY) === "1"; } catch (e) {}
+  applyCoords(coordsOn);
+  coordBtn.addEventListener("click", () => {
+    coordsOn = !coordsOn;
+    applyCoords(coordsOn);
+    try { localStorage.setItem(COORD_KEY, coordsOn ? "1" : "0"); } catch (e) {}
+  });
+
   const showBox = document.getElementById("showHint");
   showBox.addEventListener("change", () => {
     showHint = showBox.checked;
@@ -2047,6 +2106,7 @@
     document.getElementById("flipOpt").classList.toggle("on", showFlip);
     boardEl.classList.toggle("noflipline", !showFlip);
   });
+  boardEl.classList.toggle("noflipline", !showFlip);
 
   const slowBox = document.getElementById("slowFlip");
   function applySlowFlip() {
