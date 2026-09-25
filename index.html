@@ -1,0 +1,2076 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>六路黑白棋</title>
+<style>
+  :root {
+    --ground: #E9E2D2;
+    --surface: #F6F2E7;
+    --ink: #1C2320;
+    --ink-soft: #5D6862;
+    --rule: #CDC4AF;
+    --brass: #8A6C16;
+    --brass-line: #C8A44D;
+
+    --felt: #1F5C43;
+    --felt-deep: #17452F;
+    --felt-edge: #0E2C1E;
+    --felt-line: rgba(6, 26, 17, .42);
+    --disc-dark: #15181A;
+    --disc-light: #F7F3E7;
+
+    --serif: "Songti TC", "Noto Serif CJK TC", "PMingLiU", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Sans CJK TC", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #121917;
+      --surface: #1A2320;
+      --ink: #E9E4D6;
+      --ink-soft: #97A39C;
+      --rule: #2C3833;
+      --brass: #C8A44D;
+      --brass-line: #C8A44D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #121917;
+    --surface: #1A2320;
+    --ink: #E9E4D6;
+    --ink-soft: #97A39C;
+    --rule: #2C3833;
+    --brass: #C8A44D;
+    --brass-line: #C8A44D;
+  }
+
+  * { box-sizing: border-box; }
+  /* 觸控：關掉「連點兩下放大」（兩指縮放照常），不然「再點一下同一格確認」會被 Safari 當成放大；
+     也拿掉點按時的灰色閃框 */
+  html { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: 20px;
+    padding-block: 30px 56px;
+  }
+
+  header { margin-bottom: 26px; text-align: center; }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(30px, 6vw, 42px);
+    letter-spacing: .04em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  /* 玩法說明：放在計分板上方 */
+  .lede {
+    margin: 0 auto 14px;
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 18px;
+    max-width: 48ch;
+    text-wrap: balance;
+  }
+
+  /* 左：計分板　中：棋盤　右：側欄；窄一點時計分板移到棋盤下方，手機則全部直排 */
+  .game {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr) 264px;
+    grid-template-areas: "tally stage panel";
+    gap: 30px;
+    align-items: start;
+  }
+  .stage { grid-area: stage; }
+  .game > .panel { grid-area: panel; }
+  .tally { grid-area: tally; }
+  @media (max-width: 1100px) {
+    .game {
+      grid-template-columns: minmax(0, 1fr) 264px;
+      grid-template-areas: "stage panel" "tally panel";
+    }
+  }
+  @media (max-width: 800px) {
+    .game { grid-template-columns: 1fr; grid-template-areas: "stage" "panel" "tally"; gap: 22px; }
+  }
+
+  /* 計分板 */
+  /* 結果卡上的登錄表單（像大型電玩結束後輸入名字） */
+  .entry {
+    display: grid;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
+  }
+  .entry label { font-size: 12px; color: var(--brass); font-weight: 700; letter-spacing: .08em; }
+  .entry .row { display: flex; gap: 6px; }
+  .entry input {
+    flex: 1;
+    min-width: 0;
+    font: 700 16px var(--mono);
+    letter-spacing: .08em;
+    text-align: center;
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--brass-line);
+    padding: 7px 8px;
+  }
+  .entry input:focus { outline: 2px solid var(--brass-line); outline-offset: 1px; }
+  .entry .act { margin-top: 0; padding: 7px 12px; font-size: 14px; }
+  .entry-label { font-size: 12px; color: var(--brass); font-weight: 700; letter-spacing: .08em; }
+  /* 開局視窗：蓋住整頁，選好名字與難易度才開始 */
+  .setup {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(8, 26, 18, .62);
+    animation: fade .3s ease-out;
+  }
+  .setup-card { width: min(100%, 320px); margin: 0; text-align: left; }
+  .setup-card .result-eyebrow, .setup-card strong { text-align: center; }
+  .setup-card .result-note { margin-top: 2px; }
+  .setup-card > .act { margin-top: 12px; padding: 9px; font-size: 15px; }
+  .entry-done { margin: 6px 0 0; font-size: 12px; color: var(--brass); font-weight: 700; }
+  .records {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 420px;
+    overflow-y: auto;
+    border-top: 1px solid var(--rule);
+  }
+  /* 一局一行，各欄固定寬度讓上下對齊；名字太長以刪節號收尾，滑鼠停留看完整內容 */
+  .records li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20px 26px 38px 74px 42px;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .records li.empty { display: block; white-space: normal; color: var(--ink-soft); }
+  .records .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+  .records .badge { text-align: center; padding: 2px 0; }
+  .records .sc { text-align: center; }
+  .records .lv { text-align: center; color: var(--ink-soft); }
+  .records .sc, .records .at, .records .du {
+    font: 11px var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+  }
+  .records .du { text-align: right; }
+  .badge { flex: none; font-size: 11px; font-weight: 700; padding: 2px 7px; color: #FFFFFF; }
+  .badge.win { background: #A84B16; }
+  .badge.lose { background: #5D6862; }
+  .badge.draw { background: #8A6C16; }
+  button.linkbtn {
+    margin-top: 10px;
+    font: 12px var(--sans);
+    color: var(--ink-soft);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .tally-acts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .tally-msg { margin: 6px 0 0; font-size: 12px; color: var(--brass); }
+  button.linkbtn:disabled { opacity: .45; cursor: default; text-decoration: none; }
+
+  .turnbar {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--brass-line);
+    margin-bottom: 14px;
+  }
+  .turn-disc {
+    width: 30px; height: 30px; border-radius: 50%;
+    flex: none;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+  }
+  .turn-disc[data-side="B"] { background: radial-gradient(circle at 34% 30%, #3B4247, var(--disc-dark) 62%); }
+  .turn-disc[data-side="W"] { background: radial-gradient(circle at 34% 30%, #FFFFFF, #E2DCC9 66%); }
+  .turn-text { min-width: 0; }
+  .turn-text strong {
+    display: block;
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: .05em;
+  }
+  .turn-text span {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .board-area {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-rows: 18px auto;
+    gap: 5px;
+    max-width: 520px;
+  }
+  .files, .ranks {
+    display: grid;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  .files { grid-column: 2; grid-template-columns: repeat(6, 1fr); }
+  .ranks { grid-row: 2; grid-template-rows: repeat(6, 1fr); }
+  .files span, .ranks span { display: grid; place-items: center; }
+
+  .board {
+    grid-column: 2; grid-row: 2;
+    position: relative;
+    display: grid;
+    /* 列也固定等高：否則有文字的格子（「電腦」）會把那一列撐高，棋子變橢圓 */
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: repeat(6, minmax(0, 1fr));
+    aspect-ratio: 1;
+    gap: 1px;
+    padding: 1px;
+    background: var(--felt-line);
+    border: 6px solid var(--felt-edge);
+    box-shadow: 0 10px 28px rgba(8, 22, 16, .3);
+  }
+  .cell {
+    position: relative;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: var(--felt);
+    background-image: radial-gradient(circle at 50% 38%, var(--felt) 0%, var(--felt-deep) 130%);
+    cursor: default;
+    display: grid;
+    place-items: center;
+  }
+  .cell.legal { cursor: pointer; }
+  /* 關閉落子提示時，游標也不透露哪些格子可下 */
+  .board.nohint .cell.legal { cursor: default; }
+  .cell:focus-visible { outline: 2px solid var(--brass-line); outline-offset: -3px; z-index: 3; }
+
+  .guide {
+    position: absolute;
+    width: 6px; height: 6px;
+    margin: -3px 0 0 -3px;
+    border-radius: 50%;
+    background: var(--felt-line);
+    pointer-events: none;
+  }
+
+  .disc {
+    width: 78%; height: 78%;
+    border-radius: 50%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform .42s cubic-bezier(.45, .05, .3, 1);
+    animation: drop .22s ease-out;
+  }
+  .disc[data-owner="W"] { transform: rotateY(180deg); }
+  /* 提示＞翻面慢一點：翻面動畫拉長為 1.5 秒 */
+  .board.slowflip .disc { transition-duration: 1.5s; }
+  .disc .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    backface-visibility: hidden;
+    box-shadow: 0 2px 4px rgba(4, 18, 12, .45);
+  }
+  .disc .face.b { background: radial-gradient(circle at 34% 28%, #3E464B, var(--disc-dark) 64%); }
+  .disc .face.w { background: radial-gradient(circle at 34% 28%, #FFFFFF, #DED8C4 70%); transform: rotateY(180deg); }
+  @keyframes drop { from { transform: scale(.2); opacity: 0; } }
+
+  .hint {
+    width: 20%; height: 20%;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .26);
+  }
+  .cell.legal:hover .hint { background: rgba(255, 255, 255, .5); }
+
+  .ghost {
+    width: 78%; height: auto;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, .8);
+    background: rgba(255, 255, 255, .1);
+    animation: pulse 1.3s ease-in-out infinite;
+  }
+  .ghost[data-side="B"] { background: rgba(0, 0, 0, .34); border-color: rgba(255, 255, 255, .55); }
+  .cell.picked { cursor: pointer; }
+  /* 電腦選的點：虛影中央標「電腦」，和玩家自己選的點區分 */
+  .ghost { position: relative; }
+  .ghost .who {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    white-space: nowrap;
+    font-size: clamp(10px, 2.4vw, 15px);
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .7);
+  }
+  .ghost[data-side="W"] .who { color: #1B2226; text-shadow: 0 0 3px rgba(255, 255, 255, .9); }
+  @keyframes pulse { 50% { opacity: .5; } }
+
+  .cell.willflip .disc { box-shadow: 0 0 0 3px var(--brass-line); border-radius: 50%; }
+  .board.noflipline .cell.willflip .disc { box-shadow: none; }
+
+  /* 提示＞勝率：滑鼠移到可下的格子（觸控則是點選）時，在格子下緣標出該點的估計勝率 */
+  .rate {
+    position: absolute;
+    left: 0; right: 0; bottom: 7%;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: clamp(10px, 2.2vw, 13px);
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .8);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .cell.suggest::after {
+    content: "";
+    position: absolute;
+    inset: 9%;
+    border-radius: 50%;
+    border: 2px solid var(--brass-line);
+    box-shadow: 0 0 10px rgba(200, 164, 77, .55);
+    pointer-events: none;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) { .cell.suggest::after { animation: none; } }
+
+  .result {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    padding: 12px;
+    background: rgba(8, 26, 18, .62);
+    animation: fade .3s ease-out;
+  }
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--brass-line);
+    box-shadow: 0 14px 34px rgba(6, 20, 13, .45);
+    padding: 18px 22px 16px;
+    text-align: center;
+    display: grid;
+    gap: 5px;
+    min-width: min(78%, 260px);
+  }
+  .result-eyebrow {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+  .result-card strong {
+    font-family: var(--serif);
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: .05em;
+  }
+  .result-score {
+    margin: 2px 0 0;
+    font-family: var(--mono);
+    font-size: 19px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .05em;
+  }
+  .result-note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .result-card .act { margin-top: 8px; }
+  @keyframes fade { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .result { animation: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .disc { transition: none; animation: none; }
+    .ghost { animation: none; }
+  }
+
+  .panel { display: grid; gap: 16px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 14px 16px;
+  }
+  .card h2 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    font-weight: 500;
+  }
+  .score { display: grid; gap: 9px; }
+  .score-row {
+    display: grid;
+    grid-template-columns: 20px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .score-row.lead { color: var(--brass); }
+  .score-pct {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .score-row.lead .score-pct { color: var(--brass); }
+  .pip {
+    width: 18px; height: 18px; border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+  }
+  .pip[data-side="B"] { background: radial-gradient(circle at 34% 30%, #3B4247, var(--disc-dark) 62%); }
+  .pip[data-side="W"] { background: radial-gradient(circle at 34% 30%, #FFFFFF, #E2DCC9 66%); }
+  .score-n {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+  .share {
+    display: flex;
+    gap: 2px;
+    height: 10px;
+    margin-top: 12px;
+  }
+  .share-seg {
+    flex: 0 1 0;
+    min-width: 0;
+    border-radius: 3px;
+    transition: flex-grow .3s ease;
+  }
+  .share-seg[data-side="B"] {
+    background: linear-gradient(180deg, #3B4247, var(--disc-dark));
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+  }
+  .share-seg[data-side="W"] {
+    background: linear-gradient(180deg, #FFFFFF, #E2DCC9);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3);
+  }
+  .share-note {
+    margin: 8px 0 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) { .share-seg { transition: none; } }
+
+  .controls { display: grid; gap: 8px; }
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  /* 自繪方框：原生勾選框在部分系統會畫成圓角近似圓形，這裡固定為方框 */
+  .opt input {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    width: 15px; height: 15px;
+    margin: 0;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 2px;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+  .opt input::after {
+    content: "";
+    width: 4px; height: 8px;
+    margin-top: -2px;
+    border: solid var(--surface);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+  }
+  .opt input:checked { background: var(--brass); border-color: var(--brass); }
+  .opt input:checked::after { opacity: 1; }
+  .opt input:focus-visible { outline: 2px solid var(--brass-line); outline-offset: 2px; }
+  .opt input:disabled { cursor: default; }
+  .opt.on { color: var(--ink); }
+  .opt.sub { margin-top: 0; padding-left: 24px; }
+  .levels {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin: 2px 0 2px 24px;
+  }
+  .levels label {
+    position: relative;
+    display: block;
+    padding: 6px 0;
+    border: 1px solid var(--rule);
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .levels label.sel {
+    border-color: var(--brass);
+    color: var(--brass);
+  }
+  .levels label.focus { outline: 2px solid var(--brass-line); outline-offset: 2px; }
+  .levels input {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: inherit;
+  }
+  .levels.show span {
+    display: block;
+    padding: 6px 0;
+    border: 1px solid var(--rule);
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .levels.show span:not(.sel) { opacity: .55; }
+  .levels.show span.sel { border-color: var(--brass); color: var(--brass); font-weight: 700; }
+  .levels-note, .now-player { margin: 0 0 0 24px; font-size: 11px; color: var(--ink-soft); }
+  .now-player { font-size: 13px; }
+  .now-player b { color: var(--ink); font-family: var(--mono); letter-spacing: .05em; }
+  .levels.pick { margin: 0; }
+  .levels.pick label { font-size: 14px; padding: 8px 0; }
+  .levels.off { opacity: .42; }
+  .levels.off label { cursor: default; }
+  .tip {
+    margin: 10px 0 0;
+    padding-left: 11px;
+    border-left: 2px solid var(--brass-line);
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .tip b {
+    font-family: var(--mono);
+    color: var(--brass);
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .opt.off { opacity: .42; cursor: default; }
+  .opt.off input { cursor: default; }
+  .thinking {
+    display: inline-block;
+    width: 7px; height: 7px;
+    margin-left: 7px;
+    border-radius: 50%;
+    background: var(--brass-line);
+    vertical-align: middle;
+    animation: blink 1s ease-in-out infinite;
+  }
+  @keyframes blink { 50% { opacity: .2; } }
+  @media (prefers-reduced-motion: reduce) { .thinking { animation: none; } }
+  button.act {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    padding: 12px 14px;
+    border: 1px solid var(--brass);
+    background: var(--brass);
+    color: #F6F2E7;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  button.act:hover:not(:disabled) { opacity: .84; }
+  button.act:disabled {
+    background: transparent;
+    color: var(--ink-soft);
+    border-color: var(--rule);
+    cursor: not-allowed;
+  }
+  /* 操作鈕（建議一手、重新開始）：黑體白字，各自的底色見下方 */
+  button.ghostbtn {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    padding: 10px 14px;
+    background: var(--felt);
+    color: #FFFFFF;
+    border: 1px solid var(--felt-edge);
+    cursor: pointer;
+    transition: background .15s, opacity .15s, transform .15s;
+  }
+  /* 滑鼠移上：變深色的同時放大一點 */
+  button.ghostbtn:hover:not(:disabled) { background: var(--felt-deep); transform: scale(1.06); }
+  button.ghostbtn:active:not(:disabled) { transform: scale(1.02); }
+  button.ghostbtn:disabled { opacity: .45; cursor: not-allowed; }
+  /* 建議一手：暗橘；重新開始：暗紅（白字對比都在 4.5 以上） */
+  button#hint { background: #A84B16; border-color: #7A360F; }
+  button#hint:hover:not(:disabled) { background: #6A2B08; border-color: #4A1E05; }
+  button#restart { background: #8E2626; border-color: #641A1A; }
+  button#restart:hover:not(:disabled) { background: #4F1212; border-color: #380C0C; }
+  button:focus-visible { outline: 2px solid var(--brass-line); outline-offset: 2px; }
+
+  .log {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--mono);
+    font-size: 12px;
+    max-height: 176px;
+    overflow-y: auto;
+    display: grid;
+    gap: 3px;
+  }
+  .log li {
+    display: grid;
+    grid-template-columns: 2.2em 1.1em 1fr;
+    gap: 6px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .log li .n { color: var(--rule); }
+  .log li.end { color: var(--brass); }
+  .log .empty { grid-template-columns: 1fr; }
+
+  .rules {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-soft);
+    font-size: 13px;
+    max-width: 58ch;
+  }
+  .rules p { margin: 0 0 6px; }
+  .rules b { color: var(--ink); font-weight: 500; }
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="黑白棋">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E9E2D2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121917" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>六路黑白棋</h1>
+  </header>
+
+  <main class="game">
+    <aside class="tally" aria-label="計分板">
+      <p class="lede">開局先輸入名字、選電腦強弱，再點選棋盤預覽落子與翻轉結果，再點一下同一格確認後換下一位玩家。</p>
+      <section class="card">
+        <h2>計分板</h2>
+        <ol class="records" id="records"><li class="empty">尚無紀錄。開局時輸入名字，和電腦下完一局就會自動登上計分板（兩人對下不計分）</li></ol>
+        <div class="tally-acts">
+          <button class="linkbtn" id="exportRecords" type="button">匯出紀錄</button>
+          <button class="linkbtn" id="importRecords" type="button">匯入紀錄</button>
+          <button class="linkbtn" id="clearRecords" type="button">清除紀錄</button>
+          <input type="file" id="importFile" accept=".json,application/json" hidden>
+        </div>
+        <p class="tally-msg" id="tallyMsg" role="status" hidden></p>
+      </section>
+    </aside>
+
+    <div class="stage">
+      <div class="turnbar">
+        <div class="turn-disc" id="turnDisc" data-side="W"></div>
+        <div class="turn-text">
+          <strong id="turnTitle">輪到白棋</strong>
+          <span id="turnNote">選一個有提示點的格子</span>
+        </div>
+      </div>
+
+      <div class="board-area">
+        <div class="files" id="files"></div>
+        <div class="ranks" id="ranks"></div>
+        <div class="board" id="board">
+          <div class="result" id="result" hidden>
+            <div class="result-card">
+              <p class="result-eyebrow">終局</p>
+              <strong id="resultTitle">黑棋獲勝</strong>
+              <p class="result-score" id="resultScore">● 2 ： 2 ○</p>
+              <p class="result-note" id="resultNote"></p>
+              <p class="entry-done" id="entryDone" hidden>已登上計分板</p>
+              <button class="act" id="again">再來一局</button>
+            </div>
+          </div>
+          <div class="result" id="passBox" role="alertdialog" aria-modal="true" aria-labelledby="passTitle" aria-describedby="passNote" hidden>
+            <div class="result-card">
+              <p class="result-eyebrow">跳過</p>
+              <strong id="passTitle">白棋無處可下</strong>
+              <p class="result-note" id="passNote">由黑棋繼續下</p>
+              <button class="act" id="passOk">確認</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <section class="card">
+        <h2>目前子數</h2>
+        <div class="score">
+          <div class="score-row" id="rowB">
+            <span class="pip" data-side="B"></span>
+            <span>黑棋</span>
+            <span class="score-pct" id="pctB">50%</span>
+            <span class="score-n" id="scoreB">2</span>
+          </div>
+          <div class="score-row" id="rowW">
+            <span class="pip" data-side="W"></span>
+            <span>白棋</span>
+            <span class="score-pct" id="pctW">50%</span>
+            <span class="score-n" id="scoreW">2</span>
+          </div>
+        </div>
+        <div class="share" id="share" role="img" aria-label="雙方佔比 黑棋 50%，白棋 50%">
+          <i class="share-seg" data-side="B" id="segB"></i>
+          <i class="share-seg" data-side="W" id="segW"></i>
+        </div>
+        <p class="share-note" id="shareNote">已下 4 子 · 空 32 格</p>
+      </section>
+
+      <section class="card">
+        <h2>操作</h2>
+        <div class="controls">
+          <button class="ghostbtn" id="hint">建議一手</button>
+          <button class="ghostbtn" id="restart">重新開始</button>
+          <label class="opt on" id="aiOpt">
+            <input type="checkbox" id="aiBlack" checked autocomplete="off">
+            <span>黑棋由電腦下</span>
+          </label>
+          <label class="opt" id="aiWhiteOpt">
+            <input type="checkbox" id="aiWhite" autocomplete="off">
+            <span>白棋由電腦下</span>
+          </label>
+          <p class="now-player">玩家　<b id="playerName">玩家</b></p>
+          <div class="levels show" id="levels" role="img" aria-label="電腦難易度：中">
+            <span data-lv="easy">弱</span>
+            <span data-lv="normal" class="sel">中</span>
+            <span data-lv="hard">強</span>
+            <span data-lv="expert">最強</span>
+          </div>
+          <p class="levels-note">難易度在開局視窗選定，對局中不能更改</p>
+          <label class="opt sub on" id="stepOpt">
+            <input type="checkbox" id="aiStep" checked autocomplete="off">
+            <span>逐步進行（手動確認）</span>
+          </label>
+        </div>
+        <p class="tip" id="tipText" hidden></p>
+      </section>
+
+      <section class="card">
+        <h2>提示</h2>
+        <div class="controls">
+          <label class="opt on" id="flipOpt">
+            <input type="checkbox" id="showFlip" checked autocomplete="off">
+            <span>被翻子的黃線</span>
+          </label>
+          <label class="opt on" id="hintOpt">
+            <input type="checkbox" id="showHint" checked autocomplete="off">
+            <span>落子提示</span>
+          </label>
+          <label class="opt on" id="rateOpt">
+            <input type="checkbox" id="showRate" checked autocomplete="off">
+            <span>滑鼠移到落點（或點選）時顯示勝率</span>
+          </label>
+          <label class="opt on" id="slowOpt">
+            <input type="checkbox" id="slowFlip" checked autocomplete="off">
+            <span>翻面慢一點</span>
+          </label>
+          <label class="opt on" id="soundOpt">
+            <input type="checkbox" id="soundOn" checked autocomplete="off">
+            <span>聲音（選子、翻面）</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>棋譜</h2>
+        <ul class="log" id="log"><li class="empty">尚未落子</li></ul>
+      </section>
+    </div>
+  </main>
+
+  <div class="setup" id="setup" role="dialog" aria-modal="true" aria-labelledby="setupTitle" hidden>
+    <form class="result-card setup-card" id="setupForm">
+      <p class="result-eyebrow">新局</p>
+      <strong id="setupTitle">開始對局</strong>
+      <div class="entry">
+        <label for="entryName">輸入名字</label>
+        <input id="entryName" maxlength="12" placeholder="玩家" autocomplete="off" enterkeyhint="done">
+      </div>
+      <div class="entry">
+        <span class="entry-label" id="lvLabel">電腦難易度</span>
+        <div class="levels pick" id="lvPick" role="radiogroup" aria-labelledby="lvLabel">
+          <label><input type="radio" name="lv" value="easy" autocomplete="off"><span>弱</span></label>
+          <label class="sel"><input type="radio" name="lv" value="normal" checked autocomplete="off"><span>中</span></label>
+          <label><input type="radio" name="lv" value="hard" autocomplete="off"><span>強</span></label>
+          <label><input type="radio" name="lv" value="expert" autocomplete="off"><span>最強</span></label>
+        </div>
+        <p class="result-note">選定後對局中不能更改；按「重新開始」可重選</p>
+      </div>
+      <button class="act" type="submit">開始</button>
+    </form>
+  </div>
+
+  <div class="rules">
+    <p><b>規則</b>　白棋先行。落子必須夾住對手至少一顆棋子，被夾住的棋子全部翻面。</p>
+    <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
+    <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：往後算 6～8 步（剩 16 格以內就試著算到終局，比電腦最強更早，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。側欄的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
+    <p><b>電腦對手</b>　「黑棋由電腦下」與「白棋由電腦下」兩個勾選框擇一（勾其中一個會自動取消另一個；兩個都不勾則兩人對下），預設電腦執黑。白棋固定先下，所以勾「白棋由電腦下」時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）；對局中切換會直接交換雙方的操控。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
+    <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>同樣的判斷但往後算 6～8 步，剩 12 格以內會試著直接算到終局（每步最多想 1.5 秒）。狀態列會註明這步的難度與估計勝率。</p>
+  </div>
+</div>
+
+<script>
+  const N = 6;
+  const DIRS = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+  const FILES = ["A","B","C","D","E","F"];
+  const NAME = { B: "黑棋", W: "白棋" };
+
+  const boardEl = document.getElementById("board");
+  const logEl = document.getElementById("log");
+  const passOkBtn = document.getElementById("passOk");
+  const restartBtn = document.getElementById("restart");
+  const hintBtn = document.getElementById("hint");
+
+  let board, turn, pending, moves, over, log;
+  let showHint = true; // 落子提示：顯示可落子位置的提示點（預設開啟）
+  let aiOn = true, aiStep = true, thinking = false, gen = 0;
+  let aiLevel = "normal", aiNote = null;
+  let passed = null; // 上一手後被跳過的一方，狀態列用來提示「換對方繼續下」
+  let passWait = false; // 跳過視窗開著：遊戲暫停，按「確認」後才繼續
+  let setupWait = false; // 開局視窗開著：輸入名字、選好難易度按「開始」後才開始下
+  let tip = null;
+  let showFlip = true; // 提示＞被翻子的黃線
+  let showRate = true; // 提示＞滑鼠移到落點時顯示勝率
+  let slowFlip = true; // 提示＞翻面慢一點（翻面動畫 1.5 秒）
+  let soundOn = true;  // 提示＞聲音
+  let hoverIdx = null; // 滑鼠（或鍵盤焦點）目前停在哪一格
+  let rateCache = { key: "", scores: null, depth: 0 }; // 同一盤面、同一方各點往後算的局面分數
+
+  const SIM_RUNS = 160;
+  const ROLLOUT_NOISE = 0.25;
+  const SIM_NOISE_BAND = 0.03;   // 勝率差在取樣誤差內時，改用搜尋分數定勝負
+  const CORNERS = new Set([0, N - 1, N * (N - 1), N * N - 1]);
+
+  let aiSide = "B"; // 電腦執哪一色；勾「白棋由電腦下」時為白（白棋固定先下）
+  const AI_DEPTH = 4;
+  // 難易度：在「依估計勝率排好的落點名單」上取不同名次（強另走搜尋，見 aiPick）
+  const LEVELS = { easy: "弱", normal: "中", hard: "強", expert: "最強" };
+  // 最強：逐步加深搜尋（6 → 8 步；剩 12 格以內再加深到終局），每步最多想這麼久，超時就用已算完的最深結果
+  const EXPERT_MIN_DEPTH = 6;
+  const EXPERT_MAX_DEPTH = 8;
+  const EXPERT_SOLVE_EMPTIES = 12; // 剩這麼多格以內才繼續加深、試著算到終局
+  // 「建議一手」更早開始算終局：實測 12 格時照建議下對強只能平手，16 格起才贏得了
+  const SUGGEST_SOLVE_EMPTIES = 16;
+  const EXPERT_BUDGET_MS = 1500;
+  // 建議一手／提示勝率：每一點都要算出確切分數，比只挑最佳點慢約三倍，給 3 秒才算得到和以前一樣深
+  const RATE_BUDGET_MS = 3000;
+  const AI_PICK_MS = 380;
+  const AI_COMMIT_MS = 420;
+  const SLOW_FLIP_MS = 1500; // 翻面慢一點：電腦等上一手翻完才選點
+  const WEIGHTS = [
+    100, -22,  16,  16, -22, 100,
+    -22, -38,  -3,  -3, -38, -22,
+     16,  -3,   6,   6,  -3,  16,
+     16,  -3,   6,   6,  -3,  16,
+    -22, -38,  -3,  -3, -38, -22,
+    100, -22,  16,  16, -22, 100
+  ];
+
+  document.getElementById("files").innerHTML = FILES.map(f => `<span>${f}</span>`).join("");
+  document.getElementById("ranks").innerHTML = FILES.map((_, i) => `<span>${i + 1}</span>`).join("");
+
+  const cells = [];
+  // 每格目前的棋子元素：重畫時沿用，避免整盤棋子重播落下動畫而閃爍，被翻的棋子才會真的翻面
+  let discEls = [];
+  for (let i = 0; i < N * N; i++) {
+    const b = document.createElement("button");
+    b.className = "cell";
+    b.type = "button";
+    b.dataset.idx = i;
+    b.addEventListener("click", () => select(i));
+    // 只有真的滑鼠才算「移過去」：觸控的點一下若也觸發移過去並改動格子內容，
+    // iPhone／iPad 的 Safari 會把第一下當成移過去而吞掉點擊，要點兩次才選得到
+    b.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") setHover(i); });
+    b.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") setHover(null); });
+    b.addEventListener("focus", () => setHover(i));
+    b.addEventListener("blur", () => setHover(null));
+    boardEl.appendChild(b);
+    cells.push(b);
+  }
+  for (const y of [2, 4]) for (const x of [2, 4]) {
+    const d = document.createElement("i");
+    d.className = "guide";
+    d.style.left = (x / N * 100) + "%";
+    d.style.top = (y / N * 100) + "%";
+    boardEl.appendChild(d);
+  }
+
+  const coord = i => FILES[i % N] + (Math.floor(i / N) + 1);
+  const foe = p => (p === "B" ? "W" : "B");
+
+  function flipsAt(bd, player, idx) {
+    if (bd[idx]) return [];
+    const r = Math.floor(idx / N), c = idx % N, out = [];
+    for (const [dr, dc] of DIRS) {
+      const line = [];
+      let rr = r + dr, cc = c + dc;
+      while (rr >= 0 && rr < N && cc >= 0 && cc < N && bd[rr * N + cc] === foe(player)) {
+        line.push(rr * N + cc);
+        rr += dr; cc += dc;
+      }
+      if (line.length && rr >= 0 && rr < N && cc >= 0 && cc < N && bd[rr * N + cc] === player) out.push(...line);
+    }
+    return out;
+  }
+
+  function legalMoves(bd, player) {
+    const m = new Map();
+    for (let i = 0; i < N * N; i++) {
+      const f = flipsAt(bd, player, i);
+      if (f.length) m.set(i, f);
+    }
+    return m;
+  }
+
+  function isAiTurn() { return !over && aiOn && turn === aiSide; }
+
+  // 比分左右：人機對戰時玩家在左、電腦在右；兩人對下時先手白棋在左
+  const PIP = { W: "●", B: "○" };
+  const SHORT = { W: "白", B: "黑" };
+  function scoreSides() {
+    const left = aiOn ? foe(aiSide) : "W";
+    return [left, foe(left)];
+  }
+  function endScore(m) {
+    const [L, R] = scoreSides();
+    const cnt = { B: m.b, W: m.w };
+    return `${SHORT[L]}${cnt[L]}:${SHORT[R]}${cnt[R]}`;
+  }
+
+  function discDiff(bd, p) {
+    let d = 0;
+    for (const v of bd) if (v) d += v === p ? 1 : -1;
+    return d;
+  }
+
+  function negamax(bd, p, depth, alpha, beta) {
+    const mine = legalMoves(bd, p);
+    const theirs = legalMoves(bd, foe(p));
+    if (!mine.size && !theirs.size) {
+      const d = discDiff(bd, p);
+      return d > 0 ? 10000 + d : d < 0 ? -10000 + d : 0;
+    }
+    if (!depth) {
+      let s = 0;
+      for (let i = 0; i < N * N; i++) if (bd[i]) s += bd[i] === p ? WEIGHTS[i] : -WEIGHTS[i];
+      return s + 9 * (mine.size - theirs.size);
+    }
+    if (!mine.size) return -negamax(bd, foe(p), depth - 1, -beta, -alpha);
+
+    let best = -Infinity;
+    for (const [idx, flips] of mine) {
+      const nb = bd.slice();
+      nb[idx] = p;
+      for (const f of flips) nb[f] = p;
+      const v = -negamax(nb, foe(p), depth - 1, -beta, -alpha);
+      if (v > best) best = v;
+      if (best > alpha) alpha = best;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+
+
+  // 電腦（弱／中／強）排名用：對每個合法點做對局取樣，估出勝率。
+  // 取樣雙方都用「搶角、重位置、少翻子（保行動力）」的策略，偶爾隨機以保留變化；
+  // 純亂下的取樣會高估貪心步，估出來的勝率也對不上實際對手。
+  function rolloutMove(m) {
+    const keys = [...m.keys()];
+    for (const k of keys) if (CORNERS.has(k)) return k;
+    if (Math.random() < ROLLOUT_NOISE) return keys[(Math.random() * keys.length) | 0];
+    let best = keys[0], bestScore = -Infinity;
+    for (const k of keys) {
+      const s = WEIGHTS[k] - 2 * m.get(k).length;
+      if (s > bestScore) { bestScore = s; best = k; }
+    }
+    return best;
+  }
+
+  function playout(bd0, first, me) {
+    const bd = bd0.slice();
+    let p = first;
+    for (let guard = 0; guard < N * N * 2; guard++) {
+      const m = legalMoves(bd, p);
+      if (!m.size) {
+        if (!legalMoves(bd, foe(p)).size) break;
+        p = foe(p);
+        continue;
+      }
+      const idx = rolloutMove(m);
+      bd[idx] = p;
+      for (const f of m.get(idx)) bd[f] = p;
+      p = foe(p);
+    }
+    const d = discDiff(bd, me);
+    return d > 0 ? 1 : d < 0 ? 0 : 0.5;
+  }
+
+  // 每個合法點各取樣 SIM_RUNS 局，依估計勝率由低到高排名；
+  // 電腦的難易度都讀這份名單，只是取的名次不同（「建議一手」與提示勝率改用 searchScores）。
+  function simRate(nb, p) {
+    let wins = 0;
+    for (let i = 0; i < SIM_RUNS; i++) wins += playout(nb, foe(p), p);
+    return wins / SIM_RUNS;
+  }
+
+  function rankMoves(bd, p) {
+    const scored = [];
+    for (const [idx, flips] of legalMoves(bd, p)) {
+      const nb = bd.slice();
+      nb[idx] = p;
+      for (const f of flips) nb[f] = p;
+
+      scored.push({
+        idx,
+        flips: flips.length,
+        rate: simRate(nb, p),
+        ev: -negamax(nb, foe(p), AI_DEPTH - 1, -Infinity, Infinity)
+      });
+    }
+    scored.sort((a, b) => a.rate - b.rate || a.ev - b.ev);
+    return scored;
+  }
+
+  // 勝率差落在取樣誤差內時，改用深度 4 搜尋分數決勝（最低的一端則取分數最差者）。
+  function highPick(scored) {
+    const top = scored[scored.length - 1].rate;
+    return scored.filter(s => s.rate >= top - SIM_NOISE_BAND)
+      .reduce((a, s) => (s.ev > a.ev ? s : a));
+  }
+
+  function lowPick(scored) {
+    const low = scored[0].rate;
+    return scored.filter(s => s.rate <= low + SIM_NOISE_BAND)
+      .reduce((a, s) => (s.ev < a.ev ? s : a));
+  }
+
+  // 強用深度 4 搜尋分數挑，不用取樣勝率：實測對打時搜尋這邊穩定贏取樣那邊，
+  // 「勝率最高」要的是真的最會贏，取樣值只拿來顯示。
+  function searchPick(scored) {
+    return scored.reduce((a, s) => (s.ev > a.ev || (s.ev === a.ev && s.rate > a.rate) ? s : a));
+  }
+
+  // 最強用的搜尋：和 negamax 相同的評估，但先試位置好的點（剪枝更多），並有時間上限。
+  const TIMEOUT = {};
+  let deadline = Infinity, nodeCount = 0;
+  function deepNegamax(bd, p, depth, alpha, beta) {
+    if ((++nodeCount & 1023) === 0 && Date.now() > deadline) throw TIMEOUT;
+    const mine = legalMoves(bd, p);
+    const theirs = legalMoves(bd, foe(p));
+    if (!mine.size && !theirs.size) {
+      const d = discDiff(bd, p);
+      return d > 0 ? 10000 + d : d < 0 ? -10000 + d : 0;
+    }
+    if (!depth) {
+      let s = 0;
+      for (let i = 0; i < N * N; i++) if (bd[i]) s += bd[i] === p ? WEIGHTS[i] : -WEIGHTS[i];
+      return s + 9 * (mine.size - theirs.size);
+    }
+    if (!mine.size) return -deepNegamax(bd, foe(p), depth - 1, -beta, -alpha);
+
+    const order = [...mine].sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]]);
+    let best = -Infinity;
+    for (const [idx, flips] of order) {
+      const nb = bd.slice();
+      nb[idx] = p;
+      for (const f of flips) nb[f] = p;
+      const v = -deepNegamax(nb, foe(p), depth - 1, -beta, -alpha);
+      if (v > best) best = v;
+      if (best > alpha) alpha = best;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+
+  // 逐步加深：每一層都完整算完才採用；上一層的最佳點排第一個先算，剪枝更有效。
+  // 空格數以內就等於算到終局，不必再加深。
+  function expertPick(bd, p, solveEmpties = EXPERT_SOLVE_EMPTIES) {
+    let order = [...legalMoves(bd, p)].sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]]);
+    const empties = bd.filter(v => !v).length;
+    let bestIdx = order[0][0], reached = 0;
+    deadline = Date.now() + EXPERT_BUDGET_MS;
+    nodeCount = 0;
+    try {
+      for (let depth = EXPERT_MIN_DEPTH; ; depth += 2) {
+        let alpha = -Infinity, pick = null;
+        for (const [idx, flips] of order) {
+          const nb = bd.slice();
+          nb[idx] = p;
+          for (const f of flips) nb[f] = p;
+          const v = -deepNegamax(nb, foe(p), depth - 1, -Infinity, -alpha);
+          if (pick === null || v > alpha) { alpha = v; pick = idx; }
+        }
+        bestIdx = pick;
+        reached = depth;
+        order = [order.find(m => m[0] === pick), ...order.filter(m => m[0] !== pick)];
+        if (depth >= empties) break;
+        if (depth >= EXPERT_MAX_DEPTH && empties > solveEmpties) break;
+      }
+    } catch (e) {
+      if (e !== TIMEOUT) throw e;
+      // 最淺的 6 步都沒算完（極少見）就退回深度 4 的結果
+      if (!reached) {
+        deadline = Infinity;
+        return { idx: null, depth: AI_DEPTH };
+      }
+    } finally {
+      deadline = Infinity;
+    }
+    return { idx: bestIdx, depth: Math.min(reached, empties) };
+  }
+
+  // 「建議一手」與提示勝率：每個合法點都完整算出往後 6～8 步（剩 solveEmpties 格以內算到終局）的分數。
+  // 和 expertPick 同樣逐步加深，但每點都用全窗口，才有每一點的確切分數可換成勝率。
+  function searchScores(bd, p, solveEmpties) {
+    const order = [...legalMoves(bd, p)].sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]]);
+    const empties = bd.filter(v => !v).length;
+    let scores = null, reached = 0;
+    deadline = Date.now() + RATE_BUDGET_MS;
+    nodeCount = 0;
+    try {
+      for (let depth = EXPERT_MIN_DEPTH; ; depth += 2) {
+        const cur = new Map();
+        for (const [idx, flips] of order) {
+          const nb = bd.slice();
+          nb[idx] = p;
+          for (const f of flips) nb[f] = p;
+          cur.set(idx, -deepNegamax(nb, foe(p), depth - 1, -Infinity, Infinity));
+        }
+        scores = cur;
+        reached = depth;
+        order.sort((a, b) => cur.get(b[0]) - cur.get(a[0])); // 好的點先算，下一層剪枝更多
+        if (depth >= empties) break;
+        if (depth >= EXPERT_MAX_DEPTH && empties > solveEmpties) break;
+      }
+    } catch (e) {
+      if (e !== TIMEOUT) throw e;
+    } finally {
+      deadline = Infinity;
+    }
+    // 最淺的 6 步都沒算完（極少見）就退回深度 4
+    if (!scores) {
+      scores = new Map();
+      reached = AI_DEPTH;
+      for (const [idx, flips] of order) {
+        const nb = bd.slice();
+        nb[idx] = p;
+        for (const f of flips) nb[f] = p;
+        scores.set(idx, -negamax(nb, foe(p), AI_DEPTH - 1, -Infinity, Infinity));
+      }
+    }
+    return { scores, depth: Math.min(reached, empties) };
+  }
+
+  // 局面分數換成勝率：算到終局的點直接是 100%／0%（和局 0 分即 50%），
+  // 其餘用 1 / (1 + e^(−分數／RATE_SCALE))。RATE_SCALE 以約 200 個局面接著強下到終局的
+  // 實際勝負校正：分數 −100 以下約一成勝、±10 約五成、+100 以上約九成。
+  const RATE_SCALE = 65;
+  function scoreToRate(v) {
+    if (v >= 9000) return 1;
+    if (v <= -9000) return 0;
+    return 1 / (1 + Math.exp(-v / RATE_SCALE));
+  }
+
+  // 提示勝率在背景執行緒先算好，滑鼠移過去不必卡住畫面；
+  // 背景執行緒用的是上面同一份搜尋程式碼（以原始碼組成）。
+  const rateWorker = (() => {
+    if (typeof Worker === "undefined" || typeof Blob === "undefined") return null;
+    const src = [
+      `const N = ${N}, DIRS = ${JSON.stringify(DIRS)}, WEIGHTS = ${JSON.stringify(WEIGHTS)};`,
+      `const AI_DEPTH = ${AI_DEPTH}, EXPERT_MIN_DEPTH = ${EXPERT_MIN_DEPTH}, EXPERT_MAX_DEPTH = ${EXPERT_MAX_DEPTH}, RATE_BUDGET_MS = ${RATE_BUDGET_MS};`,
+      "const TIMEOUT = {}; let deadline = Infinity, nodeCount = 0;",
+      `const foe = ${foe};`,
+      flipsAt, legalMoves, discDiff, negamax, deepNegamax, searchScores,
+      "onmessage = e => { const { key, bd, p, solve } = e.data; const r = searchScores(bd, p, solve);" +
+        " postMessage({ key, scores: [...r.scores], depth: r.depth }); };"
+    ].join("\n");
+    try {
+      const w = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+      w.onmessage = e => {
+        const { key, scores, depth } = e.data;
+        if (rateCache.key !== key || rateCache.scores) return;
+        rateCache.scores = new Map(scores);
+        rateCache.depth = depth;
+        if (rateCache.wantTip) suggest(); // 按了建議一手、在等背景結果
+        drawRate();
+      };
+      return w;
+    } catch (e) {
+      return null; // 不支援背景執行緒時改為用到才算
+    }
+  })();
+
+  function suggest() {
+    rateCache.wantTip = false;
+    if (over || passWait || setupWait || isAiTurn() || !moves.size) return;
+    // 往後算 6～8 步（剩 16 格以內算到終局）後分數最高、也就是勝率最高的點；
+    // 和滑鼠移過各點顯示的勝率是同一份結果
+    const { scores, depth } = currentRates(true);
+    let best = null;
+    for (const [idx, v] of scores) if (best === null || v > scores.get(best)) best = idx;
+    const v = scores.get(best);
+    tip = {
+      side: turn, idx: best, rate: scoreToRate(v), flips: moves.get(best).length,
+      depth, solved: Math.abs(v) >= 9000
+    };
+    render();
+  }
+
+  // 依難易度挑一步：弱取勝率最低、中取中位數、強取最會贏的一步。
+  function aiPick(bd, p) {
+    const scored = rankMoves(bd, p);
+    if (!scored.length) { aiNote = null; return null; }
+
+    let label = LEVELS[aiLevel];
+    let choice;
+    if (aiLevel === "expert") {
+      const deep = expertPick(bd, p);
+      choice = (deep.idx !== null && scored.find(s => s.idx === deep.idx)) || searchPick(scored);
+      label += `・算 ${deep.depth} 步`;
+    } else {
+      choice = aiLevel === "easy" ? lowPick(scored)
+        : aiLevel === "hard" ? searchPick(scored)
+        : scored[(scored.length - 1) >> 1];
+    }
+
+    aiNote = { label, rate: choice.rate };
+    return choice.idx;
+  }
+
+  function cancelAi() {
+    gen++;
+    thinking = false;
+  }
+
+  // 輪到電腦就自動選點；自動模式隨後自行落子，逐步模式則停在選點，
+  // 等玩家點該格（和自己下棋的「再點一下」相同）。
+  function scheduleAi() {
+    if (thinking || passWait || setupWait || !isAiTurn()) return;
+    if (pending && aiStep) return;
+    thinking = true;
+    const my = gen;
+    const commitLater = () => setTimeout(() => {
+      if (my !== gen) return;
+      thinking = false;
+      commit();
+    }, AI_COMMIT_MS);
+    // 從逐步切回自動時，已選好的點直接接手落下
+    if (pending) { commitLater(); return; }
+    setTimeout(() => {
+      if (my !== gen) return;
+      if (!isAiTurn()) { thinking = false; render(); return; }
+      const idx = aiPick(board, turn);
+      if (idx === null) { thinking = false; return; }
+      pending = { idx, flips: moves.get(idx) };
+      playSelect();
+      if (aiStep) { thinking = false; render(); return; }
+      render();
+      commitLater();
+    }, slowFlip ? SLOW_FLIP_MS : AI_PICK_MS);
+  }
+
+  function start() {
+    gen++;
+    gameStartAt = Date.now();
+    saved = false;
+    // 新局重新落子：清掉沿用的棋子，開局四子重播落下動畫
+    discEls = [];
+    for (const c of cells) c.innerHTML = "";
+    thinking = false;
+    board = Array(N * N).fill(null);
+    board[2 * N + 2] = "W"; board[3 * N + 3] = "W";
+    board[2 * N + 3] = "B"; board[3 * N + 2] = "B";
+    turn = "W";
+    pending = null;
+    tip = null;
+    aiNote = null;
+    passed = null;
+    passWait = false;
+    over = false;
+    log = [];
+    moves = legalMoves(board, turn);
+    openSetup();
+    render();
+  }
+
+  // 音效：用 Web Audio 即時合成，不用音檔，離線可用。
+  // 瀏覽器規定使用者點過頁面後才能出聲，所以第一次點擊時才建立／喚醒音訊。
+  let audio = null, audioOut = null, noiseBuf = null;
+  function audioCtx() {
+    if (!soundOn) return null;
+    const AC = globalThis.AudioContext || globalThis.webkitAudioContext;
+    if (!AC) return null;
+    if (!audio) {
+      try {
+        audio = new AC();
+        // 所有聲音先經過壓縮器再輸出：音量調大後，翻很多子時疊在一起也不會破音
+        audioOut = audio.createDynamicsCompressor();
+        audioOut.threshold.value = -10;
+        audioOut.ratio.value = 6;
+        audioOut.connect(audio.destination);
+      } catch (e) { audio = null; return null; }
+    }
+    if (audio.state === "suspended") audio.resume().catch(() => {});
+    return audio;
+  }
+
+  // 敲擊聲：一小段白噪音經帶通濾波、快速衰減
+  function knock(ac, t, vol, freq) {
+    if (!noiseBuf) {
+      noiseBuf = ac.createBuffer(1, (ac.sampleRate * 0.5) | 0, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = ac.createBufferSource();
+    src.buffer = noiseBuf;
+    const f = ac.createBiquadFilter();
+    f.type = "bandpass";
+    f.frequency.value = freq;
+    f.Q.value = 2.5;
+    const g = ac.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+    src.connect(f).connect(g).connect(audioOut);
+    src.start(t, Math.random() * 0.4, 0.08);
+  }
+
+  // 選子（玩家選點、電腦選點）：短促清脆的「嗒」
+  function playSelect() {
+    const ac = audioCtx();
+    if (!ac) return;
+    const t = ac.currentTime;
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = "triangle";
+    o.frequency.setValueAtTime(1320, t);
+    o.frequency.exponentialRampToValueAtTime(880, t + 0.05);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.4, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+    o.connect(g).connect(audioOut);
+    o.start(t);
+    o.stop(t + 0.1);
+  }
+
+  // 落子＋翻面：棋子落盤一聲較低的「喀」，接著一段隨翻面長短的輕微翻轉風聲，
+  // 每顆被翻的子在轉到一半（側立）時各一聲輕響，彼此稍微錯開
+  function playFlip(n) {
+    const ac = audioCtx();
+    if (!ac) return;
+    const t = ac.currentTime;
+    knock(ac, t, 1.2, 700);
+    const still = globalThis.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const dur = still ? 0.12 : slowFlip ? 1.5 : 0.42;
+
+    const src = ac.createBufferSource();
+    src.buffer = noiseBuf;
+    src.loop = true;
+    const f = ac.createBiquadFilter();
+    f.type = "bandpass";
+    f.Q.value = 1.2;
+    f.frequency.setValueAtTime(500, t);
+    f.frequency.exponentialRampToValueAtTime(2200, t + dur);
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.15, t + dur * 0.45);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f).connect(g).connect(audioOut);
+    src.start(t);
+    src.stop(t + dur + 0.02);
+
+    for (let k = 0; k < n; k++) knock(ac, t + dur * 0.45 + k * 0.035, 0.55, 1500 + k * 90);
+  }
+
+  // 計分板：和電腦下完的每一局記下名字、勝方、難易度、比分與時間，存在這台瀏覽器裡。
+  // 讀寫都包在 try 裡：無痕視窗或封鎖網站資料時照樣能玩，只是不保留紀錄。
+  const TALLY_KEY = "othello6.tally";
+  const NAME_KEY = "othello6.player";
+  const LEVEL_KEY = "othello6.level";
+  const MAX_RECORDS = 50;
+  let records = [];
+  let gameStartAt = Date.now();
+  // 名字在開局視窗輸入；和電腦下完一局就自動登上計分板。saved 表示這局已登錄
+  let playerName = "玩家", saved = false;
+  try { records = JSON.parse(localStorage.getItem(TALLY_KEY)) || []; } catch (e) { records = []; }
+  if (!Array.isArray(records)) records = [];
+  const entryName = document.getElementById("entryName");
+
+  function addRecord() {
+    if (!aiOn) return; // 兩人對下不計分
+    const me = foe(aiSide);
+    const cnt = { B: board.filter(v => v === "B").length, W: board.filter(v => v === "W").length };
+    const d = cnt[me] - cnt[aiSide];
+    records.unshift({
+      name: playerName,
+      result: d > 0 ? "win" : d < 0 ? "lose" : "draw",
+      level: aiLevel,
+      side: me,
+      me: cnt[me],
+      ai: cnt[aiSide],
+      at: Date.now(),
+      secs: Math.round((Date.now() - gameStartAt) / 1000)
+    });
+    records.length = Math.min(records.length, MAX_RECORDS);
+    saveRecords();
+    saved = true;
+    drawTally();
+  }
+
+  const pad2 = n => String(n).padStart(2, "0");
+  function fmtWhen(ms) {
+    const t = new Date(ms);
+    return `${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())}`;
+  }
+  function fmtSecs(s) {
+    return s >= 60 ? `${Math.floor(s / 60)}'${pad2(s % 60)}s` : `${s}s`;
+  }
+
+  const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
+  const RESULT_MARK = { win: "勝", lose: "敗", draw: "和" }; // 一行放不下三個字，標籤只寫一個字（玩家的角度）
+  function drawTally() {
+    const list = document.getElementById("records");
+    list.innerHTML = "";
+    if (!records.length) {
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "尚無紀錄。開局時輸入名字，和電腦下完一局就會自動登上計分板（兩人對下不計分）";
+      list.appendChild(li);
+    }
+    for (const r of records) {
+      // 一局一行：名字、勝方、難易度、比分（玩家:電腦）、結束時間、對局長度；玩家執哪色只放在滑鼠停留提示
+      const li = document.createElement("li");
+      const cell = (tag, cls, text) => {
+        const el = document.createElement(tag);
+        el.className = cls;
+        el.textContent = text; // 名字是使用者輸入的，一律當純文字
+        return el;
+      };
+      li.append(
+        cell("b", "nm", r.name),
+        cell("span", `badge ${r.result}`, RESULT_MARK[r.result] || ""),
+        cell("span", "lv", LEVELS[r.level] || r.level),
+        cell("span", "sc", `${r.me}:${r.ai}`),
+        cell("span", "at", fmtWhen(r.at)),
+        cell("span", "du", fmtSecs(r.secs))
+      );
+      li.title = `${r.name} · ${RESULT_TEXT[r.result] || ""} · ${LEVELS[r.level] || r.level} · ` +
+        `執${SHORT[r.side]} ${r.me}:${r.ai} · ${fmtWhen(r.at)} · ${fmtSecs(r.secs)}`;
+      list.appendChild(li);
+    }
+    document.getElementById("clearRecords").disabled = !records.length;
+    document.getElementById("exportRecords").disabled = !records.length;
+  }
+
+  // 開局視窗：每局開始（載入、重新開始、再來一局）先輸入名字、選難易度；
+  // 預填上次的名字（全選，直接按 Enter 即可）與上次的難易度
+  const setupEl = document.getElementById("setup");
+  const lvBoxes = [...document.querySelectorAll("#lvPick input")];
+  function markLevel(v) {
+    for (const b of lvBoxes) {
+      b.checked = b.value === v;
+      b.parentElement.classList.toggle("sel", b.checked);
+    }
+  }
+  for (const box of lvBoxes) {
+    box.addEventListener("change", () => { if (box.checked) markLevel(box.value); });
+    box.addEventListener("focus", () => box.parentElement.classList.add("focus"));
+    box.addEventListener("blur", () => box.parentElement.classList.remove("focus"));
+  }
+  function openSetup() {
+    setupWait = true;
+    let lv = aiLevel;
+    try {
+      entryName.value = localStorage.getItem(NAME_KEY) || "";
+      lv = localStorage.getItem(LEVEL_KEY) || aiLevel;
+    } catch (e) {}
+    markLevel(LEVELS[lv] ? lv : aiLevel);
+    setupEl.hidden = false;
+    setTimeout(() => {
+      if (!setupWait) return;
+      entryName.focus();
+      if (entryName.select) entryName.select();
+    }, 60);
+  }
+  document.getElementById("setupForm").addEventListener("submit", e => {
+    e.preventDefault();
+    playerName = entryName.value.trim() || "玩家";
+    const box = lvBoxes.find(b => b.checked);
+    aiLevel = box ? box.value : aiLevel;
+    try {
+      localStorage.setItem(NAME_KEY, playerName);
+      localStorage.setItem(LEVEL_KEY, aiLevel);
+    } catch (e) {}
+    showLevel();
+    setupEl.hidden = true;
+    setupWait = false;
+    gameStartAt = Date.now(); // 對局長度從按「開始」起算
+    render();
+  });
+  // 匯出／匯入：把計分板存成 JSON 檔備份，或帶到別台電腦、別的瀏覽器
+  const tallyMsg = document.getElementById("tallyMsg");
+  function showTallyMsg(text) {
+    tallyMsg.textContent = text;
+    tallyMsg.hidden = !text;
+  }
+  function saveRecords() {
+    try { localStorage.setItem(TALLY_KEY, JSON.stringify(records)); } catch (e) {}
+  }
+
+  // 線上頁面（claude.ai）不允許一般下載連結，要改走平台的下載功能（會先跳出確認）；
+  // 本機直接開檔時沒有這個功能，照舊用下載連結
+  const claudeRT = globalThis.claude && typeof globalThis.claude.use === "function" ? globalThis.claude : null;
+  const downloadsReady = claudeRT ? claudeRT.use("downloads").catch(() => null) : Promise.resolve(null);
+
+  function saveByLink(filename, text) {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  const exportBtn = document.getElementById("exportRecords");
+  exportBtn.addEventListener("click", async () => {
+    if (!records.length) return;
+    const t = new Date();
+    const stamp = `${t.getFullYear()}${pad2(t.getMonth() + 1)}${pad2(t.getDate())}-${pad2(t.getHours())}${pad2(t.getMinutes())}`;
+    const data = { app: "othello6", kind: "tally", version: 1, exportedAt: t.toISOString(), records };
+    const filename = `othello6-計分板-${stamp}.json`;
+    const text = JSON.stringify(data, null, 2);
+    const count = records.length;
+    const downloads = claudeRT ? await downloadsReady : null;
+    if (!downloads) {
+      saveByLink(filename, text);
+      showTallyMsg(`已匯出 ${count} 筆紀錄`);
+      return;
+    }
+    try {
+      await downloads.save({ filename, data: text });
+      showTallyMsg(`已匯出 ${count} 筆紀錄`);
+    } catch (e) {
+      const code = e && e.code;
+      showTallyMsg(code === "declined" ? "已取消匯出"
+        : code === "rate_limited" ? "下載視窗已開著，請稍後再試"
+        : "這個頁面無法下載檔案，請改用本機的 othello6.html 匯出");
+    }
+  });
+
+  // 檔案內容不可信：逐筆檢查欄位，格式不對的略過；名字一律截成 12 字的純文字
+  function cleanRecord(r) {
+    if (!r || typeof r !== "object") return null;
+    const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+    if (typeof r.name !== "string" || !RESULT_TEXT[r.result] || !LEVELS[r.level] ||
+        !SHORT[r.side] || !int(r.me, 0, N * N) || !int(r.ai, 0, N * N) || r.me + r.ai > N * N ||
+        !Number.isFinite(r.at) || !int(r.secs, 0, 1e7)) return null;
+    return {
+      name: r.name.trim().slice(0, 12) || "玩家", result: r.result, level: r.level,
+      side: r.side, me: r.me, ai: r.ai, at: r.at, secs: r.secs
+    };
+  }
+  const recordKey = r => [r.at, r.name, r.me, r.ai, r.side, r.level].join("|");
+
+  // 匯入的紀錄併進現有的：同一局（時間、名字、比分都相同）不重複加，依結束時間由新到舊排，最多 50 筆
+  function importRecords(text) {
+    let data;
+    try { data = JSON.parse(text); } catch (e) { return "匯入失敗：不是 JSON 檔"; }
+    const list = Array.isArray(data) ? data : data && Array.isArray(data.records) ? data.records : null;
+    if (!list) return "匯入失敗：檔案裡沒有計分紀錄";
+    const seen = new Set(records.map(recordKey));
+    let added = 0, dup = 0, bad = 0;
+    for (const raw of list) {
+      const r = cleanRecord(raw);
+      if (!r) { bad++; continue; }
+      const k = recordKey(r);
+      if (seen.has(k)) { dup++; continue; }
+      seen.add(k);
+      records.push(r);
+      added++;
+    }
+    records.sort((x, y) => y.at - x.at);
+    const cut = Math.max(0, records.length - MAX_RECORDS);
+    records.length = Math.min(records.length, MAX_RECORDS);
+    saveRecords();
+    drawTally();
+    const skip = [dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去最舊 ${cut} 筆`]
+      .filter(Boolean).join("、");
+    return `已匯入 ${added} 筆紀錄` + (skip ? `（${skip}）` : "");
+  }
+
+  const importFile = document.getElementById("importFile");
+  document.getElementById("importRecords").addEventListener("click", () => {
+    importFile.value = "";
+    importFile.click();
+  });
+  importFile.addEventListener("change", () => {
+    const file = importFile.files && importFile.files[0];
+    if (!file) return;
+    if (file.size > 1e6) { showTallyMsg("匯入失敗：檔案太大"); return; }
+    file.text().then(t => showTallyMsg(importRecords(t)), () => showTallyMsg("匯入失敗：讀不到檔案"));
+  });
+
+  document.getElementById("clearRecords").addEventListener("click", () => {
+    if (!confirm("確定清除所有計分紀錄？")) return;
+    records = [];
+    try { localStorage.removeItem(TALLY_KEY); } catch (e) {}
+    showTallyMsg("");
+    drawTally();
+  });
+  drawTally();
+
+  function select(i) {
+    if (over || thinking || passWait || setupWait || !moves.has(i)) return;
+    // 電腦回合只接受點它選好的那格：逐步模式下＝確認落子
+    if (isAiTurn()) {
+      if (aiStep && pending && pending.idx === i) commit();
+      return;
+    }
+    // 在已選的那格再點一下（連點兩下）＝直接確認落子
+    if (pending && pending.idx === i) { commit(); return; }
+    pending = { idx: i, flips: moves.get(i) };
+    playSelect();
+    render();
+  }
+
+  function commit() {
+    if (!pending) return;
+    playFlip(pending.flips.length);
+    tip = null;
+    aiNote = null;
+    board[pending.idx] = turn;
+    for (const f of pending.flips) board[f] = turn;
+    log.push({ side: turn, at: coord(pending.idx), flips: pending.flips.length });
+    pending = null;
+    passed = null;
+
+    const next = foe(turn);
+    if (!legalMoves(board, next).size) {
+      if (legalMoves(board, turn).size) {
+        log.push({ side: next, pass: true });
+        passed = next;
+        passWait = true;
+      } else {
+        over = true;
+        pending = null;
+        log.push({
+          end: true,
+          b: board.filter(v => v === "B").length,
+          w: board.filter(v => v === "W").length
+        });
+        addRecord();
+        render();
+        return;
+      }
+    } else {
+      turn = next;
+    }
+    moves = legalMoves(board, turn);
+    render();
+  }
+
+  // 提示＞勝率：盤面或輪到的一方改變時整份作廢，否則同一盤面只算一次。
+  // sync 為真時若還沒算好就當場算（建議一手、或沒有背景執行緒時）。
+  function currentRates(sync) {
+    const key = board.map(v => v || "-").join("") + turn;
+    if (rateCache.key !== key) rateCache = { key, scores: null, depth: 0 };
+    if (!rateCache.scores && sync) Object.assign(rateCache, searchScores(board, turn, SUGGEST_SOLVE_EMPTIES));
+    return rateCache;
+  }
+
+  // 輪到玩家時就交給背景執行緒先算
+  function prefetchRates() {
+    if (!rateWorker || over || passWait || setupWait || isAiTurn() || !moves.size) return;
+    const c = currentRates(false);
+    if (c.scores || c.asked) return;
+    c.asked = true;
+    rateWorker.postMessage({ key: c.key, bd: board.slice(), p: turn, solve: SUGGEST_SOLVE_EMPTIES });
+  }
+
+  // 還在背景計算中則回傳 null
+  function rateAt(i) {
+    const { scores } = currentRates(!rateWorker);
+    return scores ? scoreToRate(scores.get(i)) : null;
+  }
+
+  // 只在玩家回合、可下的格子（含已選的那格）顯示；電腦回合格子停用，不顯示。
+  // 滑鼠停在哪格就顯示哪格；沒有停在格子上（或是觸控螢幕）時，顯示已選的那格
+  function drawRate() {
+    for (const c of cells) {
+      const old = c.querySelector(".rate");
+      if (old) old.remove();
+    }
+    const i = hoverIdx !== null ? hoverIdx : pending ? pending.idx : null;
+    if (!showRate || i === null || over || passWait || setupWait || isAiTurn() || board[i] || !moves.has(i)) return;
+    const r = document.createElement("span");
+    r.className = "rate";
+    const rate = rateAt(i);
+    r.textContent = rate === null ? "計算中" : `${Math.round(rate * 100)}%`;
+    cells[i].appendChild(r);
+  }
+
+  function setHover(i) {
+    if (hoverIdx === i) return;
+    hoverIdx = i;
+    drawRate();
+  }
+
+  function render() {
+    const ai = isAiTurn();
+    const willFlip = new Set(pending ? pending.flips : []);
+    for (let i = 0; i < N * N; i++) {
+      const cell = cells[i];
+      cell.className = "cell";
+      cell.disabled = true;
+      cell.title = "";
+      const owner = board[i];
+
+      if (owner) {
+        let disc = discEls[i];
+        if (!disc) {
+          disc = document.createElement("div");
+          disc.className = "disc";
+          disc.dataset.owner = owner; // 新子先定好顏色再放上去，只播落下、不播翻面
+          disc.innerHTML = '<div class="face b"></div><div class="face w"></div>';
+          cell.innerHTML = "";
+          cell.appendChild(disc);
+          discEls[i] = disc;
+        }
+        if (disc.dataset.owner !== owner) disc.dataset.owner = owner;
+        cell.setAttribute("aria-label", `${coord(i)} ${NAME[owner]}`);
+        if (willFlip.has(i)) cell.classList.add("willflip");
+        continue;
+      }
+
+      discEls[i] = null;
+      cell.innerHTML = "";
+      if (pending && pending.idx === i) {
+        const g = document.createElement("div");
+        g.className = "ghost";
+        g.dataset.side = turn;
+        if (ai) g.innerHTML = '<span class="who">電腦</span>';
+        cell.appendChild(g);
+        if (ai && !aiStep) {
+          cell.setAttribute("aria-label", `${coord(i)} 電腦選點`);
+        } else if (ai) {
+          cell.classList.add("picked");
+          cell.disabled = false;
+          cell.title = "點這格確認電腦落子";
+          cell.setAttribute("aria-label", `${coord(i)} 電腦選點，按一下確認落子`);
+        } else {
+          cell.classList.add("picked");
+          cell.disabled = false;
+          cell.title = "再點一下確認落子";
+          cell.setAttribute("aria-label", `${coord(i)} 已選，再按一次確認落子`);
+        }
+      } else if (!over && moves.has(i)) {
+        if (showHint) {
+          const h = document.createElement("div");
+          h.className = "hint";
+          cell.appendChild(h);
+        }
+        if (!ai) {
+          cell.classList.add("legal");
+          cell.disabled = false;
+        }
+        cell.setAttribute("aria-label", `${coord(i)} 可落子，翻 ${moves.get(i).length} 子`);
+      } else {
+        cell.setAttribute("aria-label", `${coord(i)} 空格`);
+      }
+    }
+
+    const b = board.filter(v => v === "B").length;
+    const w = board.filter(v => v === "W").length;
+    const showTip = !!tip && !over && tip.side === turn && !board[tip.idx];
+    if (showTip) cells[tip.idx].classList.add("suggest");
+
+    const tipEl = document.getElementById("tipText");
+    tipEl.hidden = !showTip;
+    if (showTip) {
+      tipEl.innerHTML = `建議下 <b>${coord(tip.idx)}</b>，估計勝率 <b>${Math.round(tip.rate * 100)}%</b>` +
+        `<br>翻 ${tip.flips} 子 · ` + (tip.solved ? "已算到終局" : `往後算 ${tip.depth} 步的局面換算`);
+    }
+
+    const placed = b + w;
+    const pctB = placed ? Math.round(b / placed * 100) : 0;
+    const pctW = placed ? 100 - pctB : 0;
+
+    document.getElementById("scoreB").textContent = b;
+    document.getElementById("scoreW").textContent = w;
+    document.getElementById("pctB").textContent = `${pctB}%`;
+    document.getElementById("pctW").textContent = `${pctW}%`;
+    document.getElementById("rowB").classList.toggle("lead", b > w);
+    document.getElementById("rowW").classList.toggle("lead", w > b);
+
+    const segB = document.getElementById("segB");
+    const segW = document.getElementById("segW");
+    segB.style.flexGrow = b;
+    segW.style.flexGrow = w;
+    segB.title = `黑棋 ${b} 子 · ${pctB}%`;
+    segW.title = `白棋 ${w} 子 · ${pctW}%`;
+    document.getElementById("share").setAttribute("aria-label", `雙方佔比 黑棋 ${pctB}%，白棋 ${pctW}%`);
+    document.getElementById("shareNote").textContent = `已下 ${placed} 子 · 空 ${N * N - placed} 格`;
+
+    const disc = document.getElementById("turnDisc");
+    const title = document.getElementById("turnTitle");
+    const note = document.getElementById("turnNote");
+
+    const resultEl = document.getElementById("result");
+    resultEl.hidden = !over;
+    const doneEl = document.getElementById("entryDone");
+    doneEl.hidden = !(over && saved);
+    doneEl.textContent = `已登上計分板（${playerName}）`;
+
+    const passEl = document.getElementById("passBox");
+    const passShown = !passEl.hidden;
+    passEl.hidden = !passWait;
+    if (passWait) {
+      document.getElementById("passTitle").textContent = `${NAME[passed]}無處可下`;
+      document.getElementById("passNote").textContent =
+        `由${NAME[turn]}${aiOn && turn === aiSide ? "（電腦）" : ""}繼續下`;
+      if (!passShown) passOkBtn.focus();
+    }
+
+    if (over) {
+      const winner = b === w ? null : (b > w ? "B" : "W");
+      // 人機對戰時標出勝方身分：玩家／電腦（兩人對下則不標）
+      const who = winner && aiOn ? (winner === aiSide ? "（電腦）" : "（玩家）") : "";
+      const headline = winner ? `${NAME[winner]}獲勝${who}` : "平手";
+
+      disc.dataset.side = b >= w ? "B" : "W";
+      title.textContent = headline;
+      const [L, R] = scoreSides();
+      const cnt = { B: b, W: w };
+      note.textContent = `終局 ${SHORT[L]} ${cnt[L]} : ${SHORT[R]} ${cnt[R]}`;
+
+      document.getElementById("resultTitle").textContent = headline;
+      // 玩家在左、電腦在右；實心 ● 代表白子、空心 ○ 代表黑子
+      const scoreEl = document.getElementById("resultScore");
+      scoreEl.textContent = `${PIP[L]} ${cnt[L]} ： ${cnt[R]} ${PIP[R]}`;
+      const role = side => (aiOn ? (side === aiSide ? "（電腦）" : "（玩家）") : "");
+      scoreEl.setAttribute("aria-label", `${NAME[L]}${role(L)} ${cnt[L]} 子，${NAME[R]}${role(R)} ${cnt[R]} 子`);
+      document.getElementById("resultNote").textContent = winner
+        ? `${NAME[winner]}多 ${Math.abs(b - w)} 子` +
+          (placed < N * N ? `，棋盤尚餘 ${N * N - placed} 格但雙方皆無棋可下` : "")
+        : `雙方各 ${b} 子`;
+    } else {
+      disc.dataset.side = turn;
+      title.innerHTML = `輪到${NAME[turn]}` +
+        (ai ? `（電腦・${LEVELS[aiLevel]}）${aiStep && pending ? "" : '<i class="thinking"></i>'}` : "");
+      const picked = pending
+        ? `電腦選了 ${coord(pending.idx)}，將翻 ${pending.flips.length} 子` +
+          (aiNote ? `（${aiNote.label}・估計勝率 ${Math.round(aiNote.rate * 100)}%）` : "")
+        : "";
+      if (ai && aiStep) {
+        note.textContent = pending ? `${picked}；點該格確認落子` : "電腦思考中⋯";
+      } else if (ai) {
+        note.textContent = pending ? picked : "電腦思考中⋯";
+      } else {
+        note.textContent = pending
+          ? `已選 ${coord(pending.idx)}，將翻 ${pending.flips.length} 子；再點一下該格確認，點別格改選`
+          : `有 ${moves.size} 個位置可下`;
+      }
+      if (passed) note.textContent = `${NAME[passed]}無處可下，由${NAME[turn]}繼續。` + note.textContent;
+      if (setupWait) note.textContent = "輸入名字、選好電腦強弱後按「開始」";
+    }
+
+    hintBtn.disabled = over || ai || !moves.size || !!rateCache.wantTip;
+    hintBtn.textContent = rateCache.wantTip ? "計算中⋯" : "建議一手";
+    if (passWait || setupWait) hintBtn.disabled = true;
+
+    if (!log.length) {
+      logEl.innerHTML = '<li class="empty">尚未落子</li>';
+    } else {
+      logEl.innerHTML = log.map((m, i) => {
+        if (m.end) {
+          const r = m.b === m.w ? "平手" : `${m.b > m.w ? "黑" : "白"}勝`;
+          return `<li class="end"><span class="n">終</span><span>◆</span><span>${r} ${endScore(m)}</span></li>`;
+        }
+        const pip = PIP[m.side];
+        return m.pass
+          ? `<li><span class="n">${i + 1}</span><span>${pip}</span><span>跳過</span></li>`
+          : `<li><span class="n">${i + 1}</span><span>${pip}</span><span>${m.at} 翻 ${m.flips}</span></li>`;
+      }).join("");
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    prefetchRates();
+    drawRate();
+    scheduleAi();
+  }
+
+  const aiBox = document.getElementById("aiBlack");
+  const aiOpt = document.getElementById("aiOpt");
+  const stepBox = document.getElementById("aiStep");
+  const stepOpt = document.getElementById("stepOpt");
+  const levelsEl = document.getElementById("levels");
+  // 側欄的難易度只顯示本局在開局視窗選定的值，對局中不能更改
+  function showLevel() {
+    for (const el of levelsEl.children) el.classList.toggle("sel", el.dataset.lv === aiLevel);
+    levelsEl.setAttribute("aria-label", `電腦難易度：${LEVELS[aiLevel]}`);
+    document.getElementById("playerName").textContent = playerName;
+  }
+
+  const showBox = document.getElementById("showHint");
+  showBox.addEventListener("change", () => {
+    showHint = showBox.checked;
+    document.getElementById("hintOpt").classList.toggle("on", showHint);
+    boardEl.classList.toggle("nohint", !showHint);
+    render();
+  });
+  boardEl.classList.toggle("nohint", !showHint);
+
+  const flipBox = document.getElementById("showFlip");
+  flipBox.addEventListener("change", () => {
+    showFlip = flipBox.checked;
+    document.getElementById("flipOpt").classList.toggle("on", showFlip);
+    boardEl.classList.toggle("noflipline", !showFlip);
+  });
+
+  const slowBox = document.getElementById("slowFlip");
+  function applySlowFlip() {
+    slowFlip = slowBox.checked;
+    document.getElementById("slowOpt").classList.toggle("on", slowBox.checked);
+    boardEl.classList.toggle("slowflip", slowBox.checked);
+  }
+  slowBox.addEventListener("change", applySlowFlip);
+  applySlowFlip();
+
+  const soundBox = document.getElementById("soundOn");
+  soundBox.addEventListener("change", () => {
+    soundOn = soundBox.checked;
+    document.getElementById("soundOpt").classList.toggle("on", soundOn);
+    if (soundOn) playSelect(); // 打開時響一聲，順便喚醒音訊
+  });
+  // 第一次點頁面就先喚醒音訊，之後電腦自動落子也聽得到
+  document.addEventListener("pointerdown", () => { audioCtx(); });
+
+  const rateBox = document.getElementById("showRate");
+  rateBox.addEventListener("change", () => {
+    showRate = rateBox.checked;
+    document.getElementById("rateOpt").classList.toggle("on", showRate);
+    drawRate();
+  });
+
+  // 「黑棋由電腦下」「白棋由電腦下」擇一：勾一個就取消另一個；都不勾＝兩人對下。
+  // 對局中切換會直接交換雙方的操控，並清掉尚未確認的選點與建議。
+  const whiteBox = document.getElementById("aiWhite");
+  const whiteOpt = document.getElementById("aiWhiteOpt");
+  function onAiSideChange(box, other) {
+    if (box.checked) other.checked = false;
+    aiOn = aiBox.checked || whiteBox.checked;
+    aiSide = whiteBox.checked ? "W" : "B";
+    aiOpt.classList.toggle("on", aiBox.checked);
+    whiteOpt.classList.toggle("on", whiteBox.checked);
+    stepBox.disabled = !aiOn;
+    stepOpt.classList.toggle("off", !aiOn);
+    levelsEl.classList.toggle("off", !aiOn);
+    cancelAi();
+    pending = null;
+    aiNote = null;
+    tip = null;
+    render();
+  }
+  aiBox.addEventListener("change", () => onAiSideChange(aiBox, whiteBox));
+  whiteBox.addEventListener("change", () => onAiSideChange(whiteBox, aiBox));
+
+  stepBox.addEventListener("change", () => {
+    aiStep = stepBox.checked;
+    stepOpt.classList.toggle("on", aiStep);
+    cancelAi();
+    render();
+  });
+
+  passOkBtn.addEventListener("click", () => {
+    passWait = false;
+    render();
+  });
+  hintBtn.addEventListener("click", () => {
+    // 背景已在算這個盤面就等它算完（不卡畫面），否則當場算
+    const c = currentRates(false);
+    if (rateWorker && c.asked && !c.scores) {
+      c.wantTip = true;
+      render();
+      return;
+    }
+    hintBtn.textContent = "計算中⋯";
+    hintBtn.disabled = true;
+    // 讓「計算中」先畫出來，再做搜尋運算。
+    setTimeout(() => {
+      suggest();
+      render();
+    }, 20);
+  });
+
+  restartBtn.addEventListener("click", start);
+  document.getElementById("again").addEventListener("click", start);
+
+  start();
+</script>
+<script>
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+</script>
+</body>
+</html>
