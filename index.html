@@ -560,6 +560,9 @@
     color: var(--ink-soft);
   }
   .result-card .act { margin-top: 8px; }
+  /* 不寫進排名的警告視窗：取消（次要）與照樣使用並排 */
+  .warn-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  button.act.alt { background: transparent; color: var(--ink); border-color: var(--rule); }
   @keyframes fade { from { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .result { animation: none; } }
 
@@ -877,6 +880,18 @@
               <button class="act" id="passOk">確認</button>
             </div>
           </div>
+          <!-- 會讓這局不寫進排名的操作（開提示、第 3 次建議一手）先跳這個視窗讓玩家選 -->
+          <div class="result" id="warnBox" role="alertdialog" aria-modal="true" aria-labelledby="warnTitle" aria-describedby="warnNote" hidden>
+            <div class="result-card">
+              <p class="result-eyebrow">注意</p>
+              <strong id="warnTitle">開啟提示？</strong>
+              <p class="result-note" id="warnNote">這局贏了將不寫進排名</p>
+              <div class="warn-acts">
+                <button class="act alt" id="warnNo" type="button">取消</button>
+                <button class="act" id="warnYes" type="button">照樣使用</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -893,7 +908,7 @@
         </p>
         <span class="hint-side">
           <button class="ghostbtn" id="hint" aria-describedby="hintWarn">建議一手</button>
-          <small class="hint-warn" id="hintWarn">使用後不寫進排名</small>
+          <small class="hint-warn" id="hintWarn">還有 2 次不影響排名</small>
         </span>
       </div>
       <div class="count-row" aria-label="目前子數">
@@ -1002,7 +1017,7 @@
       <ol class="help-steps">
         <li>
           <h3>輸入姓名</h3>
-          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或按過「建議一手」，也不記錄）。排名是共用的：所有人看到的是同一份。</p>
+          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或「建議一手」用到第 3 次，也不記錄，事先會跳視窗讓你選）。排名是共用的：所有人看到的是同一份。</p>
         </li>
         <li>
           <h3>選擇強弱</h3>
@@ -1014,13 +1029,14 @@
         </li>
         <li class="opt">
           <h3>可選想要的<b class="hl">提示</b>（非必要）</h3>
-          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率（這三項預設關閉，想要再打開；對局中勾選任一項，這局贏了也不會寫進排名）。「翻面慢一點」和「聲音」在「操作」卡片。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置（同樣算用了提示，這局不會寫進排名）。</p>
+          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率（這三項預設關閉，想要再打開；對局中勾選任一項會先跳視窗確認，選「照樣使用」後這局贏了不會寫進排名）。「翻面慢一點」和「聲音」在「操作」卡片。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置；每局前 2 次不影響排名，第 3 次起這局就不寫進排名（按鈕下方會顯示還剩幾次）。</p>
         </li>
       </ol>
       <section class="help-rules" aria-labelledby="rulesTitle">
         <h3 id="rulesTitle">規則與細節</h3>
         <p><b>規則</b>　白棋先行。落子必須夾住對手至少一顆棋子，被夾住的棋子全部翻面。</p>
         <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
+        <p><b>排名</b>　只記人機對戰的勝局（輸、和局與兩人對下不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 3 次，這局贏了就不寫進排名；每局前 2 次建議一手不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
         <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：往後算 6～8 步（剩 16 格以內就試著算到終局，比電腦最強更早，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
         <p><b>電腦對手</b>　「黑棋由電腦下」與「白棋由電腦下」兩個勾選框擇一（勾其中一個會自動取消另一個；兩個都不勾則兩人對下），預設電腦執黑。白棋固定先下，所以勾「白棋由電腦下」時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）；對局中切換會直接交換雙方的操控。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
         <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>同樣的判斷但往後算 6～8 步，剩 12 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
@@ -1054,7 +1070,10 @@
   let tip = null;
   let showFlip = false; // 提示＞被翻子的黃線（預設關閉）
   let showRate = false; // 提示＞滑鼠移到落點時顯示勝率（預設關閉）
-  let hinted = false;   // 本局開過任一項提示（黃線、落子提示、勝率）或按過建議一手：贏了也不寫進排名
+  let hinted = false;   // 本局開過任一項提示（黃線、落子提示、勝率）或建議一手超過 2 次：贏了也不寫進排名
+  const FREE_SUGGEST = 2; // 建議一手每局前 2 次不影響排名，第 3 次起不寫進排名
+  let suggestUsed = 0;  // 本局按過幾次建議一手
+  let warnOpen = false; // 不寫進排名的警告視窗開著：電腦暫停
   let slowFlip = true; // 操作＞翻面慢一點（翻面動畫 1.5 秒）
   let soundOn = true;  // 操作＞聲音
   let hoverIdx = null; // 滑鼠（或鍵盤焦點）目前停在哪一格
@@ -1466,7 +1485,7 @@
   // 輪到電腦就自動選點；自動模式隨後自行落子，逐步模式則停在選點，
   // 等玩家點該格（和自己下棋的「再點一下」相同）。
   function scheduleAi() {
-    if (thinking || passWait || setupWait || helpOpen || !isAiTurn()) return;
+    if (thinking || passWait || setupWait || helpOpen || warnOpen || !isAiTurn()) return;
     if (pending && aiStep) return;
     thinking = true;
     const my = gen;
@@ -1510,6 +1529,8 @@
     log = [];
     moves = legalMoves(board, turn);
     hinted = showHint || showFlip || showRate;
+    suggestUsed = 0;
+    closeWarn(false);
     openSetup();
     render();
   }
@@ -2142,6 +2163,12 @@
     doneEl.hidden = !(over && saved);
     doneEl.textContent = `已記錄（${playerName}）`;
 
+    // 建議一手下面的小字：還剩幾次不影響排名（兩人對下不記錄，不顯示）
+    const warnEl = document.getElementById("hintWarn");
+    warnEl.hidden = !aiOn;
+    warnEl.textContent = hinted ? "本局不寫進排名"
+      : suggestUsed < FREE_SUGGEST ? `還有 ${FREE_SUGGEST - suggestUsed} 次不影響排名` : "再用將不寫進排名";
+
     const passEl = document.getElementById("passBox");
     const passShown = !passEl.hidden;
     passEl.hidden = !passWait;
@@ -2172,7 +2199,7 @@
       document.getElementById("resultNote").textContent = winner
         ? `${NAME[winner]}多 ${Math.abs(b - w)} 子` +
           (placed < N * N ? `，棋盤尚餘 ${N * N - placed} 格但雙方皆無棋可下` : "") +
-          (aiOn && hinted && winner !== aiSide ? "（本局開過提示，不寫進排名）" : "")
+          (aiOn && hinted && winner !== aiSide ? "（本局用了提示，不寫進排名）" : "")
         : `雙方各 ${b} 子`;
     } else {
       disc.dataset.side = turn;
@@ -2182,7 +2209,7 @@
 
     hintBtn.disabled = over || ai || !moves.size || !!rateCache.wantTip;
     hintBtn.textContent = rateCache.wantTip ? "計算中⋯" : "建議一手";
-    if (passWait || setupWait) hintBtn.disabled = true;
+    if (passWait || setupWait || warnOpen) hintBtn.disabled = true;
 
     if (!log.length) {
       logEl.innerHTML = '<li class="empty">尚未落子</li>';
@@ -2235,8 +2262,45 @@
     try { localStorage.setItem(COORD_KEY, coordsOn ? "1" : "0"); } catch (e) {}
   });
 
+  // 不寫進排名的警告視窗：只在人機對戰、這局還能記錄時才問；選「照樣使用」才執行 onYes
+  const warnBox = document.getElementById("warnBox");
+  let warnYes = null;
+  function needsWarn() { return aiOn && !over && !hinted; }
+  function askNoRank(title, onYes) {
+    warnYes = onYes;
+    warnOpen = true;
+    cancelAi();
+    document.getElementById("warnTitle").textContent = title;
+    document.getElementById("warnNote").textContent = "這局贏了將不寫進排名";
+    warnBox.hidden = false;
+    document.getElementById("warnNo").focus(); // 預設停在「取消」，按 Enter 不會誤用
+  }
+  function closeWarn(yes) {
+    if (!warnOpen) return;
+    const f = warnYes;
+    warnYes = null;
+    warnOpen = false;
+    warnBox.hidden = true;
+    if (yes && f) f();
+    render(); // 電腦的回合會重新排程
+  }
+  document.getElementById("warnYes").addEventListener("click", () => closeWarn(true));
+  document.getElementById("warnNo").addEventListener("click", () => closeWarn(false));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && warnOpen) closeWarn(false); });
+  // 提示三個開關：對局中打開前先警告，選取消就維持關閉
+  function guardHint(box, label, apply) {
+    box.addEventListener("change", () => {
+      if (box.checked && needsWarn()) {
+        box.checked = false;
+        askNoRank(`開啟「${label}」？`, () => { box.checked = true; apply(); });
+        return;
+      }
+      apply();
+    });
+  }
+
   const showBox = document.getElementById("showHint");
-  showBox.addEventListener("change", () => {
+  guardHint(showBox, "落子提示", () => {
     showHint = showBox.checked;
     if (showHint && !over) hinted = true;
     document.getElementById("hintOpt").classList.toggle("on", showHint);
@@ -2246,7 +2310,7 @@
   boardEl.classList.toggle("nohint", !showHint);
 
   const flipBox = document.getElementById("showFlip");
-  flipBox.addEventListener("change", () => {
+  guardHint(flipBox, "被翻子的黃線", () => {
     showFlip = flipBox.checked;
     if (showFlip && !over) hinted = true;
     document.getElementById("flipOpt").classList.toggle("on", showFlip);
@@ -2273,7 +2337,7 @@
   document.addEventListener("pointerdown", () => { audioCtx(); });
 
   const rateBox = document.getElementById("showRate");
-  rateBox.addEventListener("change", () => {
+  guardHint(rateBox, "顯示勝率", () => {
     showRate = rateBox.checked;
     if (showRate && !over) hinted = true;
     document.getElementById("rateOpt").classList.toggle("on", showRate);
@@ -2339,8 +2403,19 @@
     passWait = false;
     render();
   });
+  // 建議一手：每局前 2 次不影響排名，第 3 次起先警告，照樣使用這局就不寫進排名
   hintBtn.addEventListener("click", () => {
-    hinted = true; // 建議一手也算用了提示，這局不寫進排名（按鈕留在參考欄，手機不用往下捲）
+    if (tip) return; // 這一手已經標出建議，再按不重算、不計次
+    if (suggestUsed >= FREE_SUGGEST && needsWarn()) {
+      askNoRank(`第 ${suggestUsed + 1} 次建議一手？`, useSuggest);
+      return;
+    }
+    useSuggest();
+  });
+  function useSuggest() {
+    if (over || isAiTurn() || !moves.size) return;
+    suggestUsed++;
+    if (suggestUsed > FREE_SUGGEST && !over) hinted = true;
     // 背景已在算這個盤面就等它算完（不卡畫面），否則當場算
     const c = currentRates(false);
     if (rateWorker && c.asked && !c.scores) {
@@ -2355,7 +2430,7 @@
       suggest();
       render();
     }, 20);
-  });
+  }
 
   restartBtn.addEventListener("click", start);
   document.getElementById("again").addEventListener("click", start);
