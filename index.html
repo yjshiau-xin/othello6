@@ -1595,10 +1595,11 @@
   const NAME_KEY = "othello6.player";
   const LEVEL_KEY = "othello6.level";
   const MAX_RECORDS = 50;
-  // 紀錄的名次：難易度（最強、強、中、弱）→ 對局秒數（少的在前）→ 時間（新的在前）。
+  // 排名：難易度（最強、強、中、弱）→ 子數差距（玩家減電腦，大的在前）→ 對局秒數（少的在前）→ 時間（新的在前）。
   // 畫面排序與保留前 50 名都用這個，和試算表 scoreboard_apps_script.gs 的 byRank 一致
   const LEVEL_RANK = { expert: 0, hard: 1, normal: 2, easy: 3 };
-  const byRank = (x, y) => (LEVEL_RANK[x.level] ?? 9) - (LEVEL_RANK[y.level] ?? 9) || x.secs - y.secs || y.at - x.at;
+  const byRank = (x, y) => (LEVEL_RANK[x.level] ?? 9) - (LEVEL_RANK[y.level] ?? 9) ||
+    (y.me - y.ai) - (x.me - x.ai) || x.secs - y.secs || y.at - x.at;
   function keepTop() {
     records.sort(byRank);
     const cut = Math.max(0, records.length - MAX_RECORDS);
