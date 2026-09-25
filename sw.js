@@ -1,6 +1,6 @@
 // 離線快取：第一次開啟時把整個遊戲存起來，之後沒有網路也能玩。
 // 版本號由 build_web.py 依 index.html 內容產生；內容一改，瀏覽器就會換上新版。
-const CACHE = "othello6-90981862f9";
+const CACHE = "othello6-3176762723";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-180.png", "./icons/icon-192.png", "./icons/icon-512.png"];
 
 self.addEventListener("install", e => {
