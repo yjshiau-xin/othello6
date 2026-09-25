@@ -88,6 +88,8 @@
     max-width: 48ch;
     text-wrap: balance;
   }
+  .lede span { white-space: nowrap; } /* 每個步驟不從中間斷行 */
+  .lede b { color: var(--brass); font-weight: 700; } /* 「提示」：黃色粗體，指向右側的「提示」卡片 */
 
   /* 左：計分板　中：棋盤　右：側欄；窄一點時計分板移到棋盤下方，手機則全部直排 */
   .game {
@@ -703,7 +705,7 @@
 
   <main class="game">
     <aside class="tally" aria-label="計分板">
-      <p class="lede">開局先輸入名字、選電腦強弱，再點選棋盤預覽落子與翻轉結果，再點一下同一格確認後換下一位玩家。</p>
+      <p class="lede"><span>輸入姓名</span> → <span>選擇強弱</span> → <span>開始遊戲</span><span>（可選想要的<b>提示</b>）</span></p>
       <section class="card">
         <h2>計分板</h2>
         <ol class="records" id="records"><li class="empty">尚無紀錄。開局時輸入名字，和電腦下完一局就會自動登上計分板（兩人對下不計分）</li></ol>
