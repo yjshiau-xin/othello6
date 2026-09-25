@@ -1595,6 +1595,16 @@
   const NAME_KEY = "othello6.player";
   const LEVEL_KEY = "othello6.level";
   const MAX_RECORDS = 50;
+  // 紀錄的名次：難易度（最強、強、中、弱）→ 對局秒數（少的在前）→ 時間（新的在前）。
+  // 畫面排序與保留前 50 名都用這個，和試算表 scoreboard_apps_script.gs 的 byRank 一致
+  const LEVEL_RANK = { expert: 0, hard: 1, normal: 2, easy: 3 };
+  const byRank = (x, y) => (LEVEL_RANK[x.level] ?? 9) - (LEVEL_RANK[y.level] ?? 9) || x.secs - y.secs || y.at - x.at;
+  function keepTop() {
+    records.sort(byRank);
+    const cut = Math.max(0, records.length - MAX_RECORDS);
+    records.length = Math.min(records.length, MAX_RECORDS);
+    return cut;
+  }
   let records = [];
   let gameStartAt = Date.now();
   // 名字在開局視窗輸入；贏了電腦就自動登上計分板。saved 表示這局已登錄
@@ -1624,8 +1634,8 @@
       at: Date.now(),
       secs: Math.round((Date.now() - gameStartAt) / 1000)
     };
-    records.unshift(rec);
-    records.length = Math.min(records.length, MAX_RECORDS);
+    records.push(rec);
+    keepTop();
     saveRecords();
     saved = true;
     drawTally();
@@ -1666,8 +1676,7 @@
           const remote = data.records.map(cleanRecord).filter(r => r && r.result === "win");
           const have = new Set(remote.map(recordKey));
           records = pendingUp.filter(r => !have.has(recordKey(r))).concat(remote);
-          records.sort((x, y) => y.at - x.at);
-          records.length = Math.min(records.length, MAX_RECORDS);
+          keepTop();
           saveRecords();
           sharedOn = true;
           if (pendingUp.length) syncAgain = true;
@@ -1695,16 +1704,14 @@
     return s >= 60 ? `${Math.floor(s / 60)}'${pad2(s % 60)}s` : `${s}s`;
   }
 
-  const TOP_N = 10; // 紀錄只秀前十名（保存與匯出仍是全部）
+  const TOP_N = 10; // 紀錄只秀前十名（保存與匯出是前 50 名）
   const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
   function drawTally() {
     const list = document.getElementById("records");
     list.innerHTML = "";
-    // 只列勝局（以前記下的輸、和局也不顯示）；依難易度（最強、強、中、弱）排，同難度對局秒數少的在前
-    // （秒數相同新的在前），只秀前十名
-    const rank = { expert: 0, hard: 1, normal: 2, easy: 3 };
+    // 只列勝局（以前記下的輸、和局也不顯示）；依名次（byRank）排，只秀前十名
     const shown = records.filter(r => r.result === "win")
-      .sort((x, y) => (rank[x.level] ?? 9) - (rank[y.level] ?? 9) || x.secs - y.secs || y.at - x.at)
+      .sort(byRank)
       .slice(0, TOP_N);
     if (!shown.length) {
       const li = document.createElement("li");
@@ -1876,13 +1883,11 @@
       fresh.push(r);
       added++;
     }
-    records.sort((x, y) => y.at - x.at);
-    const cut = Math.max(0, records.length - MAX_RECORDS);
-    records.length = Math.min(records.length, MAX_RECORDS);
+    const cut = keepTop();
     saveRecords();
     drawTally();
     upload(fresh); // 共用時匯入的紀錄也送上去（試算表那邊會再去重）
-    const skip = [notWin && `${notWin} 筆輸或和局不匯入`, dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去最舊 ${cut} 筆`]
+    const skip = [notWin && `${notWin} 筆輸或和局不匯入`, dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去排名最後 ${cut} 筆`]
       .filter(Boolean).join("、");
     return `已匯入 ${added} 筆紀錄` + (skip ? `（${skip}）` : "");
   }
