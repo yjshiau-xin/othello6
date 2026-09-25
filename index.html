@@ -59,7 +59,7 @@
     background: var(--ground);
     color: var(--ink);
     font-family: var(--sans);
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
@@ -118,7 +118,7 @@
   .help-flow {
     margin: 0 0 26px;
     text-align: center;
-    font-size: 18px;
+    font-size: 19px;
     color: var(--ink-soft);
     text-wrap: balance;
   }
@@ -142,11 +142,11 @@
     width: 40px; height: 40px;
     border-radius: 50%;
     border: 1.5px solid var(--brass-line);
-    font: 700 18px var(--mono);
+    font: 700 19px var(--mono);
     color: var(--brass);
   }
   .help-steps h3 { margin: 0; font-size: 17px; letter-spacing: .04em; align-self: end; }
-  .help-steps p { margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.7; }
+  .help-steps p { margin: 0; font-size: 15px; color: var(--ink-soft); line-height: 1.7; }
   .help-steps li.opt { border-style: dashed; }
   /* 規則與細節（原本在頁面最下方） */
   .help-rules {
@@ -154,19 +154,19 @@
     padding: 16px 18px 10px;
     border: 1px solid var(--rule);
     color: var(--ink-soft);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.75;
   }
   .help-rules h3 { margin: 0 0 10px; font-size: 17px; letter-spacing: .04em; color: var(--ink); }
   .help-rules p { margin: 0 0 10px; }
   .help-rules b { color: var(--ink); font-weight: 700; }
   .help-back { display: block; width: 100%; margin-top: 22px; }
-  .setup-help { margin: 8px 0 0; text-align: center; font-size: 13px; }
+  .setup-help { margin: 8px 0 0; text-align: center; font-size: 14px; }
 
   /* 左：計分板　中：棋盤　右：側欄；窄一點時計分板移到棋盤下方，手機則全部直排 */
   .game {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr) 300px;
+    grid-template-columns: 340px minmax(0, 1fr) 300px;
     grid-template-areas: "tally stage ref" "tally stage panel";
     grid-template-rows: auto 1fr;
     gap: 16px 30px;
@@ -202,12 +202,12 @@
     padding-top: 10px;
     border-top: 1px dashed var(--rule);
   }
-  .entry label { font-size: 12px; color: var(--brass); font-weight: 700; letter-spacing: .08em; }
+  .entry label { font-size: 13px; color: var(--brass); font-weight: 700; letter-spacing: .08em; }
   .entry .row { display: flex; gap: 6px; }
   .entry input {
     flex: 1;
     min-width: 0;
-    font: 700 16px var(--mono);
+    font: 700 17px var(--mono);
     letter-spacing: .08em;
     text-align: center;
     color: var(--ink);
@@ -216,8 +216,8 @@
     padding: 7px 8px;
   }
   .entry input:focus { outline: 2px solid var(--brass-line); outline-offset: 1px; }
-  .entry .act { margin-top: 0; padding: 7px 12px; font-size: 14px; }
-  .entry-label { font-size: 12px; color: var(--brass); font-weight: 700; letter-spacing: .08em; }
+  .entry .act { margin-top: 0; padding: 7px 12px; font-size: 15px; }
+  .entry-label { font-size: 13px; color: var(--brass); font-weight: 700; letter-spacing: .08em; }
   /* 開局視窗：蓋住整頁，選好名字與難易度才開始 */
   .setup {
     position: fixed;
@@ -232,8 +232,8 @@
   .setup-card { width: min(100%, 320px); margin: 0; text-align: left; }
   .setup-card .result-eyebrow, .setup-card strong { text-align: center; }
   .setup-card .result-note { margin-top: 2px; }
-  .setup-card > .act { margin-top: 12px; padding: 9px; font-size: 15px; }
-  .entry-done { margin: 6px 0 0; font-size: 12px; color: var(--brass); font-weight: 700; }
+  .setup-card > .act { margin-top: 12px; padding: 9px; font-size: 16px; }
+  .entry-done { margin: 6px 0 0; font-size: 13px; color: var(--brass); font-weight: 700; }
   .records {
     list-style: none;
     margin: 0;
@@ -245,12 +245,12 @@
   /* 一局一行，各欄固定寬度讓上下對齊；名字太長以刪節號收尾，滑鼠停留看完整內容 */
   .records li {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 20px 26px 38px 74px 42px;
+    grid-template-columns: minmax(0, 1fr) 22px 30px 42px 82px 46px;
     align-items: center;
     gap: 5px;
     padding: 7px 0;
     border-bottom: 1px solid var(--rule);
-    font-size: 12px;
+    font-size: 13px;
     white-space: nowrap;
   }
   .records li.empty { display: block; white-space: normal; color: var(--ink-soft); }
@@ -259,18 +259,18 @@
   .records .sc { text-align: center; }
   .records .lv { text-align: center; color: var(--ink-soft); }
   .records .sc, .records .at, .records .du {
-    font: 11px var(--mono);
+    font: 12px var(--mono);
     font-variant-numeric: tabular-nums;
     color: var(--ink-soft);
   }
   .records .du { text-align: right; }
-  .badge { flex: none; font-size: 11px; font-weight: 700; padding: 2px 7px; color: #FFFFFF; }
+  .badge { flex: none; font-size: 12px; font-weight: 700; padding: 2px 7px; color: #FFFFFF; }
   .badge.win { background: #A84B16; }
   .badge.lose { background: #5D6862; }
   .badge.draw { background: #8A6C16; }
   button.linkbtn {
     margin-top: 10px;
-    font: 12px var(--sans);
+    font: 13px var(--sans);
     color: var(--ink-soft);
     background: none;
     border: 0;
@@ -279,7 +279,7 @@
     cursor: pointer;
   }
   .tally-acts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
-  .tally-msg { margin: 6px 0 0; font-size: 12px; color: var(--brass); }
+  .tally-msg { margin: 6px 0 0; font-size: 13px; color: var(--brass); }
   button.linkbtn:disabled { opacity: .45; cursor: default; text-decoration: none; }
 
   /* 參考欄：外框＋左上角「參考」標籤，框住輪到誰、建議一手與目前子數 */
@@ -292,7 +292,7 @@
   }
   .ref legend {
     padding: 0 6px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: .12em;
     color: var(--brass);
@@ -306,7 +306,7 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--rule);
   }
-  .turn-row #hint { flex: none; padding: 6px 9px; font-size: 13px; letter-spacing: .02em; }
+  .turn-row #hint { flex: none; padding: 6px 9px; font-size: 14px; letter-spacing: .02em; }
   .turn-line {
     display: flex;
     align-items: center;
@@ -320,19 +320,19 @@
     align-items: center;
     gap: 14px;
     margin-top: 8px;
-    font-size: 13px;
+    font-size: 14px;
   }
   .count { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .count .pip { width: 14px; height: 14px; }
-  .count .score-n { font-size: 17px; font-weight: 400; margin-left: 2px; }
+  .count .score-n { font-size: 18px; font-weight: 400; margin-left: 2px; }
   .count.lead { color: var(--brass); }
   .count-row .share-note { margin: 0 0 0 auto; white-space: nowrap; }
   .ref .tip { margin-top: 10px; }
   .turn-line .pip { flex: none; }
-  .turn-line small { margin-left: 4px; font: 500 12px var(--sans); letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; }
+  .turn-line small { margin-left: 4px; font: 500 13px var(--sans); letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; }
   .turn-line strong {
     font-family: var(--serif);
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     letter-spacing: .05em;
   }
@@ -354,7 +354,7 @@
   .files, .ranks {
     display: grid;
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--ink-soft);
   }
   .files { grid-column: 2; grid-template-columns: repeat(6, 1fr); }
@@ -445,7 +445,7 @@
     position: absolute; inset: 0;
     display: grid; place-items: center;
     white-space: nowrap;
-    font-size: clamp(10px, 2.4vw, 15px);
+    font-size: clamp(11px, 2.4vw, 16px);
     font-weight: 700;
     letter-spacing: .08em;
     line-height: 1;
@@ -464,7 +464,7 @@
     left: 0; right: 0; bottom: 7%;
     text-align: center;
     font-family: var(--mono);
-    font-size: clamp(10px, 2.2vw, 13px);
+    font-size: clamp(11px, 2.2vw, 14px);
     font-weight: 700;
     line-height: 1;
     color: #fff;
@@ -508,7 +508,7 @@
   .result-eyebrow {
     margin: 0;
     font-family: var(--mono);
-    font-size: 10px;
+    font-size: 11px;
     letter-spacing: .2em;
     text-transform: uppercase;
     color: var(--brass);
@@ -522,13 +522,13 @@
   .result-score {
     margin: 2px 0 0;
     font-family: var(--mono);
-    font-size: 19px;
+    font-size: 20px;
     font-variant-numeric: tabular-nums;
     letter-spacing: .05em;
   }
   .result-note {
     margin: 0;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--ink-soft);
   }
   .result-card .act { margin-top: 8px; }
@@ -563,13 +563,13 @@
   .pip[data-side="W"] { background: radial-gradient(circle at 34% 30%, #FFFFFF, #E2DCC9 66%); }
   .score-n {
     font-family: var(--mono);
-    font-size: 20px;
+    font-size: 21px;
     font-variant-numeric: tabular-nums;
   }
   .share-note {
     margin: 8px 0 0;
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     color: var(--ink-soft);
     font-variant-numeric: tabular-nums;
   }
@@ -580,7 +580,7 @@
     align-items: center;
     gap: 9px;
     margin-top: 2px;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--ink-soft);
     cursor: pointer;
   }
@@ -624,7 +624,7 @@
     padding: 6px 0;
     border: 1px solid var(--rule);
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--ink-soft);
     cursor: pointer;
   }
@@ -646,12 +646,12 @@
     padding: 6px 0;
     border: 1px solid var(--rule);
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--ink-soft);
   }
   .levels.show span:not(.sel) { opacity: .55; }
   .levels.show span.sel { border-color: var(--brass); color: var(--brass); font-weight: 700; }
-  .levels-note, .now-player { margin: 0 0 0 24px; font-size: 11px; color: var(--ink-soft); }
+  .levels-note, .now-player { margin: 0 0 0 24px; font-size: 12px; color: var(--ink-soft); }
   .ai-row {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -661,9 +661,9 @@
   .ai-sides { display: grid; gap: 8px; }
   /* 四格排成一行，垂直置中於兩個勾選框之間 */
   .ai-row .levels { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; margin: 0; }
-  .ai-row .levels.show span { padding: 5px 0; font-size: 11px; white-space: nowrap; }
+  .ai-row .levels.show span { padding: 5px 0; font-size: 12px; white-space: nowrap; }
   .ai-row + .levels-note { margin-left: 0; }
-  .now-player { font-size: 13px; }
+  .now-player { font-size: 14px; }
   /* 參考欄「輪到白棋」旁的玩家名字：空間不夠時以刪節號收尾，不擠掉建議一手 */
   .turn-line .now-player {
     margin: 0 0 0 2px;
@@ -673,14 +673,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 12px;
+    font-size: 13px;
   }
   .turn-line strong { flex: none; }
   /* 卡片標題列：左邊標題，右邊小按鈕（棋譜＞顯示座標） */
   .card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
   .card-head h2.big-title { margin: 0; }
   button.smallbtn {
-    font: 700 12px var(--sans);
+    font: 700 13px var(--sans);
     letter-spacing: .04em;
     padding: 5px 10px;
     color: var(--surface);
@@ -694,17 +694,17 @@
   button.smallbtn[aria-pressed="true"] { color: var(--brass); background: transparent; border-color: var(--brass-line); }
   button.smallbtn[aria-pressed="true"]:hover { opacity: 1; background: var(--brass); color: var(--surface); }
   /* 玩家名字：黃色粗體，比旁邊小字大一點 */
-  .turn-line .now-player b { font-family: var(--sans); font-size: 15px; font-weight: 700; color: var(--brass); letter-spacing: .04em; }
+  .turn-line .now-player b { font-family: var(--sans); font-size: 16px; font-weight: 700; color: var(--brass); letter-spacing: .04em; }
   .now-player b { color: var(--ink); font-family: var(--mono); letter-spacing: .05em; }
   .levels.pick { margin: 0; }
-  .levels.pick label { font-size: 14px; padding: 8px 0; }
+  .levels.pick label { font-size: 15px; padding: 8px 0; }
   .levels.off { opacity: .42; }
   .levels.off label { cursor: default; }
   .tip {
     margin: 10px 0 0;
     padding-left: 11px;
     border-left: 2px solid var(--brass-line);
-    font-size: 12px;
+    font-size: 13px;
     color: var(--ink-soft);
     line-height: 1.5;
   }
@@ -729,7 +729,7 @@
   @media (prefers-reduced-motion: reduce) { .thinking { animation: none; } }
   button.act {
     font-family: var(--sans);
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     letter-spacing: .06em;
     padding: 12px 14px;
@@ -749,7 +749,7 @@
   /* 操作鈕（建議一手、重新開始）：黑體白字，各自的底色見下方 */
   button.ghostbtn {
     font-family: var(--sans);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: .06em;
     padding: 10px 14px;
@@ -775,7 +775,7 @@
     margin: 0;
     padding: 0;
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 13px;
     max-height: 176px;
     overflow-y: auto;
     display: grid;
