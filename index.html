@@ -1861,9 +1861,10 @@
       side: r.side, me: r.me, ai: r.ai, at: r.at, secs: r.secs
     };
   }
-  const recordKey = r => [r.at, r.name, r.me, r.ai, r.side, r.level].join("|");
+  // 同一局：結束時間只比到秒（試算表存成日期時間，讀回來的毫秒不保證一樣），和 scoreboard_apps_script.gs 的 keyOf 一致
+  const recordKey = r => [Math.floor(r.at / 1000), r.name, r.me, r.ai, r.side, r.level].join("|");
 
-  // 匯入的紀錄併進現有的：同一局（時間、名字、比分都相同）不重複加，依結束時間由新到舊排，最多 50 筆
+  // 匯入的紀錄併進現有的：同一局（時間、名字、比分都相同）不重複加，依名次保留前 50 名
   function importRecords(text) {
     let data;
     try { data = JSON.parse(text); } catch (e) { return "匯入失敗：不是 JSON 檔"; }
