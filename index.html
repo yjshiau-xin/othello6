@@ -332,7 +332,21 @@
   }
   /* 建議一手＋正下方的小字「使用後不寫進排名」：放在按鈕下面不佔寬度，玩家名字才有空間 */
   .hint-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  /* 子數那一行最右邊、「已下 N 子」右邊：「電腦 中」＝本局電腦難易度（弱／中／強／最強，顏色同排名），兩人對下時隱藏 */
+  .count-row .ref-cpu { margin-left: auto; white-space: nowrap; font-size: 12px; color: var(--ink-soft); }
+  .count-row .ref-cpu .ref-lv { font-size: 13px; letter-spacing: 0; }
+  .ref-lv { font-family: var(--sans); font-size: 15px; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
+  .ref-lv.easy { color: var(--lv-easy); }
+  .ref-lv.normal { color: var(--lv-normal); }
+  .ref-lv.hard { color: var(--lv-hard); }
+  .ref-lv.expert { color: var(--lv-expert); }
   .hint-warn { font-size: 13px; line-height: 1.25; text-align: right; color: var(--ink-soft); white-space: nowrap; }
+  /* 手機：小字移到按鈕左邊、折成兩行，參考欄少一排 */
+  @media (max-width: 800px) {
+    .hint-side { flex-direction: row-reverse; align-items: center; gap: 6px; }
+    .hint-warn { font-size: 12px; }
+    .hint-warn span { display: block; }
+  }
   .turn-row #hint { flex: none; padding: 6px 9px; font-size: 14px; letter-spacing: .02em; }
   .turn-line {
     display: flex;
@@ -341,11 +355,12 @@
     min-width: 0;
     margin: 0;
   }
-  /* 第二行：黑棋 N　白棋 N　已下 N 子 */
+  /* 第二行：黑棋 N　白棋 N　已下 N 子　電腦 難度（間距 8px；真的排不下時「電腦 難度」換到下一行靠右，不超出框） */
   .count-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 14px;
+    gap: 4px 8px;
     margin-top: 8px;
     font-size: 14px;
   }
@@ -353,7 +368,7 @@
   .count .pip { width: 14px; height: 14px; }
   .count .score-n { font-size: 18px; font-weight: 400; margin-left: 2px; }
   .count.lead { color: var(--brass); }
-  .count-row .share-note { margin: 0 0 0 auto; white-space: nowrap; }
+  .count-row .share-note { margin: 0 0 0 auto; white-space: nowrap; font-family: var(--sans); }
   .ref .tip { margin-top: 10px; }
   .turn-line .pip { flex: none; }
   /* 輪到電腦時「輪到白棋」後面的「電腦」：紅色粗體，和玩家名字一樣 16px（--ai-red，這時不顯示玩家名字） */
@@ -560,7 +575,15 @@
     color: var(--ink-soft);
   }
   .result-card .act { margin-top: 8px; }
-  /* 不寫進排名的警告視窗：取消（次要）與照樣使用並排 */
+  /* 不寫進排名的警告視窗：蓋住整個畫面，卡片由程式放在按下的開關或按鈕旁邊 */
+  .warn { position: fixed; inset: 0; z-index: 30; background: rgba(8, 26, 18, .45); animation: fade .2s ease-out; }
+  .warn .result-card { position: absolute; width: min(300px, calc(100vw - 32px)); box-sizing: border-box; }
+  .warn .result-note { font-size: 15px; color: var(--brass); }
+  .warn .result-eyebrow { font-size: 13px; }
+  /* 標題（最長「開啟「被翻子的黃線」？」11 字）縮到 20px、左右內距 16px，320px 寬的手機也排得下一行 */
+  .warn .result-card { padding-left: 16px; padding-right: 16px; }
+  .warn .result-card strong { font-size: 20px; white-space: nowrap; }
+  /* 取消（次要）與照樣使用並排 */
   .warn-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   button.act.alt { background: transparent; color: var(--ink); border-color: var(--rule); }
   @keyframes fade { from { opacity: 0; } }
@@ -880,18 +903,6 @@
               <button class="act" id="passOk">確認</button>
             </div>
           </div>
-          <!-- 會讓這局不寫進排名的操作（開提示、第 3 次建議一手）先跳這個視窗讓玩家選 -->
-          <div class="result" id="warnBox" role="alertdialog" aria-modal="true" aria-labelledby="warnTitle" aria-describedby="warnNote" hidden>
-            <div class="result-card">
-              <p class="result-eyebrow">注意</p>
-              <strong id="warnTitle">開啟提示？</strong>
-              <p class="result-note" id="warnNote">這局贏了將不寫進排名</p>
-              <div class="warn-acts">
-                <button class="act alt" id="warnNo" type="button">取消</button>
-                <button class="act" id="warnYes" type="button">照樣使用</button>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -908,13 +919,14 @@
         </p>
         <span class="hint-side">
           <button class="ghostbtn" id="hint" aria-describedby="hintWarn">建議一手</button>
-          <small class="hint-warn" id="hintWarn">還有 2 次不影響排名</small>
+          <small class="hint-warn" id="hintWarn"><span>還有 2 次</span><span>不影響排名</span></small>
         </span>
       </div>
       <div class="count-row" aria-label="目前子數">
         <span class="count" id="rowB"><span class="pip" data-side="B"></span>黑棋<b class="score-n" id="scoreB">2</b></span>
         <span class="count" id="rowW"><span class="pip" data-side="W"></span>白棋<b class="score-n" id="scoreW">2</b></span>
         <span class="share-note" id="shareNote">已下 4 子</span>
+        <span class="ref-cpu" id="refCpu">電腦 <b class="ref-lv normal" id="refLevel">中</b></span>
       </div>
       <p class="tip" id="tipText" hidden></p>
     </fieldset>
@@ -1010,6 +1022,19 @@
     </form>
   </div>
 
+  <!-- 會讓這局不寫進排名的操作（開提示、第 3 次建議一手）先跳這個視窗讓玩家選；
+       卡片出現在按下的開關或按鈕旁邊，手機上不用捲回棋盤找 -->
+  <div class="warn" id="warnBox" role="alertdialog" aria-modal="true" aria-labelledby="warnTitle" aria-describedby="warnNote" hidden>
+    <div class="result-card" id="warnCard">
+      <p class="result-eyebrow">注意</p>
+      <strong id="warnTitle">開啟提示？</strong>
+      <p class="result-note" id="warnNote">贏了將「不」寫進排名</p>
+      <div class="warn-acts">
+        <button class="act alt" id="warnNo" type="button">取消</button>
+        <button class="act" id="warnYes" type="button">照樣使用</button>
+      </div>
+    </div>
+  </div>
   <div class="help" id="help" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
     <div class="help-inner">
       <h2 id="helpTitle">遊戲說明</h2>
@@ -2166,8 +2191,15 @@
     // 建議一手下面的小字：還剩幾次不影響排名（兩人對下不記錄，不顯示）
     const warnEl = document.getElementById("hintWarn");
     warnEl.hidden = !aiOn;
-    warnEl.textContent = hinted ? "本局不寫進排名"
-      : suggestUsed < FREE_SUGGEST ? `還有 ${FREE_SUGGEST - suggestUsed} 次不影響排名` : "再用將不寫進排名";
+    const lvEl = document.getElementById("refLevel");
+    document.getElementById("refCpu").hidden = !aiOn;
+    lvEl.textContent = LEVELS[aiLevel];
+    lvEl.className = `ref-lv ${aiLevel}`;
+    document.getElementById("refCpu").title = `電腦難易度：${LEVELS[aiLevel]}`;
+    // 分成前後兩段：桌機接成一行放在按鈕下方，手機折成兩行放在按鈕左邊
+    const [w1, w2] = hinted ? ["本局", "不寫進排名"]
+      : suggestUsed < FREE_SUGGEST ? [`還有 ${FREE_SUGGEST - suggestUsed} 次`, "不影響排名"] : ["再用將", "不寫進排名"];
+    warnEl.innerHTML = `<span>${w1}</span><span>${w2}</span>`;
 
     const passEl = document.getElementById("passBox");
     const passShown = !passEl.hidden;
@@ -2266,15 +2298,34 @@
   const warnBox = document.getElementById("warnBox");
   let warnYes = null;
   function needsWarn() { return aiOn && !over && !hinted; }
-  function askNoRank(title, onYes) {
+  let warnAnchor = null;
+  function askNoRank(title, anchor, onYes) {
     warnYes = onYes;
+    warnAnchor = anchor;
     warnOpen = true;
     cancelAi();
     document.getElementById("warnTitle").textContent = title;
-    document.getElementById("warnNote").textContent = "這局贏了將不寫進排名";
+    document.getElementById("warnNote").textContent = "贏了將「不」寫進排名";
     warnBox.hidden = false;
-    document.getElementById("warnNo").focus(); // 預設停在「取消」，按 Enter 不會誤用
+    placeWarn();
+    document.getElementById("warnNo").focus({ preventScroll: true }); // 預設停在「取消」，按 Enter 不會誤用
   }
+  // 卡片放在觸發元素下方（放不下就放上方），水平置中對齊它、左右留 16px 不超出畫面
+  function placeWarn() {
+    if (!warnOpen || !warnAnchor) return;
+    const card = document.getElementById("warnCard");
+    const a = warnAnchor.getBoundingClientRect();
+    const cw = card.offsetWidth, ch = card.offsetHeight;
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    let top = a.bottom + 8;
+    if (top + ch > vh - 8) top = a.top - ch - 8;
+    top = Math.max(8, Math.min(top, vh - ch - 8));
+    const left = Math.max(16, Math.min(a.left + a.width / 2 - cw / 2, vw - cw - 16));
+    card.style.top = top + "px";
+    card.style.left = left + "px";
+  }
+  addEventListener("resize", placeWarn);
+  addEventListener("scroll", placeWarn, { passive: true });
   function closeWarn(yes) {
     if (!warnOpen) return;
     const f = warnYes;
@@ -2292,7 +2343,7 @@
     box.addEventListener("change", () => {
       if (box.checked && needsWarn()) {
         box.checked = false;
-        askNoRank(`開啟「${label}」？`, () => { box.checked = true; apply(); });
+        askNoRank(`開啟「${label}」？`, box.closest("label") || box, () => { box.checked = true; apply(); });
         return;
       }
       apply();
@@ -2407,7 +2458,7 @@
   hintBtn.addEventListener("click", () => {
     if (tip) return; // 這一手已經標出建議，再按不重算、不計次
     if (suggestUsed >= FREE_SUGGEST && needsWarn()) {
-      askNoRank(`第 ${suggestUsed + 1} 次建議一手？`, useSuggest);
+      askNoRank(`第 ${suggestUsed + 1} 次建議一手？`, hintBtn, useSuggest);
       return;
     }
     useSuggest();
