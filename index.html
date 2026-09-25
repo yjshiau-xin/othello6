@@ -828,14 +828,14 @@
   <h1 class="sr-only">六路黑白棋</h1>
 
   <main class="game">
-    <aside class="tally" aria-label="紀錄">
+    <aside class="tally" aria-label="排名">
       <section class="card">
-        <h2 class="big-title">紀錄</h2>
+        <h2 class="big-title">排名</h2>
         <ol class="records" id="records"><li class="empty">尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局與兩人對下不記錄）</li></ol>
         <div class="tally-acts">
-          <button class="linkbtn" id="exportRecords" type="button">匯出紀錄</button>
-          <button class="linkbtn" id="importRecords" type="button">匯入紀錄</button>
-          <button class="linkbtn" id="clearRecords" type="button">清除紀錄</button>
+          <button class="linkbtn" id="exportRecords" type="button">匯出排名</button>
+          <button class="linkbtn" id="importRecords" type="button">匯入排名</button>
+          <button class="linkbtn" id="clearRecords" type="button">清除排名</button>
           <input type="file" id="importFile" accept=".json,application/json" hidden>
         </div>
         <p class="tally-msg" id="tallyMsg" role="status" hidden></p>
@@ -988,7 +988,7 @@
       <ol class="help-steps">
         <li>
           <h3>輸入姓名</h3>
-          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動記錄在左邊的「紀錄」（輸或和局不記錄）。</p>
+          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄）。</p>
         </li>
         <li>
           <h3>選擇強弱</h3>
@@ -1704,7 +1704,7 @@
     return s >= 60 ? `${Math.floor(s / 60)}'${pad2(s % 60)}s` : `${s}s`;
   }
 
-  const TOP_N = 10; // 紀錄只秀前十名（保存與匯出是前 50 名）
+  const TOP_N = 10; // 排名只秀前十名（保存與匯出是前 50 名）
   const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
   function drawTally() {
     const list = document.getElementById("records");
@@ -1746,9 +1746,9 @@
     document.getElementById("clearRecords").hidden = !!SHEET_API;
     const src = document.getElementById("tallySrc");
     src.hidden = !SHEET_API;
-    src.textContent = sharedOn === null ? "正在讀取共用紀錄…"
-      : sharedOn ? "共用紀錄：所有人看到的是同一份"
-      : `連不上共用紀錄，先顯示這台的紀錄` + (pendingUp.length ? `（${pendingUp.length} 筆待送，連上後自動補送）` : "");
+    src.textContent = sharedOn === null ? "正在讀取共用排名…"
+      : sharedOn ? "共用排名：所有人看到的是同一份"
+      : `連不上共用排名，先顯示這台的排名` + (pendingUp.length ? `（${pendingUp.length} 筆待送，連上後自動補送）` : "");
   }
 
   // 開局視窗：每局開始（載入、重新開始、再來一局）先輸入名字、選難易度；
@@ -1829,7 +1829,7 @@
     const t = new Date();
     const stamp = `${t.getFullYear()}${pad2(t.getMonth() + 1)}${pad2(t.getDate())}-${pad2(t.getHours())}${pad2(t.getMinutes())}`;
     const data = { app: "othello6", kind: "tally", version: 1, exportedAt: t.toISOString(), records };
-    const filename = `othello6-紀錄-${stamp}.json`;
+    const filename = `othello6-排名-${stamp}.json`;
     const text = JSON.stringify(data, null, 2);
     const count = records.length;
     const downloads = claudeRT ? await downloadsReady : null;
@@ -1906,7 +1906,7 @@
   });
 
   document.getElementById("clearRecords").addEventListener("click", () => {
-    if (!confirm("確定清除所有紀錄？")) return;
+    if (!confirm("確定清除所有排名？")) return;
     records = [];
     try { localStorage.removeItem(TALLY_KEY); } catch (e) {}
     showTallyMsg("");
