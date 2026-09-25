@@ -254,11 +254,11 @@
     overflow-y: auto;
     border-top: 1px solid var(--rule);
   }
-  /* 一局一行（只記勝局）：名字、難易度、比分、日期、對局長度；各欄固定寬度讓上下對齊，
+  /* 一局一行（只記勝局，列前十名）：名次、名字、難易度、比分、日期、對局長度；各欄固定寬度讓上下對齊，
      名字太長以刪節號收尾，滑鼠停留看完整內容（含時分） */
   .records li {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 36px 46px 46px 56px;
+    grid-template-columns: 22px minmax(0, 1fr) 36px 46px 46px 56px;
     align-items: center;
     gap: 6px;
     padding: 8px 0;
@@ -267,6 +267,7 @@
     white-space: nowrap;
   }
   .records li.empty { display: block; white-space: normal; font-size: 14px; color: var(--ink-soft); }
+  .records .no { text-align: right; font: 700 15px var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
   .records .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
   .records .badge { text-align: center; padding: 2px 0; }
   .records .sc { text-align: center; }
@@ -1694,22 +1695,25 @@
     return s >= 60 ? `${Math.floor(s / 60)}'${pad2(s % 60)}s` : `${s}s`;
   }
 
+  const TOP_N = 10; // 紀錄只秀前十名（保存與匯出仍是全部）
   const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
   function drawTally() {
     const list = document.getElementById("records");
     list.innerHTML = "";
-    // 只列勝局（以前記下的輸、和局也不顯示）；依難易度（最強、強、中、弱）排，同難度新的在前
+    // 只列勝局（以前記下的輸、和局也不顯示）；依難易度（最強、強、中、弱）排，同難度對局秒數少的在前
+    // （秒數相同新的在前），只秀前十名
     const rank = { expert: 0, hard: 1, normal: 2, easy: 3 };
     const shown = records.filter(r => r.result === "win")
-      .sort((x, y) => (rank[x.level] ?? 9) - (rank[y.level] ?? 9) || y.at - x.at);
+      .sort((x, y) => (rank[x.level] ?? 9) - (rank[y.level] ?? 9) || x.secs - y.secs || y.at - x.at)
+      .slice(0, TOP_N);
     if (!shown.length) {
       const li = document.createElement("li");
       li.className = "empty";
       li.textContent = "尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局與兩人對下不記錄）";
       list.appendChild(li);
     }
-    for (const r of shown) {
-      // 一局一行：名字、難易度、比分（玩家:電腦）、日期、對局長度；玩家執哪色與時分只放在滑鼠停留提示
+    for (const [i, r] of shown.entries()) {
+      // 一局一行：名次、名字、難易度、比分（玩家:電腦）、日期、對局長度；玩家執哪色與時分只放在滑鼠停留提示
       const li = document.createElement("li");
       const cell = (tag, cls, text) => {
         const el = document.createElement(tag);
@@ -1718,6 +1722,7 @@
         return el;
       };
       li.append(
+        cell("span", "no", String(i + 1)),
         cell("b", "nm", r.name),
         cell("span", `lv ${r.level}`, LEVELS[r.level] || r.level),
         cell("span", "sc", `${r.me}:${r.ai}`),
