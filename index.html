@@ -101,6 +101,8 @@
     color: var(--brass);
     margin-bottom: 12px;
   }
+  /* 提示標題後的小字：「（勾選後不會寫進排名）」 */
+  .card h2.big-title .hint-note { font-size: 14px; font-weight: 400; letter-spacing: .04em; color: var(--ink-soft); }
   .help-link {
     color: var(--brass);
     font-weight: 700;
@@ -325,6 +327,9 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--rule);
   }
+  /* 建議一手＋左邊的小字「使用後／不寫進排名」：折成兩行靠右，少佔寬度，手機上不擠掉玩家名字 */
+  .hint-side { flex: none; display: flex; align-items: center; gap: 6px; }
+  .hint-warn { font-size: 13px; line-height: 1.25; text-align: right; color: var(--ink-soft); white-space: nowrap; }
   .turn-row #hint { flex: none; padding: 6px 9px; font-size: 14px; letter-spacing: .02em; }
   .turn-line {
     display: flex;
@@ -428,7 +433,7 @@
     animation: drop .22s ease-out;
   }
   .disc[data-owner="W"] { transform: rotateY(180deg); }
-  /* 提示＞翻面慢一點：翻面動畫拉長為 1.5 秒 */
+  /* 操作＞翻面慢一點：翻面動畫拉長為 1.5 秒 */
   .board.slowflip .disc { transition-duration: 1.5s; }
   .disc .face {
     position: absolute;
@@ -833,6 +838,7 @@
         <h2 class="big-title">排名</h2>
         <ol class="records" id="records"><li class="empty">尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局與兩人對下不記錄）</li></ol>
         <div class="tally-acts">
+          <button class="linkbtn" id="refreshRecords" type="button" hidden>更新排名</button>
           <button class="linkbtn" id="exportRecords" type="button">匯出排名</button>
           <button class="linkbtn" id="importRecords" type="button">匯入排名</button>
           <button class="linkbtn" id="clearRecords" type="button">清除排名</button>
@@ -880,7 +886,10 @@
           <strong id="turnTitle">輪到白棋</strong>
           <span class="now-player" id="playerTag" title="玩家"><b id="playerName">玩家</b></span>
         </p>
-        <button class="ghostbtn" id="hint">建議一手</button>
+        <span class="hint-side">
+          <small class="hint-warn" id="hintWarn">使用後<br>不寫進排名</small>
+          <button class="ghostbtn" id="hint" aria-describedby="hintWarn">建議一手</button>
+        </span>
       </div>
       <div class="count-row" aria-label="目前子數">
         <span class="count" id="rowB"><span class="pip" data-side="B"></span>黑棋<b class="score-n" id="scoreB">2</b></span>
@@ -919,11 +928,19 @@
             <input type="checkbox" id="aiStep" checked autocomplete="off">
             <span>逐步進行（手動確認）</span>
           </label>
+          <label class="opt on" id="slowOpt">
+            <input type="checkbox" id="slowFlip" checked autocomplete="off">
+            <span>翻面慢一點</span>
+          </label>
+          <label class="opt on" id="soundOpt">
+            <input type="checkbox" id="soundOn" checked autocomplete="off">
+            <span>聲音（選子、翻面）</span>
+          </label>
         </div>
       </section>
 
       <section class="card">
-        <h2 class="big-title">提示</h2>
+        <h2 class="big-title">提示<small class="hint-note">（勾選後不會寫進排名）</small></h2>
         <div class="controls">
           <label class="opt" id="flipOpt">
             <input type="checkbox" id="showFlip" autocomplete="off">
@@ -936,14 +953,6 @@
           <label class="opt" id="rateOpt">
             <input type="checkbox" id="showRate" autocomplete="off">
             <span>滑鼠移到落點（或點選）時顯示勝率</span>
-          </label>
-          <label class="opt on" id="slowOpt">
-            <input type="checkbox" id="slowFlip" checked autocomplete="off">
-            <span>翻面慢一點</span>
-          </label>
-          <label class="opt on" id="soundOpt">
-            <input type="checkbox" id="soundOn" checked autocomplete="off">
-            <span>聲音（選子、翻面）</span>
           </label>
         </div>
       </section>
@@ -988,7 +997,7 @@
       <ol class="help-steps">
         <li>
           <h3>輸入姓名</h3>
-          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄）。</p>
+          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或按過「建議一手」，也不記錄）。排名是共用的：所有人看到的是同一份。</p>
         </li>
         <li>
           <h3>選擇強弱</h3>
@@ -1000,7 +1009,7 @@
         </li>
         <li class="opt">
           <h3>可選想要的<b class="hl">提示</b>（非必要）</h3>
-          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率（這三項預設關閉，想要再打開），以及翻面慢一點、聲音。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置。</p>
+          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率（這三項預設關閉，想要再打開；對局中勾選任一項，這局贏了也不會寫進排名）。「翻面慢一點」和「聲音」在「操作」卡片。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置（同樣算用了提示，這局不會寫進排名）。</p>
         </li>
       </ol>
       <section class="help-rules" aria-labelledby="rulesTitle">
@@ -1040,8 +1049,9 @@
   let tip = null;
   let showFlip = false; // 提示＞被翻子的黃線（預設關閉）
   let showRate = false; // 提示＞滑鼠移到落點時顯示勝率（預設關閉）
-  let slowFlip = true; // 提示＞翻面慢一點（翻面動畫 1.5 秒）
-  let soundOn = true;  // 提示＞聲音
+  let hinted = false;   // 本局開過任一項提示（黃線、落子提示、勝率）或按過建議一手：贏了也不寫進排名
+  let slowFlip = true; // 操作＞翻面慢一點（翻面動畫 1.5 秒）
+  let soundOn = true;  // 操作＞聲音
   let hoverIdx = null; // 滑鼠（或鍵盤焦點）目前停在哪一格
   let rateCache = { key: "", scores: null, depth: 0 }; // 同一盤面、同一方各點往後算的局面分數
 
@@ -1494,6 +1504,7 @@
     over = false;
     log = [];
     moves = legalMoves(board, turn);
+    hinted = showHint || showFlip || showRate;
     openSetup();
     render();
   }
@@ -1616,7 +1627,8 @@
   let pendingUp = [];
   try { pendingUp = JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { pendingUp = []; }
   if (!Array.isArray(pendingUp)) pendingUp = [];
-  let sharedOn = null; // 共用計分板：null＝還沒連過，true＝最近一次連上，false＝連不上
+  let sharedOn = null; // 共用計分板：null＝還沒連過（或正在重讀），true＝最近一次連上，false＝連不上
+  let lastSync = 0;    // 最近一次連上共用計分板的時間
   const entryName = document.getElementById("entryName");
 
   function addRecord() {
@@ -1625,6 +1637,7 @@
     const cnt = { B: board.filter(v => v === "B").length, W: board.filter(v => v === "W").length };
     const d = cnt[me] - cnt[aiSide];
     if (d <= 0) return; // 只記勝局，輸或和局不記錄
+    if (hinted) return; // 本局開過提示不記錄
     const rec = {
       name: playerName,
       result: d > 0 ? "win" : d < 0 ? "lose" : "draw",
@@ -1680,6 +1693,7 @@
           keepTop();
           saveRecords();
           sharedOn = true;
+          lastSync = Date.now();
           if (pendingUp.length) syncAgain = true;
         } catch (e) {
           sharedOn = false;
@@ -1688,7 +1702,9 @@
         drawTally();
       } while (syncAgain);
       syncing = null;
+      drawTally(); // 「更新排名」按鈕恢復可按
     })();
+    drawTally(); // 讀取中：「更新排名」按鈕顯示「更新中…」並停用
     return syncing;
   }
 
@@ -1745,10 +1761,15 @@
     document.getElementById("exportRecords").disabled = !records.length;
     // 共用時清除只會清掉本機快取、下次又讀回來，所以不提供；要刪請到試算表
     document.getElementById("clearRecords").hidden = !!SHEET_API;
+    // 共用時可手動重讀試算表，看別人剛登上的成績；讀取中停用避免連按
+    const refresh = document.getElementById("refreshRecords");
+    refresh.hidden = !SHEET_API;
+    refresh.disabled = !!syncing;
+    refresh.textContent = syncing ? "更新中…" : "更新排名";
     const src = document.getElementById("tallySrc");
     src.hidden = !SHEET_API;
     src.textContent = sharedOn === null ? "正在讀取共用排名…"
-      : sharedOn ? "共用排名：所有人看到的是同一份"
+      : sharedOn ? `${pad2(new Date(lastSync).getHours())}:${pad2(new Date(lastSync).getMinutes())} 更新`
       : `連不上共用排名，先顯示這台的排名` + (pendingUp.length ? `（${pendingUp.length} 筆待送，連上後自動補送）` : "");
   }
 
@@ -1823,6 +1844,12 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
+
+  document.getElementById("refreshRecords").addEventListener("click", () => {
+    if (syncing) return;
+    sharedOn = null;
+    syncShared();
+  });
 
   const exportBtn = document.getElementById("exportRecords");
   exportBtn.addEventListener("click", async () => {
@@ -2139,7 +2166,8 @@
       scoreEl.setAttribute("aria-label", `${NAME[L]}${role(L)} ${cnt[L]} 子，${NAME[R]}${role(R)} ${cnt[R]} 子`);
       document.getElementById("resultNote").textContent = winner
         ? `${NAME[winner]}多 ${Math.abs(b - w)} 子` +
-          (placed < N * N ? `，棋盤尚餘 ${N * N - placed} 格但雙方皆無棋可下` : "")
+          (placed < N * N ? `，棋盤尚餘 ${N * N - placed} 格但雙方皆無棋可下` : "") +
+          (aiOn && hinted && winner !== aiSide ? "（本局開過提示，不寫進排名）" : "")
         : `雙方各 ${b} 子`;
     } else {
       disc.dataset.side = turn;
@@ -2205,6 +2233,7 @@
   const showBox = document.getElementById("showHint");
   showBox.addEventListener("change", () => {
     showHint = showBox.checked;
+    if (showHint && !over) hinted = true;
     document.getElementById("hintOpt").classList.toggle("on", showHint);
     boardEl.classList.toggle("nohint", !showHint);
     render();
@@ -2214,6 +2243,7 @@
   const flipBox = document.getElementById("showFlip");
   flipBox.addEventListener("change", () => {
     showFlip = flipBox.checked;
+    if (showFlip && !over) hinted = true;
     document.getElementById("flipOpt").classList.toggle("on", showFlip);
     boardEl.classList.toggle("noflipline", !showFlip);
   });
@@ -2240,6 +2270,7 @@
   const rateBox = document.getElementById("showRate");
   rateBox.addEventListener("change", () => {
     showRate = rateBox.checked;
+    if (showRate && !over) hinted = true;
     document.getElementById("rateOpt").classList.toggle("on", showRate);
     drawRate();
   });
@@ -2304,6 +2335,7 @@
     render();
   });
   hintBtn.addEventListener("click", () => {
+    hinted = true; // 建議一手也算用了提示，這局不寫進排名（按鈕留在參考欄，手機不用往下捲）
     // 背景已在算這個盤面就等它算完（不卡畫面），否則當場算
     const c = currentRates(false);
     if (rateWorker && c.asked && !c.scores) {
