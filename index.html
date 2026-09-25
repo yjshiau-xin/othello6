@@ -13,6 +13,10 @@
     --rule: #CDC4AF;
     --brass: #8A6C16;
     --brass-line: #C8A44D;
+    --lv-easy: #2E7D4F;
+    --lv-normal: #2F6DB0;
+    --lv-hard: #AD5A14;
+    --lv-expert: #B8322A;
 
     --felt: #1F5C43;
     --felt-deep: #17452F;
@@ -36,6 +40,10 @@
       --rule: #2C3833;
       --brass: #C8A44D;
       --brass-line: #C8A44D;
+      --lv-easy: #6FCF97;
+      --lv-normal: #7FB2F0;
+      --lv-hard: #F0A15A;
+      --lv-expert: #F07C72;
     }
   }
   :root[data-theme="dark"] {
@@ -46,6 +54,10 @@
     --rule: #2C3833;
     --brass: #C8A44D;
     --brass-line: #C8A44D;
+    --lv-easy: #6FCF97;
+    --lv-normal: #7FB2F0;
+    --lv-hard: #F0A15A;
+    --lv-expert: #F07C72;
   }
 
   * { box-sizing: border-box; }
@@ -242,24 +254,29 @@
     overflow-y: auto;
     border-top: 1px solid var(--rule);
   }
-  /* 一局一行，各欄固定寬度讓上下對齊；名字太長以刪節號收尾，滑鼠停留看完整內容 */
+  /* 一局一行（只記勝局）：名字、難易度、比分、日期、對局長度；各欄固定寬度讓上下對齊，
+     名字太長以刪節號收尾，滑鼠停留看完整內容（含時分） */
   .records li {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 22px 30px 42px 82px 46px;
+    grid-template-columns: minmax(0, 1fr) 36px 46px 46px 56px;
     align-items: center;
-    gap: 5px;
-    padding: 7px 0;
+    gap: 6px;
+    padding: 8px 0;
     border-bottom: 1px solid var(--rule);
-    font-size: 13px;
+    font-size: 17px;
     white-space: nowrap;
   }
-  .records li.empty { display: block; white-space: normal; color: var(--ink-soft); }
+  .records li.empty { display: block; white-space: normal; font-size: 14px; color: var(--ink-soft); }
   .records .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
   .records .badge { text-align: center; padding: 2px 0; }
   .records .sc { text-align: center; }
-  .records .lv { text-align: center; color: var(--ink-soft); }
+  .records .lv { text-align: center; font-weight: 700; color: var(--ink-soft); }
+  .records .lv.easy { color: var(--lv-easy); }
+  .records .lv.normal { color: var(--lv-normal); }
+  .records .lv.hard { color: var(--lv-hard); }
+  .records .lv.expert { color: var(--lv-expert); }
   .records .sc, .records .at, .records .du {
-    font: 12px var(--mono);
+    font: 15px var(--mono);
     font-variant-numeric: tabular-nums;
     color: var(--ink-soft);
   }
@@ -810,10 +827,10 @@
   <h1 class="sr-only">六路黑白棋</h1>
 
   <main class="game">
-    <aside class="tally" aria-label="計分板">
+    <aside class="tally" aria-label="紀錄">
       <section class="card">
-        <h2 class="big-title">計分板</h2>
-        <ol class="records" id="records"><li class="empty">尚無紀錄。開局時輸入名字，和電腦下完一局就會自動登上計分板（兩人對下不計分）</li></ol>
+        <h2 class="big-title">紀錄</h2>
+        <ol class="records" id="records"><li class="empty">尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局與兩人對下不記錄）</li></ol>
         <div class="tally-acts">
           <button class="linkbtn" id="exportRecords" type="button">匯出紀錄</button>
           <button class="linkbtn" id="importRecords" type="button">匯入紀錄</button>
@@ -836,7 +853,7 @@
               <strong id="resultTitle">黑棋獲勝</strong>
               <p class="result-score" id="resultScore">● 2 ： 2 ○</p>
               <p class="result-note" id="resultNote"></p>
-              <p class="entry-done" id="entryDone" hidden>已登上計分板</p>
+              <p class="entry-done" id="entryDone" hidden>已記錄</p>
               <button class="act" id="again">再來一局</button>
             </div>
           </div>
@@ -970,7 +987,7 @@
       <ol class="help-steps">
         <li>
           <h3>輸入姓名</h3>
-          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。和電腦下完一局，名字會自動登上左邊的計分板。</p>
+          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動記錄在左邊的「紀錄」（輸或和局不記錄）。</p>
         </li>
         <li>
           <h3>選擇強弱</h3>
@@ -1567,7 +1584,7 @@
     for (let k = 0; k < n; k++) knock(ac, t + dur * 0.45 + k * 0.035, 0.55, 1500 + k * 90);
   }
 
-  // 計分板：和電腦下完的每一局記下名字、勝方、難易度、比分與時間，存在這台瀏覽器裡。
+  // 計分板：贏了電腦的每一局記下名字、難易度、比分與時間（輸、和局不記錄），存在這台瀏覽器裡。
   // 讀寫都包在 try 裡：無痕視窗或封鎖網站資料時照樣能玩，只是不保留紀錄。
   // 有設定 SHEET_API 時改用共用計分板（Google 試算表，見 scoreboard_apps_script.gs）：
   // 所有人讀寫同一份，這台瀏覽器的紀錄只當快取；連不上時先記在 PENDING_KEY，下次連上再補送。
@@ -1579,10 +1596,11 @@
   const MAX_RECORDS = 50;
   let records = [];
   let gameStartAt = Date.now();
-  // 名字在開局視窗輸入；和電腦下完一局就自動登上計分板。saved 表示這局已登錄
+  // 名字在開局視窗輸入；贏了電腦就自動登上計分板。saved 表示這局已登錄
   let playerName = "玩家", saved = false;
   try { records = JSON.parse(localStorage.getItem(TALLY_KEY)) || []; } catch (e) { records = []; }
   if (!Array.isArray(records)) records = [];
+  records = records.filter(r => r && r.result === "win"); // 只記勝局：以前存的輸、和局一併清掉
   let pendingUp = [];
   try { pendingUp = JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { pendingUp = []; }
   if (!Array.isArray(pendingUp)) pendingUp = [];
@@ -1594,6 +1612,7 @@
     const me = foe(aiSide);
     const cnt = { B: board.filter(v => v === "B").length, W: board.filter(v => v === "W").length };
     const d = cnt[me] - cnt[aiSide];
+    if (d <= 0) return; // 只記勝局，輸或和局不記錄
     const rec = {
       name: playerName,
       result: d > 0 ? "win" : d < 0 ? "lose" : "draw",
@@ -1643,7 +1662,7 @@
           if (!data || !data.ok || !Array.isArray(data.records)) throw new Error("bad reply");
           pendingUp = pendingUp.filter(r => !batch.includes(r));
           savePending();
-          const remote = data.records.map(cleanRecord).filter(Boolean);
+          const remote = data.records.map(cleanRecord).filter(r => r && r.result === "win");
           const have = new Set(remote.map(recordKey));
           records = pendingUp.filter(r => !have.has(recordKey(r))).concat(remote);
           records.sort((x, y) => y.at - x.at);
@@ -1667,27 +1686,30 @@
     const t = new Date(ms);
     return `${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())}`;
   }
+  function fmtDay(ms) {
+    const t = new Date(ms);
+    return `${t.getMonth() + 1}/${t.getDate()}`;
+  }
   function fmtSecs(s) {
     return s >= 60 ? `${Math.floor(s / 60)}'${pad2(s % 60)}s` : `${s}s`;
   }
 
   const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
-  const RESULT_MARK = { win: "勝", lose: "敗", draw: "和" }; // 一行放不下三個字，標籤只寫一個字（玩家的角度）
   function drawTally() {
     const list = document.getElementById("records");
     list.innerHTML = "";
-    if (!records.length) {
+    // 只列勝局（以前記下的輸、和局也不顯示）；依難易度（最強、強、中、弱）排，同難度新的在前
+    const rank = { expert: 0, hard: 1, normal: 2, easy: 3 };
+    const shown = records.filter(r => r.result === "win")
+      .sort((x, y) => (rank[x.level] ?? 9) - (rank[y.level] ?? 9) || y.at - x.at);
+    if (!shown.length) {
       const li = document.createElement("li");
       li.className = "empty";
-      li.textContent = "尚無紀錄。開局時輸入名字，和電腦下完一局就會自動登上計分板（兩人對下不計分）";
+      li.textContent = "尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局與兩人對下不記錄）";
       list.appendChild(li);
     }
-    // 顯示順序：先看勝負（勝、和、敗），再看難易度（最強、強、中、弱），最後新的在前（保留的仍是最近 50 局）
-    const rank = { win: 0, draw: 1, lose: 2, expert: 0, hard: 1, normal: 2, easy: 3 };
-    const by = k => (x, y) => (rank[x[k]] ?? 9) - (rank[y[k]] ?? 9);
-    const shown = records.slice().sort((x, y) => by("result")(x, y) || by("level")(x, y) || y.at - x.at);
     for (const r of shown) {
-      // 一局一行：名字、勝方、難易度、比分（玩家:電腦）、結束時間、對局長度；玩家執哪色只放在滑鼠停留提示
+      // 一局一行：名字、難易度、比分（玩家:電腦）、日期、對局長度；玩家執哪色與時分只放在滑鼠停留提示
       const li = document.createElement("li");
       const cell = (tag, cls, text) => {
         const el = document.createElement(tag);
@@ -1697,10 +1719,9 @@
       };
       li.append(
         cell("b", "nm", r.name),
-        cell("span", `badge ${r.result}`, RESULT_MARK[r.result] || ""),
-        cell("span", "lv", LEVELS[r.level] || r.level),
+        cell("span", `lv ${r.level}`, LEVELS[r.level] || r.level),
         cell("span", "sc", `${r.me}:${r.ai}`),
-        cell("span", "at", fmtWhen(r.at)),
+        cell("span", "at", fmtDay(r.at)),
         cell("span", "du", fmtSecs(r.secs))
       );
       li.title = `${r.name} · ${RESULT_TEXT[r.result] || ""} · ${LEVELS[r.level] || r.level} · ` +
@@ -1713,9 +1734,9 @@
     document.getElementById("clearRecords").hidden = !!SHEET_API;
     const src = document.getElementById("tallySrc");
     src.hidden = !SHEET_API;
-    src.textContent = sharedOn === null ? "正在讀取共用計分板…"
-      : sharedOn ? "共用計分板：所有人看到的是同一份"
-      : `連不上共用計分板，先顯示這台的紀錄` + (pendingUp.length ? `（${pendingUp.length} 筆待送，連上後自動補送）` : "");
+    src.textContent = sharedOn === null ? "正在讀取共用紀錄…"
+      : sharedOn ? "共用紀錄：所有人看到的是同一份"
+      : `連不上共用紀錄，先顯示這台的紀錄` + (pendingUp.length ? `（${pendingUp.length} 筆待送，連上後自動補送）` : "");
   }
 
   // 開局視窗：每局開始（載入、重新開始、再來一局）先輸入名字、選難易度；
@@ -1796,7 +1817,7 @@
     const t = new Date();
     const stamp = `${t.getFullYear()}${pad2(t.getMonth() + 1)}${pad2(t.getDate())}-${pad2(t.getHours())}${pad2(t.getMinutes())}`;
     const data = { app: "othello6", kind: "tally", version: 1, exportedAt: t.toISOString(), records };
-    const filename = `othello6-計分板-${stamp}.json`;
+    const filename = `othello6-紀錄-${stamp}.json`;
     const text = JSON.stringify(data, null, 2);
     const count = records.length;
     const downloads = claudeRT ? await downloadsReady : null;
@@ -1835,13 +1856,14 @@
     let data;
     try { data = JSON.parse(text); } catch (e) { return "匯入失敗：不是 JSON 檔"; }
     const list = Array.isArray(data) ? data : data && Array.isArray(data.records) ? data.records : null;
-    if (!list) return "匯入失敗：檔案裡沒有計分紀錄";
+    if (!list) return "匯入失敗：檔案裡沒有紀錄";
     const seen = new Set(records.map(recordKey));
-    let added = 0, dup = 0, bad = 0;
+    let added = 0, dup = 0, bad = 0, notWin = 0;
     const fresh = [];
     for (const raw of list) {
       const r = cleanRecord(raw);
       if (!r) { bad++; continue; }
+      if (r.result !== "win") { notWin++; continue; } // 只記勝局
       const k = recordKey(r);
       if (seen.has(k)) { dup++; continue; }
       seen.add(k);
@@ -1855,7 +1877,7 @@
     saveRecords();
     drawTally();
     upload(fresh); // 共用時匯入的紀錄也送上去（試算表那邊會再去重）
-    const skip = [dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去最舊 ${cut} 筆`]
+    const skip = [notWin && `${notWin} 筆輸或和局不匯入`, dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去最舊 ${cut} 筆`]
       .filter(Boolean).join("、");
     return `已匯入 ${added} 筆紀錄` + (skip ? `（${skip}）` : "");
   }
@@ -1873,7 +1895,7 @@
   });
 
   document.getElementById("clearRecords").addEventListener("click", () => {
-    if (!confirm("確定清除所有計分紀錄？")) return;
+    if (!confirm("確定清除所有紀錄？")) return;
     records = [];
     try { localStorage.removeItem(TALLY_KEY); } catch (e) {}
     showTallyMsg("");
@@ -2074,7 +2096,7 @@
     document.getElementById("playerTag").hidden = over;
     const doneEl = document.getElementById("entryDone");
     doneEl.hidden = !(over && saved);
-    doneEl.textContent = `已登上計分板（${playerName}）`;
+    doneEl.textContent = `已記錄（${playerName}）`;
 
     const passEl = document.getElementById("passBox");
     const passShown = !passEl.hidden;
