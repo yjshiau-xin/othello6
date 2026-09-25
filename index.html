@@ -280,6 +280,7 @@
   }
   .tally-acts { display: flex; flex-wrap: wrap; gap: 4px 14px; }
   .tally-msg { margin: 6px 0 0; font-size: 13px; color: var(--brass); }
+  .tally-src { margin: 6px 0 0; font-size: 13px; color: var(--ink-soft); }
   button.linkbtn:disabled { opacity: .45; cursor: default; text-decoration: none; }
 
   /* 參考欄：外框＋左上角「參考」標籤，框住輪到誰、建議一手與目前子數 */
@@ -820,6 +821,7 @@
           <input type="file" id="importFile" accept=".json,application/json" hidden>
         </div>
         <p class="tally-msg" id="tallyMsg" role="status" hidden></p>
+        <p class="tally-src" id="tallySrc" hidden></p>
       </section>
     </aside>
 
@@ -1567,6 +1569,10 @@
 
   // 計分板：和電腦下完的每一局記下名字、勝方、難易度、比分與時間，存在這台瀏覽器裡。
   // 讀寫都包在 try 裡：無痕視窗或封鎖網站資料時照樣能玩，只是不保留紀錄。
+  // 有設定 SHEET_API 時改用共用計分板（Google 試算表，見 scoreboard_apps_script.gs）：
+  // 所有人讀寫同一份，這台瀏覽器的紀錄只當快取；連不上時先記在 PENDING_KEY，下次連上再補送。
+  const SHEET_API = "https://script.google.com/macros/s/AKfycbytkZyrotupW6CSBqUWsUompOAgivUp7NUd3yIucGIMkUXooX0jyRggwM7w51h9dLqO/exec";
+  const PENDING_KEY = "othello6.pending";
   const TALLY_KEY = "othello6.tally";
   const NAME_KEY = "othello6.player";
   const LEVEL_KEY = "othello6.level";
@@ -1577,6 +1583,10 @@
   let playerName = "玩家", saved = false;
   try { records = JSON.parse(localStorage.getItem(TALLY_KEY)) || []; } catch (e) { records = []; }
   if (!Array.isArray(records)) records = [];
+  let pendingUp = [];
+  try { pendingUp = JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { pendingUp = []; }
+  if (!Array.isArray(pendingUp)) pendingUp = [];
+  let sharedOn = null; // 共用計分板：null＝還沒連過，true＝最近一次連上，false＝連不上
   const entryName = document.getElementById("entryName");
 
   function addRecord() {
@@ -1584,7 +1594,7 @@
     const me = foe(aiSide);
     const cnt = { B: board.filter(v => v === "B").length, W: board.filter(v => v === "W").length };
     const d = cnt[me] - cnt[aiSide];
-    records.unshift({
+    const rec = {
       name: playerName,
       result: d > 0 ? "win" : d < 0 ? "lose" : "draw",
       level: aiLevel,
@@ -1593,11 +1603,63 @@
       ai: cnt[aiSide],
       at: Date.now(),
       secs: Math.round((Date.now() - gameStartAt) / 1000)
-    });
+    };
+    records.unshift(rec);
     records.length = Math.min(records.length, MAX_RECORDS);
     saveRecords();
     saved = true;
     drawTally();
+    upload([rec]);
+  }
+
+  // 共用計分板：有待送的紀錄就 POST（回傳最新名單），沒有就 GET；以試算表為準，
+  // 還沒送出的紀錄併在前面。同時只跑一個，期間新增的紀錄排在後面一起送
+  function savePending() {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(pendingUp)); } catch (e) {}
+  }
+  function upload(list) {
+    if (!SHEET_API || !list.length) return;
+    pendingUp.push(...list);
+    savePending();
+    syncShared();
+  }
+  let syncing = null, syncAgain = false;
+  function syncShared() {
+    if (!SHEET_API) return Promise.resolve();
+    if (syncing) { syncAgain = true; return syncing; }
+    syncing = (async () => {
+      do {
+        syncAgain = false;
+        const batch = pendingUp.slice(0, 50);
+        try {
+          const res = batch.length
+            ? await fetch(SHEET_API, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" }, // 免預檢（Apps Script 不回應 OPTIONS）
+                body: JSON.stringify({ records: batch })
+              })
+            : await fetch(SHEET_API, { cache: "no-store" });
+          const data = await res.json();
+          if (!data || !data.ok || !Array.isArray(data.records)) throw new Error("bad reply");
+          pendingUp = pendingUp.filter(r => !batch.includes(r));
+          savePending();
+          const remote = data.records.map(cleanRecord).filter(Boolean);
+          const have = new Set(remote.map(recordKey));
+          records = pendingUp.filter(r => !have.has(recordKey(r))).concat(remote);
+          records.sort((x, y) => y.at - x.at);
+          records.length = Math.min(records.length, MAX_RECORDS);
+          saveRecords();
+          sharedOn = true;
+          if (pendingUp.length) syncAgain = true;
+        } catch (e) {
+          sharedOn = false;
+          syncAgain = false;
+        }
+        drawTally();
+      } while (syncAgain);
+      syncing = null;
+    })();
+    return syncing;
   }
 
   const pad2 = n => String(n).padStart(2, "0");
@@ -1643,6 +1705,13 @@
     }
     document.getElementById("clearRecords").disabled = !records.length;
     document.getElementById("exportRecords").disabled = !records.length;
+    // 共用時清除只會清掉本機快取、下次又讀回來，所以不提供；要刪請到試算表
+    document.getElementById("clearRecords").hidden = !!SHEET_API;
+    const src = document.getElementById("tallySrc");
+    src.hidden = !SHEET_API;
+    src.textContent = sharedOn === null ? "正在讀取共用計分板…"
+      : sharedOn ? "共用計分板：所有人看到的是同一份"
+      : `連不上共用計分板，先顯示這台的紀錄` + (pendingUp.length ? `（${pendingUp.length} 筆待送，連上後自動補送）` : "");
   }
 
   // 開局視窗：每局開始（載入、重新開始、再來一局）先輸入名字、選難易度；
@@ -1669,6 +1738,7 @@
     } catch (e) {}
     markLevel(LEVELS[lv] ? lv : aiLevel);
     setupEl.hidden = false;
+    syncShared(); // 每局開始順便更新共用計分板
     setTimeout(() => {
       if (!setupWait) return;
       entryName.focus();
@@ -1764,6 +1834,7 @@
     if (!list) return "匯入失敗：檔案裡沒有計分紀錄";
     const seen = new Set(records.map(recordKey));
     let added = 0, dup = 0, bad = 0;
+    const fresh = [];
     for (const raw of list) {
       const r = cleanRecord(raw);
       if (!r) { bad++; continue; }
@@ -1771,6 +1842,7 @@
       if (seen.has(k)) { dup++; continue; }
       seen.add(k);
       records.push(r);
+      fresh.push(r);
       added++;
     }
     records.sort((x, y) => y.at - x.at);
@@ -1778,6 +1850,7 @@
     records.length = Math.min(records.length, MAX_RECORDS);
     saveRecords();
     drawTally();
+    upload(fresh); // 共用時匯入的紀錄也送上去（試算表那邊會再去重）
     const skip = [dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去最舊 ${cut} 筆`]
       .filter(Boolean).join("、");
     return `已匯入 ${added} 筆紀錄` + (skip ? `（${skip}）` : "");
