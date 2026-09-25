@@ -17,6 +17,7 @@
     --lv-normal: #2F6DB0;
     --lv-hard: #AD5A14;
     --lv-expert: #B8322A;
+    --ai-red: #B8322A;
 
     --felt: #1F5C43;
     --felt-deep: #17452F;
@@ -44,6 +45,7 @@
       --lv-normal: #7FB2F0;
       --lv-hard: #F0A15A;
       --lv-expert: #F07C72;
+      --ai-red: #F07C72;
     }
   }
   :root[data-theme="dark"] {
@@ -58,6 +60,7 @@
     --lv-normal: #7FB2F0;
     --lv-hard: #F0A15A;
     --lv-expert: #F07C72;
+    --ai-red: #F07C72;
   }
 
   * { box-sizing: border-box; }
@@ -327,8 +330,8 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--rule);
   }
-  /* 建議一手＋左邊的小字「使用後／不寫進排名」：折成兩行靠右，少佔寬度，手機上不擠掉玩家名字 */
-  .hint-side { flex: none; display: flex; align-items: center; gap: 6px; }
+  /* 建議一手＋正下方的小字「使用後不寫進排名」：放在按鈕下面不佔寬度，玩家名字才有空間 */
+  .hint-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
   .hint-warn { font-size: 13px; line-height: 1.25; text-align: right; color: var(--ink-soft); white-space: nowrap; }
   .turn-row #hint { flex: none; padding: 6px 9px; font-size: 14px; letter-spacing: .02em; }
   .turn-line {
@@ -353,10 +356,11 @@
   .count-row .share-note { margin: 0 0 0 auto; white-space: nowrap; }
   .ref .tip { margin-top: 10px; }
   .turn-line .pip { flex: none; }
-  .turn-line small { margin-left: 4px; font: 500 13px var(--sans); letter-spacing: .04em; color: var(--ink-soft); white-space: nowrap; }
+  /* 輪到電腦時「輪到白棋」後面的「電腦」：紅色粗體，和玩家名字一樣 16px（--ai-red，這時不顯示玩家名字） */
+  .turn-line small { margin-left: 4px; font: 700 16px var(--sans); letter-spacing: .04em; color: var(--ai-red); white-space: nowrap; }
   .turn-line strong {
     font-family: var(--serif);
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: .05em;
   }
@@ -888,8 +892,8 @@
           <span class="now-player" id="playerTag" title="玩家"><b id="playerName">玩家</b></span>
         </p>
         <span class="hint-side">
-          <small class="hint-warn" id="hintWarn">使用後<br>不寫進排名</small>
           <button class="ghostbtn" id="hint" aria-describedby="hintWarn">建議一手</button>
+          <small class="hint-warn" id="hintWarn">使用後不寫進排名</small>
         </span>
       </div>
       <div class="count-row" aria-label="目前子數">
@@ -2133,7 +2137,7 @@
 
     const resultEl = document.getElementById("result");
     resultEl.hidden = !over;
-    document.getElementById("playerTag").hidden = over;
+    document.getElementById("playerTag").hidden = over || isAiTurn(); // 輪到電腦時只標「電腦」，不顯示玩家名字
     const doneEl = document.getElementById("entryDone");
     doneEl.hidden = !(over && saved);
     doneEl.textContent = `已記錄（${playerName}）`;
