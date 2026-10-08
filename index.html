@@ -347,7 +347,15 @@
     .hint-warn { font-size: 12px; }
     .hint-warn span { display: block; }
   }
+  /* 窄手機（400px 以下）多了「反悔」排不下：小字回到按鈕下方一行，名字才不被擠掉 */
+  @media (max-width: 400px) {
+    .hint-side { flex-direction: column; align-items: flex-end; gap: 2px; }
+    .hint-warn span { display: inline; }
+  }
   .turn-row #hint { flex: none; padding: 6px 9px; font-size: 14px; letter-spacing: .02em; }
+  /* 反悔＋建議一手並排在同一行 */
+  .hint-btns { display: flex; gap: 5px; }
+  .turn-row #undo { flex: none; padding: 6px 7px; font-size: 14px; letter-spacing: .02em; }
   .turn-line {
     display: flex;
     align-items: center;
@@ -817,9 +825,12 @@
   button.ghostbtn:hover:not(:disabled) { background: var(--felt-deep); transform: scale(1.06); }
   button.ghostbtn:active:not(:disabled) { transform: scale(1.02); }
   button.ghostbtn:disabled { opacity: .45; cursor: not-allowed; }
-  /* 建議一手：暗橘；重新開始：暗紅（白字對比都在 4.5 以上） */
+  /* 建議一手：暗橘；反悔：暗藍；重新開始：暗紅（白字對比都在 4.5 以上） */
   button#hint { background: #A84B16; border-color: #7A360F; }
   button#hint:hover:not(:disabled) { background: #6A2B08; border-color: #4A1E05; }
+  /* 反悔：暗藍，和建議一手（暗橘）區分 */
+  button#undo { background: #2D4E86; border-color: #1E3760; }
+  button#undo:hover:not(:disabled) { background: #1B3260; border-color: #112142; }
   button#restart { background: #8E2626; border-color: #641A1A; }
   button#restart:hover:not(:disabled) { background: #4F1212; border-color: #380C0C; }
   button:focus-visible { outline: 2px solid var(--brass-line); outline-offset: 2px; }
@@ -918,8 +929,11 @@
           <span class="now-player" id="playerTag" title="玩家"><b id="playerName">玩家</b></span>
         </p>
         <span class="hint-side">
-          <button class="ghostbtn" id="hint" aria-describedby="hintWarn">建議一手</button>
-          <small class="hint-warn" id="hintWarn"><span>還有 3 次</span><span>不影響排名</span></small>
+          <span class="hint-btns">
+            <button class="ghostbtn" id="undo" title="退回上一手（每局第 1 次不影響排名）">反悔</button>
+            <button class="ghostbtn" id="hint" aria-describedby="hintWarn">建議一手</button>
+          </span>
+          <small class="hint-warn" id="hintWarn"><span>建議可 3 次</span><span>不影響排名</span></small>
         </span>
       </div>
       <div class="count-row" aria-label="目前子數">
@@ -1022,7 +1036,7 @@
     </form>
   </div>
 
-  <!-- 會讓這局不寫進排名的操作（開提示、第 4 次建議一手）先跳這個視窗讓玩家選；
+  <!-- 會讓這局不寫進排名的操作（開提示、第 4 次建議一手、第 2 次反悔）先跳這個視窗讓玩家選；
        卡片出現在按下的開關或按鈕旁邊，手機上不用捲回棋盤找 -->
   <div class="warn" id="warnBox" role="alertdialog" aria-modal="true" aria-labelledby="warnTitle" aria-describedby="warnNote" hidden>
     <div class="result-card" id="warnCard">
@@ -1042,7 +1056,7 @@
       <ol class="help-steps">
         <li>
           <h3>輸入姓名</h3>
-          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或「建議一手」用到第 4 次，也不記錄，事先會跳視窗讓你選）。排名是共用的：所有人看到的是同一份。</p>
+          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或「建議一手」用到第 4 次、「反悔」用到第 2 次，也不記錄，事先會跳視窗讓你選）。排名是共用的：所有人看到的是同一份。</p>
         </li>
         <li>
           <h3>選擇強弱</h3>
@@ -1054,14 +1068,14 @@
         </li>
         <li class="opt">
           <h3>可選想要的<b class="hl">提示</b>（非必要）</h3>
-          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率（這三項預設關閉，想要再打開；對局中勾選任一項會先跳視窗確認，選「照樣使用」後這局贏了不會寫進排名）。「翻面慢一點」和「聲音」在「操作」卡片。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置；每局前 3 次不影響排名，第 4 次起這局就不寫進排名（按鈕下方會顯示還剩幾次）。</p>
+          <p>右側「提示」卡片可以開關：被翻子的黃線、落子提示點、移到（或點選）落點時顯示勝率（這三項預設關閉，想要再打開；對局中勾選任一項會先跳視窗確認，選「照樣使用」後這局贏了不會寫進排名）。「翻面慢一點」和「聲音」在「操作」卡片。卡住時也可以按「參考」欄裡的「建議一手」，棋盤會用金圈標出建議的位置；每局前 3 次不影響排名，第 4 次起這局就不寫進排名（按鈕下方會顯示還剩幾次）。下錯了可以按旁邊藍色的「反悔」退回上一手（人機對戰時連同電腦接著下的那手一起退回）；每局第 1 次不影響排名，第 2 次起這局就不寫進排名。</p>
         </li>
       </ol>
       <section class="help-rules" aria-labelledby="rulesTitle">
         <h3 id="rulesTitle">規則與細節</h3>
         <p><b>規則</b>　白棋先行。落子必須夾住對手至少一顆棋子，被夾住的棋子全部翻面。</p>
         <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
-        <p><b>排名</b>　只記人機對戰的勝局（輸、和局與兩人對下不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次，這局贏了就不寫進排名；每局前 3 次建議一手不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
+        <p><b>排名</b>　只記人機對戰的勝局（輸、和局與兩人對下不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次、「反悔」用到第 2 次，這局贏了就不寫進排名；每局前 3 次建議一手、第 1 次反悔不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
         <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：往後算 6～8 步（剩 16 格以內就試著算到終局，比電腦最強更早，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
         <p><b>電腦對手</b>　「黑棋由電腦下」與「白棋由電腦下」兩個勾選框擇一（勾其中一個會自動取消另一個；兩個都不勾則兩人對下），預設電腦執黑。白棋固定先下，所以勾「白棋由電腦下」時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）；對局中切換會直接交換雙方的操控。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
         <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>同樣的判斷但往後算 6～8 步，剩 12 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
@@ -1083,6 +1097,7 @@
   const passOkBtn = document.getElementById("passOk");
   const restartBtn = document.getElementById("restart");
   const hintBtn = document.getElementById("hint");
+  const undoBtn = document.getElementById("undo");
 
   let board, turn, pending, moves, over, log;
   let showHint = false; // 提示＞落子提示：顯示可落子位置的提示點（預設關閉）
@@ -1095,9 +1110,12 @@
   let tip = null;
   let showFlip = false; // 提示＞被翻子的黃線（預設關閉）
   let showRate = false; // 提示＞滑鼠移到落點時顯示勝率（預設關閉）
-  let hinted = false;   // 本局開過任一項提示（黃線、落子提示、勝率）或建議一手超過 3 次：贏了也不寫進排名
+  let hinted = false;   // 本局開過任一項提示（黃線、落子提示、勝率）、建議一手超過 3 次或反悔超過 1 次：贏了也不寫進排名
   const FREE_SUGGEST = 3; // 建議一手每局前 3 次不影響排名，第 4 次起不寫進排名
   let suggestUsed = 0;  // 本局按過幾次建議一手
+  const FREE_UNDO = 1;  // 反悔每局第 1 次不影響排名，第 2 次起不寫進排名
+  let undoUsed = 0;     // 本局按過幾次反悔
+  let undoStack = [];   // 玩家每次落子前的局面（人機對戰時不含電腦那手），反悔時退回
   let warnOpen = false; // 不寫進排名的警告視窗開著：電腦暫停
   let slowFlip = true; // 操作＞翻面慢一點（翻面動畫 1.5 秒）
   let soundOn = true;  // 操作＞聲音
@@ -1555,6 +1573,8 @@
     moves = legalMoves(board, turn);
     hinted = showHint || showFlip || showRate;
     suggestUsed = 0;
+    undoUsed = 0;
+    undoStack = [];
     closeWarn(false);
     openSetup();
     render();
@@ -2011,6 +2031,7 @@
     if (!pending) return;
     playFlip(pending.flips.length);
     tip = null;
+    if (!aiOn || turn !== aiSide) undoStack.push({ board: board.slice(), turn, logLen: log.length });
     board[pending.idx] = turn;
     for (const f of pending.flips) board[f] = turn;
     log.push({ side: turn, at: coord(pending.idx), flips: pending.flips.length });
@@ -2198,7 +2219,7 @@
     document.getElementById("refCpu").title = `電腦難易度：${LEVELS[aiLevel]}`;
     // 分成前後兩段：桌機接成一行放在按鈕下方，手機折成兩行放在按鈕左邊
     const [w1, w2] = hinted ? ["本局", "不寫進排名"]
-      : suggestUsed < FREE_SUGGEST ? [`還有 ${FREE_SUGGEST - suggestUsed} 次`, "不影響排名"] : ["再用將", "不寫進排名"];
+      : suggestUsed < FREE_SUGGEST ? [`建議可 ${FREE_SUGGEST - suggestUsed} 次`, "不影響排名"] : ["再用將", "不寫進排名"];
     warnEl.innerHTML = `<span>${w1}</span><span>${w2}</span>`;
 
     const passEl = document.getElementById("passBox");
@@ -2231,7 +2252,7 @@
       document.getElementById("resultNote").textContent = winner
         ? `${NAME[winner]}多 ${Math.abs(b - w)} 子` +
           (placed < N * N ? `，棋盤尚餘 ${N * N - placed} 格但雙方皆無棋可下` : "") +
-          (aiOn && hinted && winner !== aiSide ? "（本局用了提示，不寫進排名）" : "")
+          (aiOn && hinted && winner !== aiSide ? "（本局用了提示或反悔，不寫進排名）" : "")
         : `雙方各 ${b} 子`;
     } else {
       disc.dataset.side = turn;
@@ -2242,6 +2263,9 @@
     hintBtn.disabled = over || ai || !moves.size || !!rateCache.wantTip;
     hintBtn.textContent = rateCache.wantTip ? "計算中⋯" : "建議一手";
     if (passWait || setupWait || warnOpen) hintBtn.disabled = true;
+    undoBtn.disabled = over || !undoStack.length || passWait || setupWait || warnOpen || !!rateCache.wantTip;
+    undoBtn.title = !aiOn || hinted ? "退回上一手"
+      : undoUsed < FREE_UNDO ? "退回上一手（這次不影響排名）" : "退回上一手（再用將不寫進排名）";
 
     if (!log.length) {
       logEl.innerHTML = '<li class="empty">尚未落子</li>';
@@ -2481,6 +2505,32 @@
       suggest();
       render();
     }, 20);
+  }
+
+  // 反悔：退回玩家上一次落子前（人機對戰時連同電腦接著下的那手），每局第 1 次不影響排名，第 2 次起先警告
+  undoBtn.addEventListener("click", () => {
+    if (undoUsed >= FREE_UNDO && needsWarn()) {
+      askNoRank(`第 ${undoUsed + 1} 次反悔？`, undoBtn, undo);
+      return;
+    }
+    undo();
+  });
+  function undo() {
+    if (over || !undoStack.length) return;
+    const s = undoStack.pop();
+    cancelAi(); // 電腦正在想或等著落子都作廢
+    board = s.board;
+    turn = s.turn;
+    log.length = s.logLen;
+    pending = null;
+    tip = null;
+    passed = null;
+    passWait = false;
+    rateCache.wantTip = false;
+    moves = legalMoves(board, turn);
+    undoUsed++;
+    if (undoUsed > FREE_UNDO && aiOn) hinted = true;
+    render();
   }
 
   restartBtn.addEventListener("click", start);
