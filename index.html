@@ -1943,6 +1943,7 @@
     const int = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
     if (typeof r.name !== "string" || !RESULT_TEXT[r.result] || !LEVELS[r.level] ||
         !SHORT[r.side] || !int(r.me, 0, N * N) || !int(r.ai, 0, N * N) || r.me + r.ai > N * N ||
+        (r.result === "win" && r.me <= r.ai) || // 勝局玩家子數一定比電腦多
         !Number.isFinite(r.at) || !int(r.secs, 0, 1e7)) return null;
     return {
       name: r.name.trim().slice(0, 12) || "玩家", result: r.result, level: r.level,
@@ -1952,7 +1953,9 @@
   // 同一局：結束時間只比到秒（試算表存成日期時間，讀回來的毫秒不保證一樣），和 scoreboard_apps_script.gs 的 keyOf 一致
   const recordKey = r => [Math.floor(r.at / 1000), r.name, r.me, r.ai, r.side, r.level].join("|");
 
-  // 匯入的紀錄併進現有的：同一局（時間、名字、比分都相同）不重複加，依名次保留前 50 名
+  // 匯入的紀錄併進現有的：同一局（時間、名字、比分都相同）不重複加，依名次保留前 50 名。
+  // 只併進這台瀏覽器，不送上共用計分板：檔案內容可以自己編，送上去等於誰都能灌假的勝局
+  // （連上共用計分板後，畫面會以試算表為準，匯入的紀錄只在離線時看得到）
   function importRecords(text) {
     let data;
     try { data = JSON.parse(text); } catch (e) { return "匯入失敗：不是 JSON 檔"; }
@@ -1960,7 +1963,6 @@
     if (!list) return "匯入失敗：檔案裡沒有紀錄";
     const seen = new Set(records.map(recordKey));
     let added = 0, dup = 0, bad = 0, notWin = 0;
-    const fresh = [];
     for (const raw of list) {
       const r = cleanRecord(raw);
       if (!r) { bad++; continue; }
@@ -1969,13 +1971,11 @@
       if (seen.has(k)) { dup++; continue; }
       seen.add(k);
       records.push(r);
-      fresh.push(r);
       added++;
     }
     const cut = keepTop();
     saveRecords();
     drawTally();
-    upload(fresh); // 共用時匯入的紀錄也送上去（試算表那邊會再去重）
     const skip = [notWin && `${notWin} 筆輸或和局不匯入`, dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去排名最後 ${cut} 筆`]
       .filter(Boolean).join("、");
     return `已匯入 ${added} 筆紀錄` + (skip ? `（${skip}）` : "");
