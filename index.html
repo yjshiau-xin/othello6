@@ -247,8 +247,7 @@
     animation: fade .3s ease-out;
   }
   .setup-card { width: min(100%, 320px); margin: 0; text-align: left; }
-  .setup-card .result-eyebrow, .setup-card strong { text-align: center; }
-  .setup-card .result-note { margin-top: 2px; }
+  .setup-card strong { text-align: center; }
   .setup-card > .act { margin-top: 12px; padding: 9px; font-size: 16px; }
   .entry-done { margin: 6px 0 0; font-size: 13px; color: var(--brass); font-weight: 700; }
   .records {
@@ -259,7 +258,7 @@
     overflow-y: auto;
     border-top: 1px solid var(--rule);
   }
-  /* 一局一行（只記勝局，列前十名）：名次、名字、難易度、比分、日期、對局長度；各欄固定寬度讓上下對齊，
+  /* 一局一行（只記勝局，列前 20 名）：名次、名字、難易度、比分、日期、對局長度；各欄固定寬度讓上下對齊，
      名字太長以刪節號收尾，滑鼠停留看完整內容（含時分） */
   .records li {
     display: grid;
@@ -703,28 +702,7 @@
     opacity: 0;
     cursor: inherit;
   }
-  .levels.show span {
-    display: block;
-    padding: 6px 0;
-    border: 1px solid var(--rule);
-    text-align: center;
-    font-size: 13px;
-    color: var(--ink-soft);
-  }
-  .levels.show span:not(.sel) { opacity: .55; }
-  .levels.show span.sel { border-color: var(--brass); color: var(--brass); font-weight: 700; }
-  .levels-note, .now-player { margin: 0 0 0 24px; font-size: 12px; color: var(--ink-soft); }
-  .ai-row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 10px;
-    align-items: center;
-  }
-  .ai-sides { display: grid; gap: 8px; }
-  /* 四格排成一行，垂直置中於兩個勾選框之間 */
-  .ai-row .levels { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; margin: 0; }
-  .ai-row .levels.show span { padding: 5px 0; font-size: 12px; white-space: nowrap; }
-  .ai-row + .levels-note { margin-left: 0; }
+  .now-player { margin: 0 0 0 24px; font-size: 12px; color: var(--ink-soft); }
   .now-player { font-size: 14px; }
   /* 參考欄「輪到白棋」旁的玩家名字：空間不夠時以刪節號收尾，不擠掉建議一手 */
   .turn-line .now-player {
@@ -760,6 +738,7 @@
   .now-player b { color: var(--ink); font-family: var(--mono); letter-spacing: .05em; }
   .levels.pick { margin: 0; }
   .levels.pick label { font-size: 15px; padding: 8px 0; }
+  .levels.sides { grid-template-columns: repeat(3, 1fr); }
   .levels.off { opacity: .42; }
   .levels.off label { cursor: default; }
   .tip {
@@ -950,26 +929,6 @@
         <h2 class="big-title">操作</h2>
         <div class="controls">
           <button class="ghostbtn" id="restart">重新開始</button>
-          <!-- 左：電腦執哪一色　右：本局難易度（一行四格，只顯示） -->
-          <div class="ai-row">
-            <div class="ai-sides">
-              <label class="opt on" id="aiOpt">
-                <input type="checkbox" id="aiBlack" checked autocomplete="off">
-                <span>黑棋由電腦下</span>
-              </label>
-              <label class="opt" id="aiWhiteOpt">
-                <input type="checkbox" id="aiWhite" autocomplete="off">
-                <span>白棋由電腦下</span>
-              </label>
-            </div>
-            <div class="levels show" id="levels" role="img" aria-label="電腦難易度：中">
-              <span data-lv="easy">弱</span>
-              <span data-lv="normal" class="sel">中</span>
-              <span data-lv="hard">強</span>
-              <span data-lv="expert">最強</span>
-            </div>
-          </div>
-          <p class="levels-note">難易度在開局視窗選定，對局中不能更改</p>
           <label class="opt on" id="stepOpt">
             <input type="checkbox" id="aiStep" checked autocomplete="off">
             <span>逐步進行（手動確認）</span>
@@ -1015,13 +974,20 @@
 
   <div class="setup" id="setup" role="dialog" aria-modal="true" aria-labelledby="setupTitle" hidden>
     <form class="result-card setup-card" id="setupForm">
-      <p class="result-eyebrow">新局</p>
       <strong id="setupTitle">開始對局</strong>
       <div class="entry">
         <label for="entryName">輸入名字</label>
         <input id="entryName" maxlength="12" placeholder="玩家" autocomplete="off" enterkeyhint="done">
       </div>
       <div class="entry">
+        <span class="entry-label" id="sideLabel">電腦下哪一色（白棋先下）</span>
+        <div class="levels pick sides" id="sidePick" role="radiogroup" aria-labelledby="sideLabel">
+          <label class="sel"><input type="radio" name="side" value="B" checked autocomplete="off"><span>黑棋</span></label>
+          <label><input type="radio" name="side" value="W" autocomplete="off"><span>白棋</span></label>
+          <label><input type="radio" name="side" value="none" autocomplete="off"><span>兩人對下</span></label>
+        </div>
+      </div>
+      <div class="entry" id="lvEntry">
         <span class="entry-label" id="lvLabel">電腦難易度</span>
         <div class="levels pick" id="lvPick" role="radiogroup" aria-labelledby="lvLabel">
           <label><input type="radio" name="lv" value="easy" autocomplete="off"><span>弱</span></label>
@@ -1029,7 +995,6 @@
           <label><input type="radio" name="lv" value="hard" autocomplete="off"><span>強</span></label>
           <label><input type="radio" name="lv" value="expert" autocomplete="off"><span>最強</span></label>
         </div>
-        <p class="result-note">選定後對局中不能更改；按「重新開始」可重選</p>
       </div>
       <button class="act" type="submit">開始</button>
       <p class="setup-help"><a class="help-link" href="#help">第一次玩？看遊戲說明</a></p>
@@ -1077,7 +1042,7 @@
         <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
         <p><b>排名</b>　只記人機對戰的勝局（輸、和局與兩人對下不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次、「反悔」用到第 2 次，這局贏了就不寫進排名；每局前 3 次建議一手、第 1 次反悔不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
         <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：往後算 6～8 步（剩 16 格以內就試著算到終局，比電腦最強更早，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
-        <p><b>電腦對手</b>　「黑棋由電腦下」與「白棋由電腦下」兩個勾選框擇一（勾其中一個會自動取消另一個；兩個都不勾則兩人對下），預設電腦執黑。白棋固定先下，所以勾「白棋由電腦下」時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）；對局中切換會直接交換雙方的操控。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
+        <p><b>電腦對手</b>　在開局視窗的「電腦下哪一色」選黑棋、白棋或兩人對下，預設電腦執黑；選定後對局中不能更改，要換邊請按「重新開始」重選。白棋固定先下，所以選電腦下白棋時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
         <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>同樣的判斷但往後算 6～8 步，剩 12 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
       </section>
       <button class="act help-back" id="helpBack" type="button">返回遊戲</button>
@@ -1127,7 +1092,7 @@
   const SIM_NOISE_BAND = 0.03;   // 勝率差在取樣誤差內時，改用搜尋分數定勝負
   const CORNERS = new Set([0, N - 1, N * (N - 1), N * N - 1]);
 
-  let aiSide = "B"; // 電腦執哪一色；勾「白棋由電腦下」時為白（白棋固定先下）
+  let aiSide = "B"; // 電腦執哪一色，在開局視窗選；選白棋時電腦先下（白棋固定先下）
   const AI_DEPTH = 4;
   // 難易度：在「依估計勝率排好的落點名單」上取不同名次（強另走搜尋，見 aiPick）
   const LEVELS = { easy: "弱", normal: "中", hard: "強", expert: "最強" };
@@ -1676,6 +1641,7 @@
   const TALLY_KEY = "othello6.tally";
   const NAME_KEY = "othello6.player";
   const LEVEL_KEY = "othello6.level";
+  const SIDE_KEY = "othello6.aiSide"; // 開局視窗選的電腦執色：B／W／none（兩人對下）
   const MAX_RECORDS = 50;
   // 排名：難易度（最強、強、中、弱）→ 子數差距（玩家減電腦，大的在前）→ 對局秒數（少的在前）→ 時間（新的在前）。
   // 畫面排序與保留前 50 名都用這個，和試算表 scoreboard_apps_script.gs 的 byRank 一致
@@ -1792,12 +1758,12 @@
     return s >= 60 ? `${Math.floor(s / 60)}'${pad2(s % 60)}s` : `${s}s`;
   }
 
-  const TOP_N = 10; // 排名只秀前十名（保存與匯出是前 50 名）
+  const TOP_N = 20; // 排名只秀前 20 名（保存與匯出是前 50 名）
   const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
   function drawTally() {
     const list = document.getElementById("records");
     list.innerHTML = "";
-    // 只列勝局（以前記下的輸、和局也不顯示）；依名次（byRank）排，只秀前十名
+    // 只列勝局（以前記下的輸、和局也不顯示）；依名次（byRank）排，只秀前 20 名
     const shown = records.filter(r => r.result === "win")
       .sort(byRank)
       .slice(0, TOP_N);
@@ -1859,14 +1825,34 @@
     box.addEventListener("focus", () => box.parentElement.classList.add("focus"));
     box.addEventListener("blur", () => box.parentElement.classList.remove("focus"));
   }
+  // 電腦執色也在開局視窗選：對局中途換邊會讓輸的一方變成贏，所以開局後就不能改
+  const sideBoxes = [...document.querySelectorAll("#sidePick input")];
+  const lvEntry = document.getElementById("lvEntry");
+  function markSide(v) {
+    for (const b of sideBoxes) {
+      b.checked = b.value === v;
+      b.parentElement.classList.toggle("sel", b.checked);
+    }
+    // 兩人對下用不到難易度
+    lvEntry.querySelector(".levels").classList.toggle("off", v === "none");
+    for (const b of lvBoxes) b.disabled = v === "none";
+  }
+  for (const box of sideBoxes) {
+    box.addEventListener("change", () => { if (box.checked) markSide(box.value); });
+    box.addEventListener("focus", () => box.parentElement.classList.add("focus"));
+    box.addEventListener("blur", () => box.parentElement.classList.remove("focus"));
+  }
+  const curSide = () => (aiOn ? aiSide : "none");
   function openSetup() {
     setupWait = true;
-    let lv = aiLevel;
+    let lv = aiLevel, side = curSide();
     try {
       entryName.value = localStorage.getItem(NAME_KEY) || "";
       lv = localStorage.getItem(LEVEL_KEY) || aiLevel;
+      side = localStorage.getItem(SIDE_KEY) || side;
     } catch (e) {}
     markLevel(LEVELS[lv] ? lv : aiLevel);
+    markSide(["B", "W", "none"].includes(side) ? side : curSide());
     setupEl.hidden = false;
     syncShared(); // 每局開始順便更新共用計分板
     setTimeout(() => {
@@ -1880,11 +1866,14 @@
     playerName = entryName.value.trim() || "玩家";
     const box = lvBoxes.find(b => b.checked);
     aiLevel = box ? box.value : aiLevel;
+    const sideBox = sideBoxes.find(b => b.checked);
+    setAiSide(sideBox ? sideBox.value : curSide());
     try {
       localStorage.setItem(NAME_KEY, playerName);
       localStorage.setItem(LEVEL_KEY, aiLevel);
+      localStorage.setItem(SIDE_KEY, curSide());
     } catch (e) {}
-    showLevel();
+    showPlayer();
     setupEl.hidden = true;
     setupWait = false;
     gameStartAt = Date.now(); // 對局長度從按「開始」起算
@@ -2288,15 +2277,10 @@
     scheduleAi();
   }
 
-  const aiBox = document.getElementById("aiBlack");
-  const aiOpt = document.getElementById("aiOpt");
   const stepBox = document.getElementById("aiStep");
   const stepOpt = document.getElementById("stepOpt");
-  const levelsEl = document.getElementById("levels");
-  // 側欄的難易度只顯示本局在開局視窗選定的值，對局中不能更改
-  function showLevel() {
-    for (const el of levelsEl.children) el.classList.toggle("sel", el.dataset.lv === aiLevel);
-    levelsEl.setAttribute("aria-label", `電腦難易度：${LEVELS[aiLevel]}`);
+  // 本局玩家名字（開局視窗輸入）；難易度只在子數列的「電腦 中」顯示
+  function showPlayer() {
     document.getElementById("playerName").textContent = playerName;
   }
 
@@ -2419,26 +2403,18 @@
     drawRate();
   });
 
-  // 「黑棋由電腦下」「白棋由電腦下」擇一：勾一個就取消另一個；都不勾＝兩人對下。
-  // 對局中切換會直接交換雙方的操控，並清掉尚未確認的選點與建議。
-  const whiteBox = document.getElementById("aiWhite");
-  const whiteOpt = document.getElementById("aiWhiteOpt");
-  function onAiSideChange(box, other) {
-    if (box.checked) other.checked = false;
-    aiOn = aiBox.checked || whiteBox.checked;
-    aiSide = whiteBox.checked ? "W" : "B";
-    aiOpt.classList.toggle("on", aiBox.checked);
-    whiteOpt.classList.toggle("on", whiteBox.checked);
+  // 電腦執色只在開局視窗選（side：B／W／none＝兩人對下），對局中不能切換：
+  // 以前中途換邊會把玩家輸的那方算成電腦，輸了反而變贏。
+  function setAiSide(side) {
+    aiOn = side !== "none";
+    aiSide = side === "W" ? "W" : "B";
     stepBox.disabled = !aiOn;
     stepOpt.classList.toggle("off", !aiOn);
-    levelsEl.classList.toggle("off", !aiOn);
     cancelAi();
     pending = null;
     tip = null;
     render();
   }
-  aiBox.addEventListener("change", () => onAiSideChange(aiBox, whiteBox));
-  whiteBox.addEventListener("change", () => onAiSideChange(whiteBox, aiBox));
 
   stepBox.addEventListener("change", () => {
     aiStep = stepBox.checked;
