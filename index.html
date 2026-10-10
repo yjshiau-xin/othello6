@@ -738,7 +738,7 @@
   .now-player b { color: var(--ink); font-family: var(--mono); letter-spacing: .05em; }
   .levels.pick { margin: 0; }
   .levels.pick label { font-size: 15px; padding: 8px 0; }
-  .levels.sides { grid-template-columns: repeat(3, 1fr); }
+  .levels.sides { grid-template-columns: repeat(2, 1fr); }
   .levels.off { opacity: .42; }
   .levels.off label { cursor: default; }
   .tip {
@@ -856,7 +856,7 @@
     <aside class="tally" aria-label="排名">
       <section class="card">
         <h2 class="big-title">排名</h2>
-        <ol class="records" id="records"><li class="empty">尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局與兩人對下不記錄）</li></ol>
+        <ol class="records" id="records"><li class="empty">尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局不記錄）</li></ol>
         <div class="tally-acts">
           <button class="linkbtn" id="refreshRecords" type="button" hidden>更新排名</button>
           <button class="linkbtn" id="exportRecords" type="button">匯出排名</button>
@@ -980,14 +980,13 @@
         <input id="entryName" maxlength="12" placeholder="玩家" autocomplete="off" enterkeyhint="done">
       </div>
       <div class="entry">
-        <span class="entry-label" id="sideLabel">電腦下哪一色（白棋先下）</span>
+        <span class="entry-label" id="sideLabel">電腦下哪一色</span>
         <div class="levels pick sides" id="sidePick" role="radiogroup" aria-labelledby="sideLabel">
-          <label class="sel"><input type="radio" name="side" value="B" checked autocomplete="off"><span>黑棋</span></label>
-          <label><input type="radio" name="side" value="W" autocomplete="off"><span>白棋</span></label>
-          <label><input type="radio" name="side" value="none" autocomplete="off"><span>兩人對下</span></label>
+          <label class="sel"><input type="radio" name="side" value="B" checked autocomplete="off"><span>黑棋（電腦後）</span></label>
+          <label><input type="radio" name="side" value="W" autocomplete="off"><span>白棋（電腦先）</span></label>
         </div>
       </div>
-      <div class="entry" id="lvEntry">
+      <div class="entry">
         <span class="entry-label" id="lvLabel">電腦難易度</span>
         <div class="levels pick" id="lvPick" role="radiogroup" aria-labelledby="lvLabel">
           <label><input type="radio" name="lv" value="easy" autocomplete="off"><span>弱</span></label>
@@ -1040,9 +1039,9 @@
         <h3 id="rulesTitle">規則與細節</h3>
         <p><b>規則</b>　白棋先行。落子必須夾住對手至少一顆棋子，被夾住的棋子全部翻面。</p>
         <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
-        <p><b>排名</b>　只記人機對戰的勝局（輸、和局與兩人對下不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次、「反悔」用到第 2 次，這局贏了就不寫進排名；每局前 3 次建議一手、第 1 次反悔不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
+        <p><b>排名</b>　只記勝局（輸、和局不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次、「反悔」用到第 2 次，這局贏了就不寫進排名；每局前 3 次建議一手、第 1 次反悔不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
         <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：往後算 6～8 步（剩 16 格以內就試著算到終局，比電腦最強更早，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
-        <p><b>電腦對手</b>　在開局視窗的「電腦下哪一色」選黑棋、白棋或兩人對下，預設電腦執黑；選定後對局中不能更改，要換邊請按「重新開始」重選。白棋固定先下，所以選電腦下白棋時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
+        <p><b>電腦對手</b>　在開局視窗的「電腦下哪一色」選黑棋或白棋，預設電腦執黑；選定後對局中不能更改，要換邊請按「重新開始」重選。白棋固定先下，所以選電腦下白棋時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
         <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>同樣的判斷但往後算 6～8 步，剩 12 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
       </section>
       <button class="act help-back" id="helpBack" type="button">返回遊戲</button>
@@ -1641,7 +1640,7 @@
   const TALLY_KEY = "othello6.tally";
   const NAME_KEY = "othello6.player";
   const LEVEL_KEY = "othello6.level";
-  const SIDE_KEY = "othello6.aiSide"; // 開局視窗選的電腦執色：B／W／none（兩人對下）
+  const SIDE_KEY = "othello6.aiSide"; // 開局視窗選的電腦執色：B／W
   const MAX_RECORDS = 50;
   // 排名：難易度（最強、強、中、弱）→ 子數差距（玩家減電腦，大的在前）→ 對局秒數（少的在前）→ 時間（新的在前）。
   // 畫面排序與保留前 50 名都用這個，和試算表 scoreboard_apps_script.gs 的 byRank 一致
@@ -1770,7 +1769,7 @@
     if (!shown.length) {
       const li = document.createElement("li");
       li.className = "empty";
-      li.textContent = "尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局與兩人對下不記錄）";
+      li.textContent = "尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局不記錄）";
       list.appendChild(li);
     }
     for (const [i, r] of shown.entries()) {
@@ -1827,22 +1826,18 @@
   }
   // 電腦執色也在開局視窗選：對局中途換邊會讓輸的一方變成贏，所以開局後就不能改
   const sideBoxes = [...document.querySelectorAll("#sidePick input")];
-  const lvEntry = document.getElementById("lvEntry");
   function markSide(v) {
     for (const b of sideBoxes) {
       b.checked = b.value === v;
       b.parentElement.classList.toggle("sel", b.checked);
     }
-    // 兩人對下用不到難易度
-    lvEntry.querySelector(".levels").classList.toggle("off", v === "none");
-    for (const b of lvBoxes) b.disabled = v === "none";
   }
   for (const box of sideBoxes) {
     box.addEventListener("change", () => { if (box.checked) markSide(box.value); });
     box.addEventListener("focus", () => box.parentElement.classList.add("focus"));
     box.addEventListener("blur", () => box.parentElement.classList.remove("focus"));
   }
-  const curSide = () => (aiOn ? aiSide : "none");
+  const curSide = () => aiSide;
   function openSetup() {
     setupWait = true;
     let lv = aiLevel, side = curSide();
@@ -1852,7 +1847,7 @@
       side = localStorage.getItem(SIDE_KEY) || side;
     } catch (e) {}
     markLevel(LEVELS[lv] ? lv : aiLevel);
-    markSide(["B", "W", "none"].includes(side) ? side : curSide());
+    markSide(side === "B" || side === "W" ? side : curSide()); // 以前存的「兩人對下」改回上次的執色
     setupEl.hidden = false;
     syncShared(); // 每局開始順便更新共用計分板
     setTimeout(() => {
@@ -2403,7 +2398,7 @@
     drawRate();
   });
 
-  // 電腦執色只在開局視窗選（side：B／W／none＝兩人對下），對局中不能切換：
+  // 電腦執色只在開局視窗選（side：B／W），對局中不能切換：
   // 以前中途換邊會把玩家輸的那方算成電腦，輸了反而變贏。
   function setAiSide(side) {
     aiOn = side !== "none";
