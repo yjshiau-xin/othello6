@@ -270,6 +270,29 @@
     font-size: 17px;
     white-space: nowrap;
   }
+  /* 點一下展開這局的詳細資訊（再點一下收起，同時只開一列） */
+  .records li.rec { cursor: pointer; }
+  .records li.rec:hover, .records li.rec:focus-visible { background: color-mix(in srgb, var(--brass-line) 12%, transparent); outline: none; }
+  .records li.rec.open { background: color-mix(in srgb, var(--brass-line) 16%, transparent); }
+  .records .detail {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 3px 12px;
+    margin: 4px 0 0 28px;
+    font-size: 14px;
+    white-space: normal;
+    color: var(--ink-soft);
+  }
+  .records .detail dt { margin: 0; }
+  .records .detail dd { margin: 0; color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+  /* 名字用黃銅色、難易度用該難度的顏色（和排名列一致），一眼分得出來 */
+  .records .detail dd.v-name { color: var(--brass); font-size: 15px; font-weight: 800; }
+  .records .detail dd.v-lv { font-size: 15px; }
+  .records .detail dd.v-lv.easy { color: var(--lv-easy); }
+  .records .detail dd.v-lv.normal { color: var(--lv-normal); }
+  .records .detail dd.v-lv.hard { color: var(--lv-hard); }
+  .records .detail dd.v-lv.expert { color: var(--lv-expert); }
   .records li.empty { display: block; white-space: normal; font-size: 14px; color: var(--ink-soft); }
   .records .no { text-align: right; font: 700 15px var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
   .records .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
@@ -1021,7 +1044,7 @@
       <ol class="help-steps">
         <li>
           <h3>輸入姓名</h3>
-          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或「建議一手」用到第 4 次、「反悔」用到第 2 次，也不記錄，事先會跳視窗讓你選）。排名是共用的：所有人看到的是同一份。</p>
+          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或「建議一手」用到第 4 次、「反悔」用到第 2 次，也不記錄，事先會跳視窗讓你選）。排名是共用的：所有人看到的是同一份。點排名裡的任一列可以展開這局的詳細資訊（名次、執棋、比分、結束時間、對局長度），再點一下收起。</p>
         </li>
         <li>
           <h3>選擇強弱</h3>
@@ -1758,8 +1781,23 @@
     return s >= 60 ? `${Math.floor(s / 60)}'${pad2(s % 60)}s` : `${s}s`;
   }
 
+  function fmtFull(ms) {
+    const t = new Date(ms);
+    return `${t.getFullYear()}/${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())}`;
+  }
+  function fmtLong(s) {
+    return s >= 60 ? `${Math.floor(s / 60)} 分 ${s % 60} 秒` : `${s} 秒`;
+  }
+  let openRec = null; // 排名裡展開詳細資訊的那一局（recordKey），重畫排名時保持展開
+
   const TOP_N = 20; // 排名只秀前 20 名（保存與匯出是前 50 名）
   const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
+  // 重畫後焦點回到剛點的那一列，鍵盤操作才不會跳掉
+  function focusRec(key) {
+    for (const li of document.querySelectorAll("#records li.rec")) {
+      if (li.dataset.key === key) { li.focus(); break; }
+    }
+  }
   function drawTally() {
     const list = document.getElementById("records");
     list.innerHTML = "";
@@ -1791,7 +1829,39 @@
         cell("span", "du", fmtSecs(r.secs))
       );
       li.title = `${r.name} · ${RESULT_TEXT[r.result] || ""} · ${LEVELS[r.level] || r.level} · ` +
-        `執${SHORT[r.side]} ${r.me}:${r.ai} · ${fmtWhen(r.at)} · ${fmtSecs(r.secs)}`;
+        `執${SHORT[r.side]} ${r.me}:${r.ai} · ${fmtWhen(r.at)} · ${fmtSecs(r.secs)}（點一下看詳細）`;
+      // 點一下（或鍵盤 Enter／空白鍵）展開詳細資訊，再點一下收起；同時只開一列
+      const key = recordKey(r);
+      const open = openRec === key;
+      li.className = open ? "rec open" : "rec";
+      li.tabIndex = 0;
+      li.setAttribute("role", "button");
+      li.setAttribute("aria-expanded", String(open));
+      if (open) {
+        const dl = document.createElement("dl");
+        dl.className = "detail";
+        const diff = r.me - r.ai;
+        for (const [k, v, cls] of [
+          ["名次", `第 ${i + 1} 名`],
+          ["名字", r.name, "v-name"],
+          ["電腦難易度", LEVELS[r.level] || r.level, `v-lv ${r.level}`],
+          ["玩家執棋", `${SHORT[r.side]}棋（${r.side === "W" ? "先下" : "後下"}）`],
+          ["比分", `玩家 ${r.me} : 電腦 ${r.ai}`],
+          ["差距", `贏 ${diff} 子`],
+          ["空格", `${N * N - r.me - r.ai} 格`],
+          ["結束時間", fmtFull(r.at)],
+          ["對局長度", fmtLong(r.secs)]
+        ]) {
+          dl.append(cell("dt", "", k), cell("dd", cls || "", v));
+        }
+        li.appendChild(dl);
+      }
+      const toggle = () => { openRec = openRec === key ? null : key; drawTally(); focusRec(key); };
+      li.addEventListener("click", toggle);
+      li.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+      li.dataset.key = key;
       list.appendChild(li);
     }
     document.getElementById("clearRecords").disabled = !records.length;
