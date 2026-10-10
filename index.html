@@ -980,10 +980,11 @@
         <input id="entryName" maxlength="12" placeholder="玩家" autocomplete="off" enterkeyhint="done">
       </div>
       <div class="entry">
-        <span class="entry-label" id="sideLabel">電腦下哪一色</span>
+        <span class="entry-label" id="sideLabel">玩家選棋</span>
+        <!-- 選項的值是電腦執色：玩家下白棋＝電腦執黑 B，玩家下黑棋＝電腦執白 W -->
         <div class="levels pick sides" id="sidePick" role="radiogroup" aria-labelledby="sideLabel">
-          <label class="sel"><input type="radio" name="side" value="B" checked autocomplete="off"><span>黑棋（電腦後）</span></label>
-          <label><input type="radio" name="side" value="W" autocomplete="off"><span>白棋（電腦先）</span></label>
+          <label class="sel"><input type="radio" name="side" value="B" checked autocomplete="off"><span>白棋（先下）</span></label>
+          <label><input type="radio" name="side" value="W" autocomplete="off"><span>黑棋（後下）</span></label>
         </div>
       </div>
       <div class="entry">
@@ -1041,7 +1042,7 @@
         <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
         <p><b>排名</b>　只記勝局（輸、和局不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次、「反悔」用到第 2 次，這局贏了就不寫進排名；每局前 3 次建議一手、第 1 次反悔不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
         <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：往後算 6～8 步（剩 16 格以內就試著算到終局，比電腦最強更早，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
-        <p><b>電腦對手</b>　在開局視窗的「電腦下哪一色」選黑棋或白棋，預設電腦執黑；選定後對局中不能更改，要換邊請按「重新開始」重選。白棋固定先下，所以選電腦下白棋時由電腦先下、你執黑後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
+        <p><b>電腦對手</b>　在開局視窗的「玩家選棋」選白棋或黑棋，預設玩家執白、電腦執黑；選定後對局中不能更改，要換邊請按「重新開始」重選。白棋固定先下，所以玩家選黑棋時由電腦（白棋）先下、玩家後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
         <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>同樣的判斷但往後算 6～8 步，剩 12 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
       </section>
       <button class="act help-back" id="helpBack" type="button">返回遊戲</button>
@@ -1091,7 +1092,7 @@
   const SIM_NOISE_BAND = 0.03;   // 勝率差在取樣誤差內時，改用搜尋分數定勝負
   const CORNERS = new Set([0, N - 1, N * (N - 1), N * N - 1]);
 
-  let aiSide = "B"; // 電腦執哪一色，在開局視窗選；選白棋時電腦先下（白棋固定先下）
+  let aiSide = "B"; // 電腦執哪一色；開局視窗問「玩家選棋」，選項的值仍存電腦執色（玩家白＝B、玩家黑＝W）
   const AI_DEPTH = 4;
   // 難易度：在「依估計勝率排好的落點名單」上取不同名次（強另走搜尋，見 aiPick）
   const LEVELS = { easy: "弱", normal: "中", hard: "強", expert: "最強" };
