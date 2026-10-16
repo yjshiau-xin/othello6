@@ -1071,7 +1071,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <span class="ver">v2.0.106</span>
+        <span class="ver">v2.0.107</span>
       </div>
     </form>
   </div>
@@ -2157,7 +2157,7 @@
   function kifuCell(r, key) {
     const dd = document.createElement("dd");
     dd.className = "v-kifu";
-    if (!r.kifu) { dd.textContent = "未記錄（v2.0 以前的勝局）"; return dd; }
+    if (!r.kifu) { dd.textContent = "未記錄（v2.0 以前）"; return dd; }
     const btn = (text, fn) => {
       const b = document.createElement("button");
       b.type = "button";
