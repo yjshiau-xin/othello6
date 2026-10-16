@@ -179,30 +179,29 @@
   .help-rules b { color: var(--ink); font-weight: 700; }
   .help-back { display: block; width: 100%; margin-top: 22px; }
   .setup-help { margin: 8px 0 0; text-align: center; font-size: 14px; }
-  /* 開局視窗最下面一行：左邊「演算法邏輯」「必勝口訣」兩個按鈕（點一下展開說明，再點收起），右邊版號 */
+  /* 開局視窗最下面一行：左邊「演算法邏輯」「必勝口訣」兩個按鈕（各開一頁獨立說明），右邊版號 */
   .setup-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
   .setup-more { display: flex; flex-wrap: wrap; gap: 4px 14px; }
   .setup-more button.linkbtn { margin: 0; font-size: 13px; color: var(--brass); }
-  .setup-more button.linkbtn[aria-expanded="true"] { font-weight: 700; text-decoration-thickness: 2px; }
   .ver { flex: none; font-size: 11px; letter-spacing: .04em; color: var(--ink-soft); }
-  .setup-note {
-    margin-top: 4px;
-    padding: 8px 10px;
-    text-align: left; /* 開局卡片整體置中，說明文字要靠左 */
-    max-height: 42vh;
-    overflow-y: auto;
-    font-size: 13px;
-    line-height: 1.6;
+  /* 「演算法邏輯」「必勝口訣」：和遊戲說明一樣蓋住整頁的獨立頁，不用在開局視窗裡上下捲；「返回」固定在畫面下方 */
+  .info-body {
+    margin-top: 16px;
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 15px;
+    line-height: 1.75;
     color: var(--ink-soft);
-    background: var(--ground);
-    border-left: 2px solid var(--brass-line);
+    background: var(--surface);
+    border: 1px solid var(--rule);
   }
-  .setup-note ol { margin: 0; padding-left: 1.3em; }
-  .setup-note ul.flat { margin: 0; padding: 0; list-style: none; } /* 「補充」的強、中、弱：不編號、靠左 */
-  .setup-note li + li { margin-top: 4px; }
-  .setup-note b { color: var(--ink); }
-  .setup-note .note-h { margin: 10px 0 2px; font-weight: 700; color: var(--brass); }
-  .setup-note .note-h:first-child { margin-top: 0; }
+  .info-body ol { margin: 0; padding-left: 1.4em; }
+  .info-body ul.flat { margin: 0; padding: 0; list-style: none; } /* 「補充」的強、中、弱：不編號、靠左 */
+  .info-body li + li { margin-top: 6px; }
+  .info-body b { color: var(--ink); }
+  .info-body .note-h { margin: 14px 0 4px; font-size: 16px; font-weight: 700; color: var(--brass); }
+  .info-body .note-h:first-child { margin-top: 0; }
+  .info-page .help-back { position: sticky; bottom: 16px; }
 
   /* 左：計分板　中：棋盤　右：側欄；窄一點時計分板移到棋盤下方，手機則全部直排 */
   .game {
@@ -1069,33 +1068,10 @@
       <p class="setup-help"><a class="help-link" href="#help">第一次玩？看遊戲說明</a></p>
       <div class="setup-foot">
         <span class="setup-more">
-          <button class="linkbtn" type="button" id="aboutAiBtn" aria-expanded="false" aria-controls="aboutAi">演算法邏輯</button>
-          <button class="linkbtn" type="button" id="winTipsBtn" aria-expanded="false" aria-controls="winTips">必勝口訣</button>
+          <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
+          <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <span class="ver">v2.0</span>
-      </div>
-      <div class="setup-note" id="aboutAi" hidden>
-        <p class="note-h">最強</p>
-        <ol>
-          <li><b>開局查表</b>：前 12 手查開局庫。庫裡 5199 個局面都事先算到終局，電腦執白最多輸 4 子、執黑至少贏 4 子（6×6 雙方都不失誤時，先手 16:20 輸）。</li>
-          <li><b>中盤往後算</b>：往後算 6～12 步，算過的局面記在表裡不重算，明顯較差的分支直接跳過。局面好壞看位置（角最好，角旁最差）和雙方各有幾個點能下。</li>
-          <li><b>殘局算到底</b>：剩 20 格以內直接算到終局，挑子數差最大的一步；剩 17～20 格時先確保不掉出上面的理論結果。</li>
-          <li><b>想多久</b>：每一步最多想 1.5 秒。</li>
-        </ol>
-        <p class="note-h">補充</p>
-        <ul class="flat">
-          <li><b>強</b>：往後算 4 步，挑局面最好的點。</li>
-          <li><b>中</b>：每個點模擬下完 160 盤，挑勝率排在中間的點。</li>
-          <li><b>弱</b>：同樣模擬，挑勝率最低的點。</li>
-        </ul>
-      </div>
-      <div class="setup-note" id="winTips" hidden>
-        <ol>
-          <li><b>後下</b>：選黑棋。6×6 雙方都不失誤時後手 20:16 贏，執白先下贏不了最強。</li>
-          <li><b>少翻子</b>：前半盤少翻子，讓對方能下的點越來越少，逼它下壞位置。</li>
-          <li><b>搶角、不碰角旁</b>：角一旦拿到就翻不回來；角旁的格子別先下，免得把角送給對方。</li>
-          <li><b>留著建議一手</b>：對最強要一步都沒錯才贏得了；建議一手每局前 3 次不影響排名，留到關鍵時刻用。</li>
-        </ol>
+        <span class="ver">v2.0.106</span>
       </div>
     </form>
   </div>
@@ -1145,6 +1121,42 @@
         <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>前 12 手查開局庫（離線算到終局得出，執白最多輸 4 子、執黑至少贏 4 子，6×6 雙方完美下棋時就是先手 16:20 落敗），離開開局庫後每一手先確認仍保得住這個結果，再往後算 6～12 步，剩 20 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
       </section>
       <button class="act help-back" id="helpBack" type="button">返回遊戲</button>
+    </div>
+  </div>
+  <!-- 開局視窗左下角兩個按鈕開的獨立頁 -->
+  <div class="help info-page" id="aboutAi" role="dialog" aria-modal="true" aria-labelledby="aboutAiTitle" hidden>
+    <div class="help-inner">
+      <h2 id="aboutAiTitle">演算法邏輯</h2>
+      <div class="info-body">
+        <p class="note-h">最強</p>
+        <ol>
+          <li><b>開局查表</b>：前 12 手查開局庫。庫裡 5199 個局面都事先算到終局，電腦執白最多輸 4 子、執黑至少贏 4 子（6×6 雙方都不失誤時，先手 16:20 輸）。</li>
+          <li><b>中盤往後算</b>：往後算 6～12 步，算過的局面記在表裡不重算，明顯較差的分支直接跳過。局面好壞看位置（角最好，角旁最差）和雙方各有幾個點能下。</li>
+          <li><b>殘局算到底</b>：剩 20 格以內直接算到終局，挑子數差最大的一步；剩 17～20 格時先確保不掉出上面的理論結果。</li>
+          <li><b>想多久</b>：每一步最多想 1.5 秒。</li>
+        </ol>
+        <p class="note-h">補充</p>
+        <ul class="flat">
+          <li><b>強</b>：往後算 4 步，挑局面最好的點。</li>
+          <li><b>中</b>：每個點模擬下完 160 盤，挑勝率排在中間的點。</li>
+          <li><b>弱</b>：同樣模擬，挑勝率最低的點。</li>
+        </ul>
+      </div>
+      <button class="act help-back" type="button">返回</button>
+    </div>
+  </div>
+  <div class="help info-page" id="winTips" role="dialog" aria-modal="true" aria-labelledby="winTipsTitle" hidden>
+    <div class="help-inner">
+      <h2 id="winTipsTitle">必勝口訣</h2>
+      <div class="info-body">
+        <ol>
+          <li><b>後下</b>：選黑棋。6×6 雙方都不失誤時後手 20:16 贏，執白先下贏不了最強。</li>
+          <li><b>少翻子</b>：前半盤少翻子，讓對方能下的點越來越少，逼它下壞位置。</li>
+          <li><b>搶角、不碰角旁</b>：角一旦拿到就翻不回來；角旁的格子別先下，免得把角送給對方。</li>
+          <li><b>留著建議一手</b>：對最強要一步都沒錯才贏得了；建議一手每局前 3 次不影響排名，留到關鍵時刻用。</li>
+        </ol>
+      </div>
+      <button class="act help-back" type="button">返回</button>
     </div>
   </div>
 
@@ -2351,17 +2363,26 @@
     gameStartAt = Date.now(); // 對局長度從按「開始」起算
     render();
   });
-  // 開局視窗左下角：「演算法邏輯」「必勝口訣」點一下展開說明，再點收起；同時只開一個
-  const setupNotes = [["aboutAiBtn", "aboutAi"], ["winTipsBtn", "winTips"]]
-    .map(([b, n]) => [document.getElementById(b), document.getElementById(n)]);
-  for (const [btn, note] of setupNotes) {
-    btn.addEventListener("click", () => {
-      const open = note.hidden;
-      for (const [b, n] of setupNotes) { n.hidden = true; b.setAttribute("aria-expanded", "false"); }
-      note.hidden = !open;
-      btn.setAttribute("aria-expanded", String(open));
-    });
+  // 開局視窗左下角：「演算法邏輯」「必勝口訣」各開一頁蓋住整頁的說明，按「返回」或 Esc 回到開局視窗
+  let infoOpen = null; // [按鈕, 說明頁]
+  function closeInfo() {
+    if (!infoOpen) return;
+    const [btn, page] = infoOpen;
+    infoOpen = null;
+    page.hidden = true;
+    btn.focus();
   }
+  for (const [b, n] of [["aboutAiBtn", "aboutAi"], ["winTipsBtn", "winTips"]]) {
+    const btn = document.getElementById(b), page = document.getElementById(n);
+    btn.addEventListener("click", () => {
+      infoOpen = [btn, page];
+      page.hidden = false;
+      page.scrollTop = 0;
+      page.querySelector(".help-back").focus({ preventScroll: true });
+    });
+    page.querySelector(".help-back").addEventListener("click", closeInfo);
+  }
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && infoOpen) closeInfo(); });
   // 匯出／匯入：把計分板存成 JSON 檔備份，或帶到別台電腦、別的瀏覽器
   const tallyMsg = document.getElementById("tallyMsg");
   function showTallyMsg(text) {
