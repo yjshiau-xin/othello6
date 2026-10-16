@@ -319,6 +319,8 @@
   .records .detail dd.v-lv.expert { color: var(--lv-expert); }
   /* 詳細資訊最後一列「棋譜」：按「看棋譜」展開每一手（重下一遍得出跳過與翻子數），可複製整串座標 */
   .records .detail dd.v-kifu { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-weight: 400; color: var(--ink-soft); }
+  /* 「未記錄」一律灰色、不加粗 */
+  .records .detail dd.v-none { color: var(--ink-soft); font-weight: 400; }
   .records .detail button.smallbtn { padding: 3px 8px; font-size: 12px; }
   .records .kifu {
     grid-column: 1 / -1;
@@ -1071,7 +1073,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <span class="ver">v2.0.107</span>
+        <span class="ver">v2.0.108</span>
       </div>
     </form>
   </div>
@@ -2157,7 +2159,7 @@
   function kifuCell(r, key) {
     const dd = document.createElement("dd");
     dd.className = "v-kifu";
-    if (!r.kifu) { dd.textContent = "未記錄（v2.0 以前）"; return dd; }
+    if (!r.kifu) { dd.className = "v-kifu v-none"; dd.textContent = "未記錄（v2.0 以前）"; return dd; }
     const btn = (text, fn) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -2263,8 +2265,8 @@
           ["比分", `玩家 ${r.me} : 電腦 ${r.ai}`],
           ["差距", `贏 ${diff} 子`],
           // v2.0 以前的勝局沒有記這兩項
-          ["建議一手", r.sug == null ? "未記錄" : `${r.sug} 次`],
-          ["反悔", r.undo == null ? "未記錄" : `${r.undo} 次`],
+          ["建議一手", r.sug == null ? "未記錄" : `${r.sug} 次`, r.sug == null ? "v-none" : ""],
+          ["反悔", r.undo == null ? "未記錄" : `${r.undo} 次`, r.undo == null ? "v-none" : ""],
           ["結束時間", fmtFull(r.at)],
           ["對局長度", fmtLong(r.secs)]
         ]) {
