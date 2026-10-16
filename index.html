@@ -179,6 +179,30 @@
   .help-rules b { color: var(--ink); font-weight: 700; }
   .help-back { display: block; width: 100%; margin-top: 22px; }
   .setup-help { margin: 8px 0 0; text-align: center; font-size: 14px; }
+  /* 開局視窗最下面一行：左邊「演算法邏輯」「必勝口訣」兩個按鈕（點一下展開說明，再點收起），右邊版號 */
+  .setup-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+  .setup-more { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .setup-more button.linkbtn { margin: 0; font-size: 13px; color: var(--brass); }
+  .setup-more button.linkbtn[aria-expanded="true"] { font-weight: 700; text-decoration-thickness: 2px; }
+  .ver { flex: none; font-size: 11px; letter-spacing: .04em; color: var(--ink-soft); }
+  .setup-note {
+    margin-top: 4px;
+    padding: 8px 10px;
+    text-align: left; /* 開局卡片整體置中，說明文字要靠左 */
+    max-height: 42vh;
+    overflow-y: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    background: var(--ground);
+    border-left: 2px solid var(--brass-line);
+  }
+  .setup-note ol { margin: 0; padding-left: 1.3em; }
+  .setup-note ul.flat { margin: 0; padding: 0; list-style: none; } /* 「補充」的強、中、弱：不編號、靠左 */
+  .setup-note li + li { margin-top: 4px; }
+  .setup-note b { color: var(--ink); }
+  .setup-note .note-h { margin: 10px 0 2px; font-weight: 700; color: var(--brass); }
+  .setup-note .note-h:first-child { margin-top: 0; }
 
   /* 左：計分板　中：棋盤　右：側欄；窄一點時計分板移到棋盤下方，手機則全部直排 */
   .game {
@@ -243,6 +267,7 @@
     display: grid;
     place-items: center;
     padding: 16px;
+    overflow-y: auto; /* 展開說明後太高時（小手機）可以捲動 */
     background: rgba(8, 26, 18, .62);
     animation: fade .3s ease-out;
   }
@@ -293,6 +318,27 @@
   .records .detail dd.v-lv.normal { color: var(--lv-normal); }
   .records .detail dd.v-lv.hard { color: var(--lv-hard); }
   .records .detail dd.v-lv.expert { color: var(--lv-expert); }
+  /* 詳細資訊最後一列「棋譜」：按「看棋譜」展開每一手（重下一遍得出跳過與翻子數），可複製整串座標 */
+  .records .detail dd.v-kifu { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-weight: 400; color: var(--ink-soft); }
+  .records .detail button.smallbtn { padding: 3px 8px; font-size: 12px; }
+  .records .kifu {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 2px 8px;
+    margin: 4px 0 0;
+    padding: 6px 8px;
+    list-style: none;
+    font: 13px var(--mono);
+    color: var(--ink);
+    border: 1px solid var(--brass-line);
+    background: var(--surface);
+    cursor: text;
+    user-select: text;
+  }
+  .records .kifu .n { display: inline-block; min-width: 2.2em; text-align: right; margin-right: 4px; color: var(--ink-soft); }
+  .records .kifu .pc { color: var(--brass); font-weight: 700; }
+  .records .kifu-raw { grid-column: 1 / -1; margin: 2px 0 0; font: 12px var(--mono); color: var(--ink-soft); overflow-wrap: anywhere; user-select: all; cursor: text; }
   .records li.empty { display: block; white-space: normal; font-size: 14px; color: var(--ink-soft); }
   .records .no { text-align: right; font: 700 15px var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); }
   .records .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
@@ -1021,6 +1067,36 @@
       </div>
       <button class="act" type="submit">開始</button>
       <p class="setup-help"><a class="help-link" href="#help">第一次玩？看遊戲說明</a></p>
+      <div class="setup-foot">
+        <span class="setup-more">
+          <button class="linkbtn" type="button" id="aboutAiBtn" aria-expanded="false" aria-controls="aboutAi">演算法邏輯</button>
+          <button class="linkbtn" type="button" id="winTipsBtn" aria-expanded="false" aria-controls="winTips">必勝口訣</button>
+        </span>
+        <span class="ver">v2.0</span>
+      </div>
+      <div class="setup-note" id="aboutAi" hidden>
+        <p class="note-h">最強</p>
+        <ol>
+          <li><b>開局查表</b>：前 12 手查開局庫。庫裡 5199 個局面都事先算到終局，電腦執白最多輸 4 子、執黑至少贏 4 子（6×6 雙方都不失誤時，先手 16:20 輸）。</li>
+          <li><b>中盤往後算</b>：往後算 6～12 步，算過的局面記在表裡不重算，明顯較差的分支直接跳過。局面好壞看位置（角最好，角旁最差）和雙方各有幾個點能下。</li>
+          <li><b>殘局算到底</b>：剩 20 格以內直接算到終局，挑子數差最大的一步；剩 17～20 格時先確保不掉出上面的理論結果。</li>
+          <li><b>想多久</b>：每一步最多想 1.5 秒。</li>
+        </ol>
+        <p class="note-h">補充</p>
+        <ul class="flat">
+          <li><b>強</b>：往後算 4 步，挑局面最好的點。</li>
+          <li><b>中</b>：每個點模擬下完 160 盤，挑勝率排在中間的點。</li>
+          <li><b>弱</b>：同樣模擬，挑勝率最低的點。</li>
+        </ul>
+      </div>
+      <div class="setup-note" id="winTips" hidden>
+        <ol>
+          <li><b>後下</b>：選黑棋。6×6 雙方都不失誤時後手 20:16 贏，執白先下贏不了最強。</li>
+          <li><b>少翻子</b>：前半盤少翻子，讓對方能下的點越來越少，逼它下壞位置。</li>
+          <li><b>搶角、不碰角旁</b>：角一旦拿到就翻不回來；角旁的格子別先下，免得把角送給對方。</li>
+          <li><b>留著建議一手</b>：對最強要一步都沒錯才贏得了；建議一手每局前 3 次不影響排名，留到關鍵時刻用。</li>
+        </ol>
+      </div>
     </form>
   </div>
 
@@ -1044,7 +1120,7 @@
       <ol class="help-steps">
         <li>
           <h3>輸入姓名</h3>
-          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或「建議一手」用到第 4 次、「反悔」用到第 2 次，也不記錄，事先會跳視窗讓你選）。排名是共用的：所有人看到的是同一份。點排名裡的任一列可以展開這局的詳細資訊（名次、執棋、比分、結束時間、對局長度），再點一下收起。</p>
+          <p>每局開始會跳出開局視窗，先輸入名字（最多 12 字，不填就是「玩家」）。贏了電腦，名字會自動列進左邊的「排名」（輸或和局不記錄；對局中開過「提示」卡片的任一項，或「建議一手」用到第 4 次、「反悔」用到第 2 次，也不記錄，事先會跳視窗讓你選）。排名是共用的：所有人看到的是同一份。點排名裡的任一列可以展開這局的詳細資訊（名次、執棋、比分、差距、建議一手與反悔各用了幾次、結束時間、對局長度、棋譜），再點一下收起。「棋譜」按「看棋譜」列出這局每一手（黃色是玩家下的），按「複製」把整局座標複製成一行文字，可以貼給別人或 AI 重播、分析（v2.0 以前的勝局沒有棋譜）。</p>
         </li>
         <li>
           <h3>選擇強弱</h3>
@@ -1064,9 +1140,9 @@
         <p><b>規則</b>　白棋先行。落子必須夾住對手至少一顆棋子，被夾住的棋子全部翻面。</p>
         <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
         <p><b>排名</b>　只記勝局（輸、和局不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次、「反悔」用到第 2 次，這局贏了就不寫進排名；每局前 3 次建議一手、第 1 次反悔不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
-        <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：往後算 6～8 步（剩 16 格以內就試著算到終局，比電腦最強更早，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
+        <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：前 12 手查開局庫（顯示「開局庫最佳下法」），之後往後算 6～12 步（剩 20 格以內就試著算到終局，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），查開局庫以外，建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
         <p><b>電腦對手</b>　在開局視窗的「玩家選棋」選白棋或黑棋，預設玩家執白、電腦執黑；選定後對局中不能更改，要換邊請按「重新開始」重選。白棋固定先下，所以玩家選黑棋時由電腦（白棋）先下、玩家後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
-        <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>同樣的判斷但往後算 6～8 步，剩 12 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
+        <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>前 12 手查開局庫（離線算到終局得出，執白最多輸 4 子、執黑至少贏 4 子，6×6 雙方完美下棋時就是先手 16:20 落敗），離開開局庫後每一手先確認仍保得住這個結果，再往後算 6～12 步，剩 20 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
       </section>
       <button class="act help-back" id="helpBack" type="button">返回遊戲</button>
     </div>
@@ -1119,12 +1195,14 @@
   const AI_DEPTH = 4;
   // 難易度：在「依估計勝率排好的落點名單」上取不同名次（強另走搜尋，見 aiPick）
   const LEVELS = { easy: "弱", normal: "中", hard: "強", expert: "最強" };
-  // 最強：逐步加深搜尋（6 → 8 步；剩 12 格以內再加深到終局），每步最多想這麼久，超時就用已算完的最深結果
+  // 最強：逐步加深搜尋（6 → 12 步；剩 20 格以內再加深到終局），每步最多想這麼久，超時就用已算完的最深結果。
+  // 搜尋核心換成就地落子＋置換表後（makeEngine），jsc 實測剩 28 格算 12 步約 0.1～0.3 秒、
+  // 剩 18 格算到終局約 0.1～0.6 秒、剩 20 格約 0.6～4.5 秒（超時就退回 18 步的結果）
   const EXPERT_MIN_DEPTH = 6;
-  const EXPERT_MAX_DEPTH = 8;
-  const EXPERT_SOLVE_EMPTIES = 12; // 剩這麼多格以內才繼續加深、試著算到終局
-  // 「建議一手」更早開始算終局：實測 12 格時照建議下對強只能平手，16 格起才贏得了
-  const SUGGEST_SOLVE_EMPTIES = 16;
+  const EXPERT_MAX_DEPTH = 12;
+  const EXPERT_SOLVE_EMPTIES = 20; // 剩這麼多格以內才繼續加深、試著算到終局
+  // 「建議一手」與最強相同（以前因搜尋慢，最強只能從 12 格、建議一手從 16 格起算終局）
+  const SUGGEST_SOLVE_EMPTIES = 20;
   const EXPERT_BUDGET_MS = 1500;
   // 建議一手／提示勝率：每一點都要算出確切分數，比只挑最佳點慢約三倍，給 3 秒才算得到和以前一樣深
   const RATE_BUDGET_MS = 3000;
@@ -1324,36 +1402,212 @@
     return scored.reduce((a, s) => (s.ev > a.ev || (s.ev === a.ev && s.rate > a.rate) ? s : a));
   }
 
-  // 最強用的搜尋：和 negamax 相同的評估，但先試位置好的點（剪枝更多），並有時間上限。
+  // 最強用的搜尋：有時間上限，超時丟出 TIMEOUT。
   const TIMEOUT = {};
   let deadline = Infinity, nodeCount = 0;
-  function deepNegamax(bd, p, depth, alpha, beta) {
-    if ((++nodeCount & 1023) === 0 && Date.now() > deadline) throw TIMEOUT;
-    const mine = legalMoves(bd, p);
-    const theirs = legalMoves(bd, foe(p));
-    if (!mine.size && !theirs.size) {
-      const d = discDiff(bd, p);
-      return d > 0 ? 10000 + d : d < 0 ? -10000 + d : 0;
+  const TT_BITS = 19; // 置換表 2^19 格，約 9 MB
+  // 「最強」與「建議一手」的搜尋核心：補邊的 8×8 盤面（Int8Array）就地落子、還原，
+  // 搭配 Zobrist 置換表；搜尋途中不配置任何物件，比逐層複製陣列、建 Map 快很多。
+  // 背景執行緒（rateWorker）也組進同一份原始碼，所以只用參數 W 與外層的 deadline、nodeCount、TIMEOUT。
+  function makeEngine(W, ttBits) {
+    const DIR = [-9, -8, -7, -1, 1, 7, 8, 9];
+    const b = new Int8Array(64).fill(3); // 0 空、1 黑、2 白、3 邊界
+    const WT = new Int32Array(64);
+    const SQ = [];
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 6; c++) {
+      const x = (r + 1) * 8 + c + 1;
+      SQ.push(x);
+      b[x] = 0;
+      WT[x] = W[r * 6 + c];
     }
-    if (!depth) {
-      let s = 0;
-      for (let i = 0; i < N * N; i++) if (bd[i]) s += bd[i] === p ? WEIGHTS[i] : -WEIGHTS[i];
-      return s + 9 * (mine.size - theirs.size);
-    }
-    if (!mine.size) return -deepNegamax(bd, foe(p), depth - 1, -beta, -alpha);
+    // 依位置權重由高到低產生棋步，等於先試好位置（和舊版排序相同）
+    const ORD = Int8Array.from(SQ.slice().sort((x, y) => WT[y] - WT[x]));
 
-    const order = [...mine].sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]]);
-    let best = -Infinity;
-    for (const [idx, flips] of order) {
-      const nb = bd.slice();
-      nb[idx] = p;
-      for (const f of flips) nb[f] = p;
-      const v = -deepNegamax(nb, foe(p), depth - 1, -beta, -alpha);
-      if (v > best) best = v;
-      if (best > alpha) alpha = best;
-      if (alpha >= beta) break;
+    // Zobrist：每格每色兩個 32 位元亂數，合成 64 位元鍵，避免不同盤面撞號；固定種子，主執行緒與背景執行緒一致
+    // 亂數必須是非線性的：xorshift 這類線性產生器的輸出全落在 32 維空間，
+    // 合成的鍵一定有不同盤面撞號（實測剩 22 格就會算錯），所以用 murmur3 的 fmix32 打散計數器
+    let seed = 0;
+    const rnd = () => {
+      let z = seed = (seed + 0x9e3779b9) | 0;
+      z = Math.imul(z ^ (z >>> 16), 0x85ebca6b);
+      z = Math.imul(z ^ (z >>> 13), 0xc2b2ae35);
+      return (z ^ (z >>> 16)) | 0;
+    };
+    const ZL = new Int32Array(192), ZH = new Int32Array(192);
+    for (let i = 0; i < 192; i++) { ZL[i] = rnd(); ZH[i] = rnd(); }
+    const SIDE_L = rnd(), SIDE_H = rnd();
+    let hl = 0, hh = 0, empt = 0;
+
+    // 置換表：鍵、分數、深度、精確值或上下界、最佳步、第幾次搜尋
+    const SIZE = 1 << ttBits, MASK = SIZE - 1;
+    const TK1 = new Int32Array(SIZE), TK2 = new Int32Array(SIZE), TV = new Int32Array(SIZE);
+    const TD = new Int8Array(SIZE), TF = new Int8Array(SIZE), TB = new Int8Array(SIZE);
+    const TG = new Uint16Array(SIZE);
+    const EXACT = 0, LOWER = 1, UPPER = 2, SOLVED = 100;
+    let gen = 0;
+
+    const stk = new Int8Array(4096); // 被翻的格子，還原時倒著取回
+    let sp = 0;
+    const MV = new Int8Array(80 * 36), KEY = new Int32Array(80 * 36);
+
+    function canMove(x, p) {
+      const o = 3 - p;
+      for (let d = 0; d < 8; d++) {
+        const dd = DIR[d];
+        let y = x + dd;
+        if (b[y] !== o) continue;
+        y += dd;
+        while (b[y] === o) y += dd;
+        if (b[y] === p) return true;
+      }
+      return false;
     }
-    return best;
+
+    function countMoves(p) {
+      let n = 0;
+      for (let i = 0; i < 36; i++) { const x = ORD[i]; if (b[x] === 0 && canMove(x, p)) n++; }
+      return n;
+    }
+
+    function make(x, p) {
+      const o = 3 - p, start = sp;
+      for (let d = 0; d < 8; d++) {
+        const dd = DIR[d];
+        let y = x + dd;
+        if (b[y] !== o) continue;
+        y += dd;
+        while (b[y] === o) y += dd;
+        if (b[y] !== p) continue;
+        for (y -= dd; y !== x; y -= dd) {
+          b[y] = p;
+          stk[sp++] = y;
+          hl ^= ZL[y * 3 + o] ^ ZL[y * 3 + p];
+          hh ^= ZH[y * 3 + o] ^ ZH[y * 3 + p];
+        }
+      }
+      const n = sp - start;
+      b[x] = p;
+      hl ^= ZL[x * 3 + p];
+      hh ^= ZH[x * 3 + p];
+      stk[sp++] = n;
+      empt--;
+    }
+
+    function undo(x, p) {
+      const o = 3 - p;
+      let n = stk[--sp];
+      b[x] = 0;
+      hl ^= ZL[x * 3 + p];
+      hh ^= ZH[x * 3 + p];
+      while (n--) {
+        const y = stk[--sp];
+        b[y] = o;
+        hl ^= ZL[y * 3 + o] ^ ZL[y * 3 + p];
+        hh ^= ZH[y * 3 + o] ^ ZH[y * 3 + p];
+      }
+      empt++;
+    }
+
+    // 和舊版 deepNegamax 相同的分數：終局 ±10000＋子數差，深度用完時位置權重＋9×行動力差。
+    // 唯一不同：「停一手」不扣深度，所以深度 ≥ 空格數就保證算到終局。
+    function search(p, depth, alpha, beta, ply) {
+      if ((++nodeCount & 1023) === 0 && Date.now() > deadline) throw TIMEOUT;
+      const o = 3 - p;
+      const exact = depth >= empt;
+      const want = exact ? SOLVED : depth;
+      const kl = p === 2 ? hl ^ SIDE_L : hl, kh = p === 2 ? hh ^ SIDE_H : hh;
+      const slot = kl & MASK;
+      let ttMove = 0;
+      if (TG[slot] === gen && TK1[slot] === kl && TK2[slot] === kh) {
+        ttMove = TB[slot];
+        if (TD[slot] >= want) {
+          const v = TV[slot], f = TF[slot];
+          if (f === EXACT || (f === LOWER && v >= beta) || (f === UPPER && v <= alpha)) return v;
+        }
+      }
+
+      const base = ply * 36;
+      let n = 0;
+      for (let i = 0; i < 36; i++) { const x = ORD[i]; if (b[x] === 0 && canMove(x, p)) MV[base + n++] = x; }
+      if (!n && !countMoves(o)) {
+        let d = 0;
+        for (let i = 0; i < 36; i++) { const v = b[SQ[i]]; if (v) d += v === p ? 1 : -1; }
+        return d > 0 ? 10000 + d : d < 0 ? -10000 + d : 0;
+      }
+      if (!depth) {
+        let s = 0;
+        for (let i = 0; i < 36; i++) { const x = SQ[i], v = b[x]; if (v) s += v === p ? WT[x] : -WT[x]; }
+        return s + 9 * (n - countMoves(o));
+      }
+      if (!n) return -search(o, depth, -beta, -alpha, ply + 1);
+
+      // 排序：置換表記下的最佳步先算；算終局且空格還多時，其餘依「下完後對手可下的點少」優先
+      if (exact && empt > 6) {
+        for (let k = 0; k < n; k++) {
+          const x = MV[base + k];
+          make(x, p);
+          // 空格還多（≥ 14）時改用對手的 2 步搜尋分數排序，較準；實測剩 22 格算到終局快約 1.7 倍
+          KEY[base + k] = empt >= 14
+            ? search(o, 2, -Infinity, Infinity, ply + 1)
+            : countMoves(o) * 16 - (WT[x] === 100 ? 8 : 0);
+          undo(x, p);
+        }
+        for (let k = 1; k < n; k++) {
+          const x = MV[base + k], key = KEY[base + k];
+          let j = k - 1;
+          while (j >= 0 && KEY[base + j] > key) { MV[base + j + 1] = MV[base + j]; KEY[base + j + 1] = KEY[base + j]; j--; }
+          MV[base + j + 1] = x;
+          KEY[base + j + 1] = key;
+        }
+      }
+      if (ttMove) {
+        for (let k = 1; k < n; k++) if (MV[base + k] === ttMove) {
+          for (let j = k; j > 0; j--) MV[base + j] = MV[base + j - 1];
+          MV[base] = ttMove;
+          break;
+        }
+      }
+
+      const alpha0 = alpha;
+      let best = -Infinity, bestMove = 0;
+      for (let k = 0; k < n; k++) {
+        const x = MV[base + k];
+        make(x, p);
+        const v = -search(o, depth - 1, -beta, -alpha, ply + 1);
+        undo(x, p);
+        if (v > best) {
+          best = v;
+          bestMove = x;
+          if (v > alpha) { alpha = v; if (alpha >= beta) break; }
+        }
+      }
+      // 同一輪裡已存了算得更深的別的盤面就不蓋掉
+      if (TG[slot] === gen && TD[slot] > want && !(TK1[slot] === kl && TK2[slot] === kh)) return best;
+      TK1[slot] = kl; TK2[slot] = kh; TV[slot] = best; TD[slot] = want; TB[slot] = bestMove; TG[slot] = gen;
+      TF[slot] = best <= alpha0 ? UPPER : best >= beta ? LOWER : EXACT;
+      return best;
+    }
+
+    return {
+      // 每次「選一手」開始時換一輪，舊的置換表內容作廢，主執行緒與背景執行緒算出的結果才會一致
+      newSearch() { gen = gen === 65535 ? 1 : gen + 1; },
+      search(bd, p, depth, alpha, beta) {
+        hl = hh = 0;
+        empt = 0;
+        sp = 0;
+        for (let i = 0; i < 36; i++) {
+          const x = SQ[i], v = bd[i] === "B" ? 1 : bd[i] === "W" ? 2 : 0;
+          b[x] = v;
+          if (v) { hl ^= ZL[x * 3 + v]; hh ^= ZH[x * 3 + v]; } else empt++;
+        }
+        if (!gen) gen = 1;
+        return search(p === "B" ? 1 : 2, depth, alpha, beta, 0);
+      }
+    };
+  }
+  const ENGINE = makeEngine(WEIGHTS, TT_BITS);
+  function deepNegamax(bd, p, depth, alpha, beta) {
+    return ENGINE.search(bd, p, depth, alpha, beta);
   }
 
   // 逐步加深：每一層都完整算完才採用；上一層的最佳點排第一個先算，剪枝更有效。
@@ -1364,6 +1618,7 @@
     let bestIdx = order[0][0], reached = 0;
     deadline = Date.now() + EXPERT_BUDGET_MS;
     nodeCount = 0;
+    ENGINE.newSearch();
     try {
       for (let depth = EXPERT_MIN_DEPTH; ; depth += 2) {
         let alpha = -Infinity, pick = null;
@@ -1393,7 +1648,7 @@
     return { idx: bestIdx, depth: Math.min(reached, empties) };
   }
 
-  // 「建議一手」與提示勝率：每個合法點都完整算出往後 6～8 步（剩 solveEmpties 格以內算到終局）的分數。
+  // 「建議一手」與提示勝率：每個合法點都完整算出往後 6～12 步（剩 solveEmpties 格以內算到終局）的分數。
   // 和 expertPick 同樣逐步加深，但每點都用全窗口，才有每一點的確切分數可換成勝率。
   function searchScores(bd, p, solveEmpties) {
     const order = [...legalMoves(bd, p)].sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]]);
@@ -1401,6 +1656,7 @@
     let scores = null, reached = 0;
     deadline = Date.now() + RATE_BUDGET_MS;
     nodeCount = 0;
+    ENGINE.newSearch();
     try {
       for (let depth = EXPERT_MIN_DEPTH; ; depth += 2) {
         const cur = new Map();
@@ -1454,7 +1710,8 @@
       `const AI_DEPTH = ${AI_DEPTH}, EXPERT_MIN_DEPTH = ${EXPERT_MIN_DEPTH}, EXPERT_MAX_DEPTH = ${EXPERT_MAX_DEPTH}, RATE_BUDGET_MS = ${RATE_BUDGET_MS};`,
       "const TIMEOUT = {}; let deadline = Infinity, nodeCount = 0;",
       `const foe = ${foe};`,
-      flipsAt, legalMoves, discDiff, negamax, deepNegamax, searchScores,
+      flipsAt, legalMoves, discDiff, negamax, makeEngine, deepNegamax, searchScores,
+      `const ENGINE = makeEngine(WEIGHTS, ${TT_BITS});`,
       "onmessage = e => { const { key, bd, p, solve } = e.data; const r = searchScores(bd, p, solve);" +
         " postMessage({ key, scores: [...r.scores], depth: r.depth }); };"
     ].join("\n");
@@ -1477,7 +1734,14 @@
   function suggest() {
     rateCache.wantTip = false;
     if (over || passWait || setupWait || isAiTurn() || !moves.size) return;
-    // 往後算 6～8 步（剩 16 格以內算到終局）後分數最高、也就是勝率最高的點；
+    // 前 12 手查得到開局庫就直接用（和最強相同的庫）：後手保住至少贏 4 子、先手最多輸 4 子
+    const bk = bookPick(board, turn);
+    if (bk !== null) {
+      tip = { side: turn, idx: bk, flips: moves.get(bk).length, book: true };
+      render();
+      return;
+    }
+    // 往後算 6～12 步（剩 20 格以內算到終局）後分數最高、也就是勝率最高的點；
     // 和滑鼠移過各點顯示的勝率是同一份結果
     const { scores, depth } = currentRates(true);
     let best = null;
@@ -1490,15 +1754,88 @@
     render();
   }
 
+  // 開局庫（最強用）：離線完整算到終局得出。6×6 雙方完美下棋時先手 16:20 落敗，
+  // 庫中每一手都保證電腦執白最多輸 4 子、執黑至少贏 4 子；收錄玩家每一種應手，
+  // 一直涵蓋到剩 20 格左右，之後由「剩 20 格起算到終局」接手。
+  // 格式：每筆 11 字（BOOK_ABC 字母表）：前 5 字＝第 1～18 格的三進位值（空 0、黑 1、白 2），
+  // 再 5 字＝第 19～36 格的三進位值 ×2＋輪到誰（黑 0、白 1），最後 1 字＝落點。盤面取 8 種旋轉／鏡射之一
+  const BOOK_ABC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const OPENING_BOOK = (() => {
+    const s = /*BOOK*/"HaYpKAAAB-IHaYpKFIklpXHaYpKAkpHZXHaYpKAAADrbHaYpKAAJosSHaYpKIk-GVjHaYpKEA_bDfHaYpKtEWrTfHaYpKJt-CPjHaYpKsf4T3gHaYpKE904XRHaYpKEl8wdjHaYpKEkmXXjHaYpKXAOOIeHaYpKCeY-6eHaYpKWPhGueHaYpKBtr3geHaYpKXcmUEfHaYpKWr8ZsgHaYpKMzbi0MHaYpKWUhHENHaYpKCjfZUMHaYpKAET58NHaYpKMCoBWjHaYpKC6xE2fHaYpKCKHKegHaYpKMCubajHaYpKWTplMcHaYpKAENk8XHaYpKWTd6eZHaYpKPFMc-MHaYpKAEPnuNHaYpKDfTtYJHaYpKAFHKKIHaYpKAAKWAeHaYpKKVM56IHaYpKCfSq4eHaYpKXYidqNHaYpKWn4jSNHaYpKMvXsajHaYpKCfbi6WHaYpKAAQDihHaYpKC2tOcfHaYpKCGDUENHaYpKL-qlAjHaYpKWPluyNHaYpKPe7UchHaYpKB0cMgjHaYpKByo3YRHaYpKApn3IJHaYpKAEUD-hHaYpKC6xO4fHaYpKEDwGciHaYpKCKHUggHaYpKMCulcgHaYpKEDr1EiHaYpKED0X0iHaYpKAo0kGhHaYpKAALxUNHaYpKPe3COgHaYpKArbLajHaYpKCfUGMNHaYpKMCk9gjHaYpKAEPxwgHaYpKK5tkWhHaYpKDbP2-IHaYpKABDTwIHaYpKS57H4IHaYpKEGWuUjHaYpKAFHWuRHaYpKEEjZMiHaYpKPfukqRHaYpKIk3sTjHaYpKEA8ODfHaYpKDfT3agHaYpKFAeFEiHaYpKKRJDgIHaYpKCh-_cRHaYpKQn9X6hHaYpKAG6rAjHaYpKABgKvhHaYpKKVND8IWzpXQHb9IheWzpXQiPfXheWzpXQEBdXHfWzpXQIjlfZjWzpXQDbnapjWzpXQImSuRjWzpXQDeUphjWzpXQDbURhdWzpXQEBKNJjWzpXQseh6rdWzpXQiOlxLdPHBANFIk01LPHBANAkpWlLPHBANIjnmfjPHBAND_o7NfPHBANtDALdXPHBANseh0BgPHBANE8eYhePHBANBtrMZfPHBANAAN9ZePHBANCGBN7ePHBANAs0YPXPHBANAUfbDYPHBANAIVTPhPHBANAFXVoIPHBANAFJdKNPHBANAH0WajPHBANDgNh-NPHBANAAJq5aBbOldEmJkxjBbOldohF6_RBbOldEl8wpeBbOldEuEGffBbOldEwdn9TBbOldtzrRHTBbOldEkmXjQBbOldAAAB_JBbOldAAHgZTBbOldAAN_hhBbOldIjlgPjBbOldDbnbfgBbOldDct3pRBbOldDcqqngBbOldsf4TxgBbOldE904RJBbOldDbURhgBbOldseh6rgBbOldABDUGNBbOldAAJumNBbOldABgL7QBbOldABnqVeBbOldAJrzJgBbOldKRJD2SBbOldAAJotWBbOldHm0O3eBbOldAAN6FhBbOldDnU_XgBbOldHu4XrSBbOldHm-AFeBbOldEww2VjBbOldAAKyraBbOldDcsyjQBbOldE93ANQBbOldEuEzBQBbOldElsudQBbOldjZH1NNBbOldto6XnXBbOldEkWWNNBbOldtnj_XcBbOldMDrTAjBbOldPGGIYMBbOldKVNAGXBbOldXcmZIfBbOldWUhMIMBbOldMCoGajBbOldPFWJ-jBbOldKVTUQhBbOldO5FLafBbOldKWGlUNBbOldKRJxKeBbOldAV3rxMBbOldAuLknMBbOldMDeo6jBbOldKRPd2NBbOldKVTeShBbOldO5FVcfBbOldKSCu6NBbOldKWGvWNBbOldDbNtdJBbOldEwXDneBbOldHu7NljBbOldAJvsjYBbOldBSt2jQBbOldEwg01eQ0fTjIk_NHjQ0fTjEBKI7QQ0fTjtEXyFXQ0fTjDc97VgQ0fTjnY3U9cQ0fTjictTlcQ0fTji04prfQ0fTjiQ2DLQQ0fTjDct-ZjQ0fTjsf7njgQ0fTjKVNGeLJH28gDbXXzNJH28gsehz7gJH28gE8eYbXJH28gE90_3QJH28gAAJsFQJH28gAARKfeJH28gAIVTTgJH28gDbWStQJH28gE8ggXJJH28gtnj3xcJH28gAUhL7MJH28gAs1ExMJH28gAIZMtYJH28gBRXWtMD_cCeEkzE7jD_cCeofvbJeD_cCejYeM1iD_cCeEuEzNiD_cCejj4nHXD_cCeDbUMdRD_cCeseh1nRD_cCejXxVXNTYswkEmJkxeLsEZhE8epTLJsWYSmaLHJdHII7RPzCz0RHII7RAYbjWRHII7RJtDTXRHII7REkmQpeHII7RPzCxaRDtMUlBJHgyXDtMUlAAb3aeDtMUlAEgEOXDtMUlBJyLvJDtMUltoGCrXDtMUlJtJsdjDtMUlmZ34HeDtMUluIh-7ZDtMUltpTKnRDtMUltrP_PTDtMUltoGKRdDtMUlEkzCljDtMUljYeKfiDtMUlAEeTohDtMUlO2ijvRDtMUlBLAZVRDtMUlAYuyAhDtMUlC2tNriDtMUlBJrvnLDtMUlAAWc1gDtMUlBVfy_eDtMUlPBSNveDtMUlDXF85iDtMUlBqEe1hDtMUlPV25lJDtMUljj4kxWDtMUlDbDHaSDtMUlBJFYSSDtMUlAADTtIDtMUlCKJAkgDtMUlMCyaMgDtMUlC67dsfDtMUlBy2QsgDtMUlPBTXJeDtMUlCioSaXDtMUlBx0w8gDtMUlHnZpbXDtMUlC3KFfiDtMUlAAzUpgDtMUlBV8qzhDtMUlPBvFjeDtMUlO1cENeDtMUlMXC4kjDtMUlCHGvEjDtMUlRjEc2gDtMUlBJZlfNDtMUlO1MAPWDtMUlKNDbXjDtMUlBpyUthDtMUlPVkvdYDtMUlFFCJlWDtMUlCjhPIjDtMUlPRiZUjDtMUlCvogsRDtMUlMnTnmjDtMUlCXXeGjDtMUlBJppLXDtMUlO1cD7NDtMUlEwwudeDtMUlBJY49JDtMUlEkyU7MDtMUlEs7crMDtMUljXxqveDtMUlO1MdHMDtMUlBJqStjDtMUlBJY4HJDtMUlO1LS3JDtMUlFFEpPWDtMUlO1IF1JDtMUlBpxnVZDtMUlPVkCFZDtMUlFFLDTZDtMUlFFQZBNDtMUlDXIcRcDtMUljXk1xiDtMUlBqF53NDtMUlezx_VJDtMUlBJ1v7MDtMUlO1oKrJDtMUlEw81NeDtMUliPoODgDtMUlFEyfHSDtMUle2fGVNDtMUlEkx95jDtMUlogBiTIDtMUlJtM6djDtMUlBJYhFLDtMUlO1K71LDtMUlFFESNMDtMUlBpxQTZDtMUlPVjrDJDtMUljj3gFeDtMUlFFKsRZDtMUlGyH49NDtMUlDXIFPiDtMUlFEyIXYDtMUljXwRDRDtMUlBJ1Y5JDtMUlO1nzpJDtMUlEw8eLeTGdCrAAxO3NTGdCrACH95TTGdCrAYu0ELTGdCrq0nOrgTGdCrgjUlViTGdCrAEgL0LTGdCrACAOPXTGdCrBvcpxjTGdCrWn4vKcTGdCrRf6qagTGdCrAAq0_jTGdCrACBkBjTGdCrj7nIrNTGdCre0iufLTGdCrACBjLjTGdCrezpKrdTGdCrAAqHnjTGdCrACA2pjTGdCrACIVDeTGdCrj7mbTNTGdCre0iBHhTGdCrezpdJLTGdCrq0mKbKTGdCrgjThFiTGdCrezodBdTGdCrezpGZLLZ0roPzC0SSLZ0roBJp5fjLZ0roAYbj0SLZ0roEkyAbjR3Y70HrAecLR3Y70HavTSLR3Y70Haxa8LW_z12AAq1FjW_z12e0ixHeW_z12PNWfkLW_z12RgquiLW_z12PaENgIW_z12Mj6QyjW_z12RJMO4LW_z12QANXUhW_z12A13SATW_z12AlmG2JW_z12MltsqjW_z12SRePKfW_z12Rf6qOKW_z12QkcxGLW_z12K1r5IhW_z12LF53QhW_z12EQAp4LW_z12Pa93OhW_z12bZR-oLW_z12A19twjW_z12PbgCOIW_z12Ax8W6jW_z12AEeaMLW_z12BuE7RdW_z12QizAiJW_z12CGDdOLW_z12PZzEoJW_z12Bx010LW_z12PyJGuIW_z12PceFeLW_z12ZrDniIW_z12PbkTULW_z12PbHeCLW_z12AA9C2jW_z12M7VfwLW_z12UjiW2SW_z12BuE2BSW_z12BwyE5jW_z12K2ljgjW_z12EAsWIjW_z12K1xOqeW_z12GRq4XeW_z12BVg2_eW_z12C2rEpeW_z12BJpmlhW_z12PbHboLFCVqvA4kUOjFCVqvQYlhiRFCVqvPb3ioMFCVqvaRMyeTFCVqvTbTlGRFCVqvPbatWMFCVqvAoTJEjFCVqvMmnQeRFCVqvQAcUIRFCVqvLG2tKTFCVqvEQ9fyTFCVqvA9-REeFCVqvABQSKgFCVqvK2liATFCVqvEAsUoTFCVqvLGzgITFCVqvEQ6SwTFCVqvAl1DqfFCVqvQkmYMMFCVqvQkJi6IFCVqvQj_70cFCVqvK4Y40hFCVqvLIm28jFCVqvEStpkjFCVqvA4qtcjFCVqvPQARYjFCVqvPbDM8cFCVqvPbmcSIFCVqvPbJnAIFCVqvA0pWmjFCVqvBJ_HuMFCVqvK1xMUTFCVqvLF_KchFCVqvEQF9EiFCVqvA2DA8jFCVqvAA_L0MFCVqvADqFEjFCVqvZsaHYMFCVqvPbkUoiFCVqvPbHfWSFCVqvX-iKkgFCVqvVskbcMFCVqvU76hEMFCVqvEQD0kiFCVqvK2q3EjFCVqvEAxpsjFCVqvK2mOojFCVqvEAtBQjFCVqvK1x5yeFCVqvC3Q3FiFCVqvBJqA_hFCVqvAADqZgFCVqvC2g1TiFCVqvBVNAjeFCVqvBJihvbFCVqvO1RvdbFCVqvBp7Q9jFCVqvBV9BfeFCVqvBJF0DMFCVqvO01BxbFCVqvBpejRZFCVqvK2q3iIFCVqvK5SjMRFCVqvEDZV0RFCVqvK4eOWeFCVqvE9gskjFCVqvPbJksMFCVqvPbIJSeFCVqvPbaq8MFCVqvQkJggMFCVqvEkmNRjJUBbGD_tMxfJUBbGDbnZPgJUBbGDbXXDJJUBbGE8hktiJUBbGEkpczjD5WzLAYux0hD5WzLAEeSmXD5WzLMXC4YgD5WzLCHGu4jD5WzLRjEcqgD5WzLAEgJkhD5WzLMC0Q-jD5WzLBy4HegD5WzLCmeLNWD5WzLHm919eD5WzLC2uSBeD5WzLBVg3VhD5WzLBJpm7RD5WzLEwwsNID5WzLMnOo8jD5WzLCXSfcSD5WzLBJZ8dMD5WzLEwhBveD5WzLC-yavfD5WzLPzE5oMD5WzLC-2VFMD5WzLBJZlbRD5WzLEwgqteW5umjIk3u1jW5umjCHGpqjW5umjC25CKeW5umjDcmgHjQoU09EmJnTjQoU09El8yVTQoU09Dct6LIQoU09sf7jVXQoU09Jt-ErjQoU09iQmCBQQoU09DbQC2LQoU09BJSTuLQoU09Ik_NNjQoU09EBKJBfQoU09Dc96lSQoU09Dct-fjQoU09KWGx4LI7sd6DbWTvII7sd6E8eqJLI7sd6uA7DBXI7sd6sej8ncI7sd6E8ghHXI7sd6t_3xXcI7sd6tD517fI7sd6tnj4hcI7sd6E93IjTI7sd6E89nRQI7sd6AIZNnII7sd6BRXXhhI7sd6DbnZfjI7sd6AIZ6XMVwvu_Ila-DgVwvu_EBl53TVwvu_Dc97VgVwvu_DdJvVjDzRj4Es7IVjDzRj4jXxWZRDzRj4tnqURJDzRj4toJPtdDzRj4E9G99RDzRj4BJp7pjTMiR-q0mKVgTMiR-gjTg_iTMiR-AApwpjTMiR-ACAfrjTMiR-j7mEVMTMiR-e0hqJXTMiR-ezoGVdTMiR-ACH-ReTMiR-ezpGXLTMiR-ezoYzLTMiR-ezoCDhLf567DbzLRILf567JtM83JLf567izEB3XLf567Ik3-FgLf567DcmZbXLf567AAJrzJLf567sf0ClXLf567E9wnFXLf567EA8dTJLf567Dcp3VjLf567DdDdDjLf567Dct4BXLf567DcnvZILf567DcnB1JLf567DbWTjMLf567sej8tXLf567E8ghNSLf567KVVdygLf567DfcQagLf567AFZUSWLf567Acq_0gLf567KVUZcgLf567DfbMEgLf567AFYP8jLf567Ackq0XLf567DcLqOjLf567ABVdmjLf567DcmrFJLf567AAQFzMLf567CGDWVILf567AIWAhhLf567S4JXKeLf567PdTKieLf567S1cmqdLd4LKPzCxgGLd4LKAYbiuGLd4LKPzCwqGPXO-VDbnY9gI_v9cAAN9deI_v9cAIy1TGI_v9cAUfbBQI_v9cAIVTNgI_v9cAAOUTeI_v9cAIV_rYLj9adAIWABGLj9adIjnmljLj9adD_o7TfLj9adDbzIFILj9adDndkXXLj9adDbXX5JLj9adDbWqVILj9adAksUpYLj9adPaJVqGLj9adAAs6VYLj9adAMXWnYLj9adDbWTlYLj9adAAN9HYLj9adAAQcleLb2bZBJ1XdjLb2bZO1klLjLb2bZEkv1djLb2bZgI65peLb2bZhqFHTiLb2bZf80s_NLb2bZf8zqVNGSwRcPzE8yRGSwRcBJHmsbGSwRcAYdsUTGSwRcBKUhIjGSwRca0bDSdGSwRcNIooieGSwRcQmSO6RGSwRcLaQoGhGSwRcXMX-qWGSwRcCjfCCjGSwRcCqivceGSwRcW0FKKcGSwRcCGDYuXGSwRcCekFseGSwRcAEeTKXGSwRcCioSyXGSwRcAEgKIhGSwRcR_cu-iGSwRcW3rzkWGSwRcXNRtceGSwRcCHGxIRGSwRcPOWjEjGSwRcCroVmjGSwRcAFYEejGSwRcZvemoRGSwRcPhVyQRGSwRcBy4JudGSwRcPeNvMRGSwRcAEgJShGSwRcCibw2ZGSwRcWz_06NGSwRcCSKlsNGSwRcCeewcMGSwRcBtrO-NGSwRcCimhWcGSwRcBxy_4gGSwRcCrjBMeGSwRcPeL-mRGSwRcWn4tegGSwRcRf6ouRGSwRcCGDeQSGSwRcBJpnfIGSwRcCuoc6XGSwRcBJsHJjGSwRcf9kDLWGSwRchqFe7iGSwRcf8oPpWGSwRcAZXYYeGSwRcAdblejGSwRcf8qaBRGSwRcAdZ02jGSwRcPzE6YRGSwRcGRp03JGSwRcDbDH6XGSwRcBJFYyXGSwRcBJ1WXNGSwRcO1nxHMGSwRcC2qATiGSwRcDb85ORGSwRcBJ_KGJGSwRcCHGxQiGSwRcBJYjnRGSwRcO1K-XRVsA_iBJa2kFVsA_iNHu9-FVsA_iAEeZ6FVsA_iGRp5FMVsA_iBVf3teVsA_iC2qFXiVsA_iBKvDdNVsA_iBJYrNdN_YofAYbjeFN_YofPzCxaFTHzihBVzQXeTHzihBJp2rITHzihBJsWVMTHzihGRqEDJTHzihBJ1ljMTHzihBVgB1eTHzihO0-W5WTHzihC2qPfiTHzihDeqAgjTHzihBJYyzNLbLLeBJrwdXLbLLeCHGycFLbLLef8qYnhLbLLeBJYh7XLbLLeO1K8rXLbLLeO0-HtXHn5nmXMrNIeHn5nmWz_0ucHn5nmMzZDIjHn5nmCeewQIHn5nmCimhKTHn5nmWQaQKJHn5nmCfO7UTHn5nmQANXURHn5nmAp3hYTHn5nmWn4tSgHn5nmQkcvaTHn5nmA13SAJHn5nmAlmG2JHn5nmPbgAigHn5nmED6a-iHn5nmWPdLETHn5nmBtn72THn5nmR8S6SWHn5nmW0h-4WHn5nmWSNkcIHn5nmCrjAKRHn5nmChCPmRHn5nmQjIZ8hHn5nmPeL9khHn5nmArhOkjHn5nmXYim0fHn5nmC2tXmfHn5nmL-quKjHn5nmMvUoijHn5nmWPl38gHn5nmBJRM8IHn5nmNHlUWjHn5nmBttbsIHn5nmAEeXqgHn5nmK5znghHn5nmAo1-QJHn5nmCibwYZHn5nmCSKlOJHn5nmBtrOgXHn5nmBulAqGHn5nmCGDdyJHn5nmBwYU8RHn5nmXMOZQeHn5nmCGDc8IHn5nmBx01iIHn5nmCiZoKMHn5nmCTTSIJHn5nmRHX9MRHn5nmRHWiERHn5nmCTJogJHn5nmRHeFiSHn5nmCTINYSHn5nmRHcqaJHn5nmUjiW2MHn5nmAczV4JHn5nmWPfT8SHn5nmBtqEuSHn5nmWPd40SHn5nmbYz9mSHn5nmRKEs2RHn5nmCU5ySJHn5nmbYyieSHn5nmWP8LwgHn5nmBujx0jHn5nmMj5BqjHn5nmWPlwigHn5nmBtwhUJHn5nmMj3mijHn5nmWPkVagHn5nmRHYYMJHn5nmWPfeEgHn5nmCiZn4MHn5nmCWPOWSHn5nmCTOpsMHn5nmAdZ0ggHn5nmWPd4iJHn5nmBtopUIHn5nmRKDRcRHn5nmCU4W4RHn5nmAda4AjHn5nmAfNIyjHn5nmWP6wWgHn5nmBuiWajHn5nmWPkVIJHn5nmBtvF6JHn5nmAYdrYeHn5nmWPeCqgHn5nmAch4eIHn5nmWQW2kWHn5nmWPjmEWHn5nmBtuW2WHn5nmWPdREXHn5nmWQdVsXHn5nmCV0h8JHn5nmMj3LcjHn5nmWPj6UJHn5nmCTHxcRHn5nmBuxrCgHn5nmMkG64jHn5nmWQAd4gHn5nmWPjwMgHn5nmL-nXGjHn5nmMmj7GjHn5nmWSQp-XHn5nmMl3EqXHn5nmL_hEMgHn5nmPOJlMjHn5nmL-tzsjHn5nmWQW2SJHn5nmBuhnEWHn5nmBuxtSgHn5nmWQdVagHn5nmCrmGQeHn5nmCtP0SeHn5nmCVxUoJHn5nmWQXC8IHn5nmK1xM-hHn5nmWTD6MJHn5nmBxOq-RHn5nmWSQpsgHn5nmBwbaegHn5nmWSKXOIHn5nmCTN8eIHn5nmCU3qgIHn5nmCTHf4IHn5nmWPdLUGHn5nmMj25CjHn5nmWPjn6gHn5nmBxzRoMHn5nmBxs8oXHn5nmWPgBieHn5nmMCsR4jHn5nmD_hj8iHn5nmBymh2JHn5nmWPgBQeHn5nmBtqyCeHn5nmCKC3-JHn5nmBtxOoeHn5nmD_gIieHn5nmWQY_SXHn5nmWPluyWHn5nmBtwfkWHn5nmWPkTqeHn5nmWPfZyXHn5nmD_yqMIHn5nmBV8oNeHn5nmC3G13jHn5nmL-pf0jHn5nmBJpm3eHn5nmL-v8ajHn5nmWQY_AJHn5nmBujvyJHn5nmWQXj4eHn5nmBuz2AeHn5nmEAZI0iHn5nmE8XBuIHn5nmBwdjMeHn5nmECMdGjHn5nmDbDMIgHn5nmBJFdAIHn5nmCGDdEJXBKVsWQz9egXBKVsWPgkwFXBKVsWPjqSXXBKVsWP6FOXXBKVsWPjqAXXBKVsWPdXiFXBKVsBxO3ojPUh-pC5aXSfPUh-pMBXt2gPUh-pBwabYjPUh-pBxSAWjPUh-pCIwdejPUh-pPzMXiKPUh-pBxQxgjPUh-pBxPWGFPUh-pBxequFPUh-pMCOD4FGe6wCRf6oigGe6wCCGDeEcGe6wCAEeYghGe6wCBx02qSGe6wCMX8legGe6wCBy2YGgGe6wCCJzukRGe6wCMCyfEjGe6wCBx010gGe6wCM7YtojLnVqECHGxajGY1gvCjfCOSGY1gvCqivoeGY1gvXMOXweGY1gvBJrwLIGY1gvCGDY6XGY1gvC2ztWfGY1gvCekF4eGY1gvCHGxUjGY1gvf8qYVWOFd3yAEWCoFOFd3yAEU-SFOFd3yDfV2EFOFd3yDbR_qFOFd3yABFccFOFd3yPaJWaFTN4x0BJr_XIGWzw-AdZzqjGWzw-AYdrYJGWzw-DbDMOGGWzw-BJFdGGGWzw-CGDdKJLfOrADb85UjHr9HICTHf0SHr9HIWPjn2gHr9HIC2tXyfHr9HIL-quWjHr9HIBttb4IHr9HICibwkZHr9HICSKlaKHr9HIWz2NiKHr9HICeewKiHr9HIBtrOsXHr9HIBulA2SHr9HICGDd-JHr9HIBwYVIRHr9HIWPjnkJHr9HIBtuYWJHr9HICGDdIIHr9HIWPd4gJHr9HIBtwhEeHr9HID_ioAGGUyBNCekGEXGUyBNCeewgYHp7XXCeewWXGa3QgQkmZCTGa3QgPb3ioRGa3QgPbatWhGa3QgBJ_IkTGa3QgBODsKjGa3QgAFYCyjPHsQIKVNGeNE22cEEkmXjiUQHKKDbUMdFUQHKKEBKIFFUQHKKseh1neUQHKKiOlsHFUQHKKDeBbVFMjezHAIV_9YJIiMbKVTg0hJIiMbKWGx4NLaf7je1GHxTLaf7jAYu0idLaf7jACAYXjLaf7jACH2xjLaf7jAEgNIhLaf7je1FAJFKLb0sHzHdgeKLb0sHa0pATUcRowBuE2NFUcRowezpFteUcRowBwyFFjUcRowBJpm7FUcRowBJZlbFMvpRtPb3iogMvpRtPbatWgMvpRtAFYFmMMvpRtCHGvuJMvpRtQkmYMMMvpRtQkJi6JMvpRtCIwfcjMvpRtPbmcSiMvpRtPbJnAIMvpRtAEgMGgMvpRtMXC4YgMvpRtZsaHYMMvpRtPbkUobMvpRtPbHfWbJUsrBKVNGwMLmqaJAYu0WhLmqaJMXC66gLmqaJDPL-aeLmqaJCHGxadLmqaJAEgMGgDz8zzizNqpTFHEaMDbnapjFHEaMDbzPfjFHEaMAlAnbeFHEaMAIyyxjFHEaMAkkDBbFHEaMAkjufWFHEaMAkkcHWEmod8O1kkVSEmod8Ekv0neLim6nAAWpZJCSakaAAJosSCSakaWUhHEMCSakaWUd6CMCSakaByoq0NCSakaCjSlMNCSakaMDfjOjCSakaWP0Z-eCSakaAENk8JCSakaWTd6eZCSakaWTkUicCSakaBxvFUXCSakaCiY_sMCSakaMCl9ujCSakaWPhF4eCSakaXALAQeCSakaBtr2qeCSakaCeVxCeCSakaXcmTOMCSakaAET5GJCSakaMCoAgZCSakaC6xEAfCSakaMCuakjCSakaMzYU8jCSakaPFMc-MCSakaAEPnuJCSakaWTpkWcCSakaMa75WgCSakaO5GPwfCSakaCeV7KeCSakaC6xOIfCSakaBxxSOICSakaDfTtYFCSakaAFHKKJCSakaByo0qQCSakaAAKWAeCSakaRITQ-eCSakaB0cLejCSakaBtsAgeCSakaWQaDoNCSakaXBD-AdCSakaBuk0aNCSakaCfOuyNCSakaXY_YAfCSakaWoL2iRCSakaWPgeIcCSakaXAKYgcCSakaBtrO6XCSakaCeVJSRCSakaCfO46QCSakaXYic0fCSakaAAQCshCSakaC2tNmfCSakaL-qkKjCSakaMvUeijCSakaAALxUJCSakaWPlt8NCSakaXAPoUNCSakaSRePSfCSakaChCPuRCSakaRIUsSICSakaC2tXufCSakaMvUoqjCSakaBttb0ICSakaC6xOCfCSakaMCk9gjCSakaBxxSIICSakaDbP2-ICSakaABDTwJCSakaRJMOuFCSakaBuk-QICSakaByo0kFCSakaBwYVEjCSakaB0cLYjJ_C7dCeV0aeJ_C7dChCI-NJ_C7dCeVYedJ_C7dMvUh6jHIlwjAAFcMRHIlwjPzE78RHIlwjBy4KAjHIlwjAk4F4RHIlwjAADTsRHIlwjCiawuXHIlwjBxy_CgHIlwjCijTeFHIlwjCWQ_sXHIlwjCuoc6FHIlwjDbFVGRWh2epBttRkTWh2epCinkqXWh2epRf8rUXWh2epCGFeUgWh2epCIylmjWh2epBx010LWh2epAk4A0FWh2epCroOAjWh2epCtOvAXWh2epPNVP-eWh2epCildAJWh2epRf6jqgWh2epCroJ4eWh2epCGFccgWh2epPNVOYeWh2epBuzwEgWh2epCqhroeO1OHmPzhxOIEkYTiB0h4CjEkYTiAYdreJEkYTiAEgJkhEkYTiMC0Q-jEkYTiWn4sogEkYTiRf6n4gEkYTiCGDdaJEkYTiPzE5iJMRAqlDb_CMJGR2m4AEeSURGR2m4MnOoqjGR2m4CXSfKFGR2m4DbDHEXGR2m4BJFX8FGR2m4Db85ORN-e97Al09eFN-e97Ap5KkjN-e97BOFfwLN-e97Ap3Z-hN-e97PzfpkbN-e97Db85kjN-e97dGDbuFN-e97BJ_KcdN-e97BOEyQLN-e97Db_CMJLaRg6BNLtmXLaRg6AEgEOgLaRg6BNJ9AfLaRg6AEeTohLaRg6DbDHaXLaRg6BJFYSXLaRg6CKJAkgLaRg6E0RBcXLaRg6MCyaMjLaRg6C67dsfLaRg6By2QsjLaRg6Bx0w8gLaRg6BNLAGXLaRg6BZSSIYHm_9CRgquiRHm_9CA13UiRHm_9CAlmJYRHm_9CRJMO4RHm_9CQANXUhHm_9CSRePKfHm_9CPa93OhHm_9CbZR-ocHm_9CA19twjHm_9CMltlERHm_9CAx8W6jHm_9CAA9FYFHm_9CPbkTUIHm_9CPbHeCIHm_9CCSNhAMHm_9CCWPNgXHm_9CCSNf4eHm_9CMjMNqjHm_9CCTTRwiHm_9CCqk9SFHm_9CAk4F-hHm_9CK2ljgjHm_9CEAsWIiHm_9CCSMzgJHm_9CDbDMIFXAQrICilb-HXAQrIRf6ioXXAQrIBtrImFXAQrICGDVWFXAQrICqhsyeXAQrICIwcojXAQrICTP_MjXAQrIBBTrmWXAQrICqhrSeXAQrIBttReFXAQrIAo_bIhXAQrICSNa0eXAQrIAp0HgJXAQrIAk4A6ePToUFAoTJEjPToUFA9-REePToUFK2liALPToUFEAsUoIPToUFAl1DqTPToUFAp3Y8fPToUFPzfoQIPToUFS0wyYbPToUFBLVnwIFCygBAAWcoIFCygBAk4BGTFCygBBx010MFCygBMjM2QjFCygBCTT6WfFCygBAk4ukhFCygBAlxsUMHUwPJBy2YGjWuA9PBxzD6LEwiyIB0gGIjEwiyIRf6nsgEwiyICGDdOIEwiyIAEeXqhEwiyIMCyfEjEwiyIBx010gOKpchApqkiXLmb_gAEeSmgLmb_gK5wS4hLmb_gDbFVMFCYfztCfSpeeCYfztC7qvafCYfztBy3noMCYfztBulhyeCYfztWQRJ6eCYfztCrZ6weCYfztCfPcKeCYfztG3FxieCYfztCLA0wgCYfztWPc0OFCYfztMwRW-jCYfztC3m5AfCYfztXZShIfCYfztBuzxOiCYfztWQfZWQCYfztCroKMeCYfztCfdrmiCYfztCG8-WgCYfztWoomegCYfztPOMwSJCYfztWQfZEeHg6tvWPcHaeCGQF0Rr9jAJCGQF0KRPd2gCGQF0K1xCUJO7TW5DbVQ6eO7TW5ABItsjMXF54DfV2WaMXF54AEWCoJMXF54AEU-SgMXF54Ackk6FMXF54DbR_8aMXF54ABFcuaMXF54S0_ieaMXF54PaJV2JMXF54DcO3QjGX72LW0FPgFGX72LCSQASeGX72LCid-aFGX72LAkk40eGX72LA0y28bGX72LBA_d8XGX72LCXVs2jGX72LCWUNGXGX72LA2C7mhGX72LHbkjwjGX72LBB5PQjGX72LFAbkoiGX72LBBBUEFGX72LA0wucMGX72LA08eOMGX72LCWSbqFGX72LAonUMMGX72LBBAmsFDzuZKAk7OIhDzuZKMjPVijDzuZKA1JMQhDzuZKMzdTqjDzuZKCTTMCiDzuZKCjhKKjDzuZKEPwcQFGV6GaDbDMOGLeVAcDbFVMGLeVAcDb85UGCioiiAk17yTCioiiAkk1cICioiiAlcX4QCioiiAnPusFCioiiHapBARCioiiCSQPqICioiiCTTPmICioiiCU8_UfCioiiCU5ySICioiiAk7Q2hCioiiMjPYQjCioiiHaq3IfCioiiHbsAqSCioiiHdVwYFCioiiCU4W4SCioiiD_1ukiCioiiAk2oaSCioiiMl3EqjCioiiCVxUoRCioiiAlvmKQCioiiAni8-hCioiiCU3qgRCioiiCfR76GCioiiAk7-ceCioiiG3FD-eCioiiByoqiGCioiiWPcGqeCioiiD_2cKiCioiiBuk0IGCioiiWQQcQGCioiiCrZNGeCioiiCfOugGCioiiAlwTwQCioiiK1rsUGCioiiAnjqkhR75QoCSMymIR75QoCSLXMSR75QoMjKE-jR75QoCTEU8QR75QoAk19ShR75QoCSKq0QR75QoAk2q4hHrDckAo6nQIHrDckCWSbMXHrDckAonTuXHrDckAphF4IHrDckBA_jAIHrDckA08c6XHrDckArUaKjHrDckBA_iKbHrDckCSP98JHrDckHaovASXEUKqAlcXCFXEUKqAoJl6jXEUKqAlvn2XFG1_jAlvmWTFG1_jAoctojFG1_jAlegAIFG1_jAoLnSjFG1_jAoJZQXFG1_jAl07ahFG1_jEAvZIjFG1_jAlwS-SFG1_jAocniXMzeWmDbYY-eMzeWmABIooeCIR1lKVM6MaCIR1lKRJDyaCIR1lKRRmiJCIR1lKVVc2gCIR1lKVNEOgHQsvnPb3ioTHQsvnPbatWRHQsvnBJ_KQRHQsvnQkmYMIHQsvnAA_OWbHQsvnAZhAOFHQsvnDcPDyeHQsvnBKRT0FHQsvnABI2ejGZ9l8ZsaHYFGZ9l8BODt2jGZ9l8AFYEeFGZ9l8BA_eUhGZ9l8AlxxYXGZ9l8A0wugYGZ9l8AonUQYD1wI7A-J2ieD1wI7AlxswhHJ8QZXMaHoeHJ8QZBx02qJHJ8QZBx010JHJ8QZXMaHWcHJ8QZXMUyGcHJ8QZAYdrkJHJ8QZCGFcceHJ8QZCLLJSjHJ8QZCKJpiSHJ8QZBuzwEFHJ8QZCKH4EYVsd00BP3ICFVsd00AHLeqFN_1dxBNJ8iXN_1dxAEeTKXN_1dxBNLzgFN_1dxBODt2FN_1dxAFYEejN_1dxBNLyqFN_1dxAEgJSFN_1dxBxy_4gN_1dxDbDNUFN_1dxBJFeMFN_1dxBNLGAFN_1dxBNLFKFN_1dxDbFV8JN_1dxDb86EFN_1dxDb85OjHoWc4XMUx6eHoWc4WPgYGIHoWc4W0B8kIHoWc4BtrImFHoWc4Bxvy2FHoWc4C6xxifHoWc4MCvIGjHoWc4CKI8EgHoWc4BypYEMHoWc4BttReePU-z7AEeXqhPU-z7BNKAwFHWGu_BxzEwTHWGu_CGgSggHWGu_BxzD6TGZSWBW0FKcFGZSWBCSP7OFGZSWBCid5WFGZSWBHbkfijHN_v7CKH3uSHL-AKCeewWJGbUFyAlxsUhOH8c1BJ_LGjO15XhAEgMGSMRr6gAaFR2IPUTkAAEeaMgPUTkAPbkTUFPUTkAPbHeCMPCD2HCGDfwMWz3x5Ik3u1gWz3x5DcmgHjE2ZmyABgL7FUPqU4BuIPtdUPqU4DdDOpaMjB91AAJsFFMjB91AAQGFFMjB91CGDWnMMjB91AIWAzFV9IoOEBKI7JV9IoOiOls9gV9IoODbUMdTV9IoOseh1ncV9IoODeBbVTV9IoODct4HeD_qdHDXGQ9iD_qdHBrICBjD_qdHBqEwXFD_qdHBpyoxRD_qdHEkmXRjD_qdHDcszZSD_qdHsf6cjSD_qdHE93BDSD_qdHElsvTRD_qdHBJY1TJD_qdHO1LQDJD_qdHBpxkhJD_qdHf-nOpRD_qdHf8z5hJD_qdHEBCohfD_qdHDo0EjFD_qdHDct35ND_qdHDcmZXRD_qdHsf0ChRD_qdHE9wnBaTY7LNDbnZbeLsS0KDbWTjNLsS0Ksej8tSLsS0KE8ghNSBJNSNEkzCTNBJNSNjXk2VMBJNSNe2fGVSBJNSNEkx95jBJNSNogBiTWBJNSNFFKtHjBJNSNJtM8_NBJNSNjXwRDJDtavOEkyAbjUb0zelpBKvLUb0zegh8wjXUb0zeggmYTdUb0zeBuEzrjUb0zeghGSLiUb0zeBwyCjjUb0zeghDE9iUb0zeBuE0xjBnnesEkmOHJWJTG0ezpGRJWJTG0BJpmphWJTG0BJZlbJTlFpzAlNbXeTlFpzBuMSFeTlFpzAM-3ZjTlFpzAAxMVaTlFpzghEKDiTlFpzAA3lpjL4dSwD_sIhfL4dSwDndkjFL4dSwDbXX5JBVXwzEkzZRMW59BMIk3u5jW59BMDcmgLjW59BMDcngNeW59BMDcmb5FUVvkLDdDOtjWDN3hDcmb5JEFvsaDcmZbREFvsasf0ClaEFvsaE9wnFaEFvsaDct3vJGXtbiGRtWBMGXtbilG7vXhGXtbitncq_aVw-JoDbXatMDzf-hf8z6jFDzf-hBJY1fFDzf-hO1LQPFDzf-hBpxktFDzf-hf-nO1RDzf-hAATkbIDzf-hDbzIvjDzf-hJtM6VjDzf-hnWl33IDzf-hizEB3TDzf-he1h9xRDzf-hia4q7RDzf-hDcsz1FTMwsnj9zTPLTMwsnDdJoljTMwsngi2rtJTMwsne1lMfTTMwsne1-yNhTMwsnBuLcpILgIVkGRqI_hBNQxvEkzZFNBNQxvBR9DBNFGnk6GSKIxRBrq-Of9jsNJBrq-Of8n49JBrq-OBJrvVjBrq-OBqEejhBrq-Of8qDVXBrq-OBJsc9jBrq-Of8qBlYG0F4QAAkV3JG0F4QAkjvVJG0F4QAkkDlJG0F4QAkkc9JEP4bPDbnY9gEP4bPDbzPfjBLPB-e2evjNGTp8AEkv1LNBRURREkzCleTOycYghDF_XTOycYAA3mreLiKFVDbWT1FTaRrDFIoBfFTaRrDFIl5XaTaRrDFIk0HaTOHMdD_vkXMTOHMdFIk1BgG1cYGMjKA2ZG1cYGCqivoeEQjrKAkj0ZICSHWOFQwNJfCSHWOAs0u5fCSHWOQPrSKcCSHWOHCR7DeCSHWOG2HzPeCSHWOG2IOPXCSHWOIHOE3jCSHWOFUzVJgCSHWOHmxEReCSHWOGl5LxhCSHWOFIpNVeCSHWOGZvD9hCSHWOFc6q_gCSHWOHam39eCSHWOHaou7XCSHWOHiuppfCSHWOEIO4PfCSHWOEUFETRCSHWOEH68ffCSHWOFIq-9ZCSHWOAkvgthCSHWOFQw5rgCSHWOAs1bbhCSHWOFpIWVhCSHWOBFM4FhCSHWOAs0YJfCSHWOWUhHEMCSHWOWTd6eZCSHWOEH0LHfCSHWODvln_gCSHWOtDBNTfCSHWOEH6lvfCSHWOKVNEyICSHWODjvbpjCSHWODbXXFeCSHWOE8rL1eCSHWOselAPeCSHWOBFMhVhJ-vtRG2IeRgJ-vtRKE7bPjJ-vtRHao-HLHaiQQCidEYMHaiQQCTJ6ORHaiQQXAKh2WHaiQQCeVSoSHaiQQBtrX-SHaiQQRsHT8WHaiQQCSM8cMHaiQQBxvUgMHaiQQCeWAOeHaiQQC6xTMfHaiQQBxxXSgHaiQQCKHZYKHaiQQByo5uMHaiQQBtsFkeHaiQQCeV_8eHaiQQBulyqeHaiQQCfO9-NHaiQQCeVYeNHaiQQC2tcyfHaiQQMvUtujHaiQQBttg4IHaiQQCeXbQNHaiQQC3nJ4IHaiQQBu0CGIHaiQQCGDi-KHaiQQBulDUWHaiQQCfO9sWHaiQQCG9QEDHaiQQBxSHOjWzy-WFQwMTXWzy-WAs0uDXWzy-WCic1MMWzy-WHayggLWzy-WP_Ts8LWzy-WA09noLWzy-WAksceLWzy-WXAKSqIWzy-WCeVDcSWzy-WAADYwLWzy-WBxzEGLWzy-WBtrIySWzy-WHbke4jWzy-WCSMtQMWzy-WCTJnYjWzy-WBxzD0LWzy-WFQw5rhWzy-WAs1bbhWzy-WAs0XTXWzy-WBxvFUMWzy-WCeVxCeWzy-WC6xEAfWzy-WBxxIGgWzy-WCKHKMKWzy-WByoqiMWzy-WBtr2YeWzy-WCeVwweWzy-WBuljeeWzy-WCfOuyWWzy-WCeVJSNWzy-WC2tNmfWzy-WMvUeijWzy-WBttRsIWzy-WCeXMENWzy-WC3wkUfWzy-WBuzy6IWzy-WCGDTyKWzy-WBuk0IWWzy-WCfOugWWzy-WCG9A4DWzy-WBxR4CjWzy-WK1r4-LPHKnTWPgtYgPHKnTBtreKdPHKnTCeVYidPHKnTCSNCodPHKnTCHaAoSPHKnTMABRkjE2UzPFQw53RE2UzPAs1bnRE2UzPXBD-ENE2UzPCfOu2NE2UzPXAKYkNE2UzPBtrO-RE2UzPCeVJWRE2UzPCSMzcRE2UzPCijUURE2UzPA3qp2jE2UzPQXr3KeE2UzPaQTIGhE2UzPAnZesjE2UzPPfFpKSE2UzPWn4tegE2UzPLF9CySE2UzPEQD1aiE2UzPA2A5SSE2UzPRf6ougE2UzPA9EmseE2UzPK1r3oSE2UzPMvUemjE2UzPXAPoYDE2UzPBttRwNE2UzPBuk0MNE2UzPCTTMyWE2UzPMnOpgjE2UzPCXSgADE2UzPBy2WUDE2UzPAAWcihE2UzPAk4BAhE2UzPCV2pmRE2UzPB0gGCjE2UzPCKJFWgE2UzPAEeXkhE2UzPBx01ugE2UzPG2If9gE2UzPEH7pNfE2UzPK1skGeE2UzPDjvZZgE2UzPK1xMcIE2UzPK2lh2IE2UzPK4Y4qhMi9KSChCJCNMi9KSCU5zIDMi9KSWn4l4gMi9KSCGDWqDMi9KSMvUh-jMi9KSCfOxYIMi9KSWPlxYgMi9KSCTTPmIMi9KSCqk7IeMi9KSMjMMEjMi9KSChCIMNMi9KSMvUhIjD_lpkBy2WmgD_lpkBxy_CXD_lpkCGDdaDD_lpkCKJFogD_lpkMCyfQgD_lpkBx02ADD_lpkCiawcXD_lpkCWQ_aXHISiXCjgVkjHISiXCie10SHISiXGRqcfRHISiXBVgbHeHISiXC2qoxRWhjQdCjgGYWWhjQdCiemoSWhjQdAEeZ6LWhjQdPfFn2LWhjQdBx01iLWhjQdBt-aRXWhjQdAk_itXEkFFWAEeTKXEkFFWAEgKIIEkFFWAHLZmjEkFFWPfHZwhEkFFWB0h3wjEkFFWAEgJShEkFFWBy4HMjEkFFWC2z_RiEkFFWe0iDphEkFFWj7wCZhEkFFWBJ1tZNEkFFWO1oIJNEkFFWBVgJreEkFFWPBSkbeEkFFWDXGTlREkFFWO1bUBNEkFFWBqE1hhEkFFWBJY6XXEkFFWO1LVHXEkFFWO1IIFXEkFFWezyEHdEkFFWGSGsrjEkFFWC3QgDiEkFFWBJpp9eEkFFWBV8qdeMQtcZPzCxaILZ-SuBJZJjLKK6L3Ijoq1jKK6L3D_p_jSKK6L3DbnZDgHmsu2RsHUCWHmsu2CidD6THmsu2CSM8QLHmsu2CeXbUDHmsu2WPhVCMHmsu2CeWAMMHmsu2BtsFiMHmsu2CSNqAeHmsu2CfO98DHmsu2Cee_iDHmsu2CeVYcDHmsu2MvUtsjHmsu2C2qPufHmsu2MjMXyDHmsu2CTTb4eHmsu2CqlHaeHmsu2AAWroDHmsu2Ak4QGhHmsu2C3j8ijHmsu2CeVSsDHmsu2Ac0eMhHmsu2AEgOkDHmsu2AFYH-WHmsu2AAcBYeHmsu2BtuOKGW_9c8MnOjsTW_9c8BxzD6LW_9c8CunTUWW_9c8Cic0uWW_9c8CXIzqWW_9c8HbkeseW_9c8CSMtEeW_9c8CeXMIDW_9c8WPhF2DW_9c8CeVxAMW_9c8Btr2WMW_9c8CSNa0MW_9c8CfOuwWW_9c8CeewWIW_9c8CeVJQIW_9c8MvUegjW_9c8C2qAifW_9c8MjMImjW_9c8CTTMseW_9c8Cqk4OeW_9c8AAWccDW_9c8Ak4A6hW_9c8C3tW-jW_9c8CeVDgDW_9c8Ac0PAhW_9c8AEf_YDW_9c8AFX4ygW_9c8AAbyMeW_9c8Btt--DPTVF5BtsLudFCfR1e0hntgFCfR1f9hjnhFCfR1BuIBjjFCfR1lpEXxRFCfR1gh_9lRFCfR1ggplVRFCfR1By2WagFCfR1AAWcoTFCfR1BtrI5WFCfR1AApq1jFCfR1gJq9BhFCfR1Ak4BGTFCfR1PfFoIDFCfR1B0gGIjFCfR1AEeXqhFCfR1MCyfEjFCfR1Bx010DFCfR1Bx01iDFCfR1WQaxQWFCfR1CfPcaCFCfR1CekGKIFCfR1WPhLwDFCfR1CefeARFCfR1Btr8iRFCfR1CeV26RFCfR1CSNhARFCfR1AAbyiSFCfR1C2sJUDFCfR1XYjKcfFCfR1C2t7OfFCfR1L-rRyjFCfR1MvVMKjFCfR1C2quMfFCfR1WPmbkDFCfR1MjM2QjFCfR1Btt_USFCfR1C3yqifFCfR1BulhwMFCfR1CTT6WfFCfR1AAXKGhFCfR1Ak4ukhFCfR1C3kbAjFCfR1AEgJeMFCfR1C3jr8WFCfR1C2ztifFCfR1BJYhUhFCfR1O1HvCIFCfR1BVfy5eFCfR1C2qAjiFCfR1DXF8ziFCfR1O1a9PjFCfR1BqEevSFCfR1BV8-9eFCfR1C3HMniFCfR1BJp9nhFCfR1O2BcIjFCfR1ABQH2MFCfR1AlxsUMFCfR1AAWcdgFCfR1C6QvkjFCfR1ghGR_gFCfR1CfOu6IFCfR1CeewgRFCfR1CeVJaRFCfR1MvUeqjFCfR1C2qAsfFCfR1AAcf2MFCfR1C2wD2eFCfR1L-taaeFCfR1K1r2uIFCfR1ABVdmMFCfR1Bu0egMMvHo4BtrMRgMvHo4C2rILeMvHo4CeVFzcMvHo4BwY8OIMvHo4C2t-mfMvHo4CGEEOIMvHo4L-rVKjMvHo4C2qCziWttvDAEeaAgEwPj8Rf6oigEwPj8AEeYgTEwPj8Ac0ZGhEwPj8AHLZsjCYMlhFQwe3fCYMlhGZvEthCYMlhFtHgLhCYMlhJIg8JjCYMlhFIpIveCYMlhFIq_tXCYMlhAkvhdMCYMlhFQw6bgCYMlhAs1cLfCYMlhFpIXFMCYMlhBFM41MCYMlhBFJrzMCYMlhRr9j2DCYMlhAMXedMCYMlhPaHNySCYMlhW0WU6MCYMlhP-jhmMCYMlhDbQBKICYMlhBJSSCICYMlhRvQ5uMCYMlhP-oxahCYMlhQN538MCYMlhAAJyjaCYMlhB10a3MCYMlhAAOEHMCYMlhAUfhxMCYMlhAIVZ9MCYMlhG2IghgCYMlhHanqlMCYMlhIv8wheCYMlhIn1xdjCYMlhFItHphCYMlhGZy-RhCYMlhGd1ZdeCYMlhFQxQdgCYMlhAIS6NaCYMlhBFMiFMCYMlhRHlKqMCYMlhPeNNGQCYMlhZvXYwZCYMlhS5BWGiCYMlhZvA3oDCYMlhS5HqQiCYMlhZu8mQgCYMlhS5DY4gCYMlhPaH7YeCYMlhRKs2qeCYMlhQBt_GeCYMlhPhU5GZCYMlhZq3UieCYMlhS0-HKeCYMlhZqzDKMCYMlhS051yMCYMlhZyESQQCYMlhS8LE4QCYMlhS5eUYQCYMlhK1skGeCYMlhQBynchCYMlhPaJWshCYMlhSQmhmiCYMlhRf8nOiCYMlhRKuR-ICYMlhPdRCsgCYMlhQaFbqhCYMlhIjnuHjCYMlhD_pC1fCYMlhAAQMjhCYMlhAIWHRhKE08kFQxJ5LKE08kFIrO5LKE08kJIEEVLKE08kABgVxMKE08kAAJrzXKE08kAUcftLKE08kAJpdtMKE08kAISzvMKE08kAALBxeKE08kAAQGFhKE08kD_sIjfKE08kAIWAzgKE08kAAJ9dLKE08kIjnmhjHgnfjRr9egeW54NpFQw5lhW54NpAs1bVhPNP2mABgVthMpCZlAAM3_MMpCZlBtsQteMpCZlAMYbHeMpCZlAAKwDaMpCZlAEWCoWMpCZlAEU-SWMpCZlDfVIgWMpCZlDfV2EIMpCZlAAJrvXBhdb2SEQXOeBhdb2W0v8UIBhdb2RvCB-IBhdb2Rr9iueGp4V4Bulw-eEFq43ED8C8iEFq43A1_psMEFq43A1-lWMEFq43S1bLoeLyTP6P-oyiDLyTP6PaH7YeLyTP6K1sa0MLyTP6AckkoECF83oQBymMfCF83oRKxfAQCF83oZq4v2aCF83oS0_ieaCF83oK1xMcQCF83oPdRCshCF83oRjETOQCF83odF4kIWCF83oLF89YhCF83oK1ryOXCF83oK5zjIhCF83oKWGvWICF83oZuAb2DCF83oS4HOeDCF83oZuI-mQCF83oS4PxOeCF83oS1ad-QCF83oS1WMmeCF83oZrThODCF83oZrPP2DCF83oK4Y4qjRfNluK1r4-LHOXxqP-oyERHOXxqDcJzURHOXxqPaHNuRHOXxqK1rtKRHOXxqQBtRcXHOXxqK5zeEhO7AItDfUqCdMWyrsDbR_qeMWyrsS0_jCeMWyrsABFccDMWyrsPaJWaeGXon_ED8RqiGXon_A1_4sjGXon_A1-0WjGXon_ED6gOWGXon_ABTpgjGXon_Bu0FijGXon_ZraK0RGXon_S1g9cRGXon_PdRWcgGXon_ABDjAWGXon_BulDYSGXon_CfO9wRGXon_X9r24KGXon_BxwBwDGXon_ABTmshGXon_S1aeCLGXon_RfxFkMGXon_CTQOGMGXon_BttgqDGXon_AUcftMGXon_AJpixjGXon_AIv55MGXon_AIWSNhGXon_KWG0gjGXon_CG9NiWGXon_Bu0AIeOEQ_CP-pBQdOEQ_CPaHc6dOEQ_CK1r8WdDzbK-GZy_TTDzbK-FQxLlhDzbK-FAwbcDDzbK-FIrRbgDzbK-BFNmZhDzbK-GTKNZjDzbK-A2DkGjDzbK-H_IbfjDzbK-JINtHIDzbK-Gd7AzeDzbK-GSQh_RDzbK-FAvuWDDzbK-ED8C8DDzbK-S09fwiDzbK-Rfw8kgDzbK-CTQFGeDzbK-BttXqeDzbK-S2w8eiDzbK-AAQM5IDzbK-DcJhmjDzbK-ABTU-WDzbK-CG8-ajDzbK-BuzxAWDzbK-CfdrYDDzbK-ZGXREaDzbK-AAJuVIDzbK-CKJBIXDzbK-C64ROfDzbK-S4HOiXDzbK-RjEScgDzbK-BuzwKgDzbK-AIS2RXDzbK-AIZUjhDzbK-IjzWRIDzbK-AAQIngDzbK-BKvElRDzbK-BVf3_eDzbK-C2qFpiDzbK-AIWCfXDzbK-BJ1ZLIDzbK-GRp57IDzbK-BJZrVIDzbK-DbWbLRDzbK-BJYrNITMr5EABTZMDTMr5EBuz1OeLgDiBQBynChLgDiBAAJ9hLLgDiBAITFdLLgDiBAITC7LLgDiBDbWT3ILgDiBLOD3YhLgDiBPdRCsDLgDiBK1xC4DE6YSxBJp-jjE6YSxBV8_DeCiVUWAk17yTCiVUWAkk1cTCiVUWOUs5kTCiVUWAlcX4QCiVUWAktYxXCiVUWEEnJiQCiVUWP-oxOfCiVUWQN53weCiVUWAnPusICiVUWEGagWRCiVUWFAh3GiCiVUWHapBAICiVUWAxC0-ICiVUWAooQ8ICiVUWAx8N0ICiVUWAo_eySCiVUWCSXFkQCiVUWAzvkohCiVUWCU5ySICiVUWAk7Q2fCiVUWEMCWIiCiVUWHaq3IfCiVUWHbsAqICiVUWAphpgQCiVUWRr9dqeCiVUWHdVwYfCiVUWBDqUSICiVUWEGUGebCiVUWCU4W4SCiVUWArVAUICiVUWD_1ukiCiVUWD_kpEICiVUWEDwrWfCiVUWAk2oaSCiVUWAkli6eCiVUWBA9_oDCiVUWEDnx0bCiVUWCVDaIRCiVUWArnh-ICiVUWCSWpoQCiVUWAk7RmhCiVUWCquiIeCiVUWMl3EqjCiVUWCVxUoICiVUWAsN-EXCiVUWAlvmKQCiVUWAlegqQCiVUWAni8-hCiVUWAnR3eeCiVUWAUcUdgCiVUWCU3qgRCiVUWArUT8ICiVUWCSWYEQCiVUWAk7-ceCiVUWPaHN0GCiVUWPeLEIGCiVUWS08VQeCiVUWZu6dSGCiVUWS5BP6iCiVUWD_2cKiCiVUWRHkdAGCiVUWRKsJAGCiVUWQBtRcGCiVUWAlwTwQCiVUWZq2m4GCiVUWS09ZgGCiVUWZqyVgeCiVUWAnjqkhCiVUWK1r2cGCiVUWBtrS3YCiVUWAMXeHYR7mCcAxCk8hR7mCcAk7YchR7mCcD_12KiR7mCcAk2wASR7mCcCSWacXR7mCcAlvtwQR7mCcAk19SXR7mCcAnjMKhR7mCcAk2q4hKO9rZAktn9eKO9rZAUcN_gKO9rZBtrMZYKO9rZABgVtYHqwOYP-SrYIHqwOYA0w3QDHqwOYA07isDHqwOYAlcmODHqwOYA1qkWDHqwOYPZ94sDHqwOYZrTwwLHqwOYPaHheSHqwOYPZ5meDHqwOYHaovAIHqwOYS1ahaiHqwOYPckfuRHqwOYABDksjHqwOYBuoSGjHqwOYAlv0ghHqwOYAlevAIHqwOYAEecqIHqwOYBulDUGXEA8eP-SY0DXEA8eA0woEDXEA8eA07TgDXEA8eAlcXCDXEA8eA1qVKDXEA8eAlvn2XXEA8eAlef0eXEA8eAEeNegFGixXA1D3YCFGixXAlvmWTFGixXA19keTFGixXP-o04TFGixXA0yxCCFGixXLF6u8hFGixXQA_bCDFGixXAlegAjFGixXA1seIjFGixXA1qTeWFGixXEQBiIiFGixXA10-6DFGixXAoJZQDFGixXA4XXYDFGixXAktppRFGixXAl07ahFGixXEAvZIjFGixXEAeToeFGixXAlwS-SFGixXAlfNeeFGixXAl08KhFGixXAocniXFGixXAoLiCXFGixXAEf_aGFGixXBtt_AeFGixXAEeTqXFGixXAFX44CFGixXAAbySeFGixXAc0PAGFGixXBtrOFYMzLIaDfUa2WMzLIaAAM37YE0TDeAEeXkfD3eqgBJ1uVRLkHBjPaHN0GHckABCSNqAeHckABCTTb4DHckABCqlHaeW10uHCSNa0eW10uHCTTMsWW10uHCqk4OeEmG1HC2zofiEmG1He0hs3hEmG1Hj7vrnNEmG1HBJ1WnNEmG1HBVfy5eEmG1HDXF8ziEmG1HO1a9PSEmG1HBqEevhEmG1HBJYjlNEmG1HO1HxTXEmG1HezxtVdHouenBtuOgDHouenCSM8ceHouenC2uKUfHouenL-rg4jHouenCGEQgWHouenBulw2RXB_MtBtt_UDXB_MtCSMtQeXB_MtC2t7IfXB_MtL-rRsjXB_MtCGEBUWXB_MtBulhqGFEhBmBV8oLeFEhBmC3G11jFEhBmBJpm1eFEhBmBVf1beFEhBmC2qDFSCaOVSP-kPKXCaOVSK1k-EeCaOVSD_rwseCaOVSP-o3gXCaOVSQW7rueCaOVSaP2K2XCaOVSQBtWeICaOVSK2qv8QCaOVSEAxikQCaOVSOQqfCeCaOVSK4RSoRCaOVSECYFQeCaOVSE8fcAeCaOVSP-jh8YCaOVSKVNPSZCaOVSKVTWygCaOVSKVPFaQCaOVSKWGn2ICaOVSK1fw0eCaOVSKX5-qICaOVSKRJzseCaOVSKRPJahRzfDYKVM--IW759aABQ5uhE-byTBJpnxeE-byTBVg3VhE-byTGRq5ReE-byTC20s1eGr6FpABRKCIGr6FpPaE8qhEHsooBKS8EjEHsooABQ1gWEHsooAlyZ-hEHsooPyc3sgEHsooDcQq6jEHsooABWM6jEHsooABWLQDCH-nZK1hMIaCH-nZKVNFEaCH-nZKRLPAaCH-nZK4MFYjCH-nZKRJOegCH-nZOQlQ8jCH-nZKVNEyICH-nZKT2IQDCH-nZKT7d-eRhPVfKRJIkDRhPVfKROeSeEsMEaPb3ioTEsMEaPbatWTEsMEaAFYCyjGZqXwPycaEgGZqXwABQXCjGZqXwAlx7gjGZqXwBulw2jGZqXwPycZOgGZqXwS1dq-iGZqXwPdOD-hGZqXwPaJkugGZqXwAAcvCRGZqXwABQuIjGZqXwABVsyeD1c6vf9jsTLD1c6vezn9JgD1c6vBtrOzID1c6vghGTBgD1c6vC2tNfiD1c6vAAWcpgD1c6vBVfyzeD1c6vPBSNjeD1c6vDXF8tID1c6vgIxSdhD1c6vBqEephD1c6vf8n4xXD1c6vGRpz5ID1c6vGyCjHhD1c6vBJZlTID1c6vO1MADID1c6vBpyUhYD1c6vBJYhVID1c6vO1HvDWD1c6vBpxQjZD1c6vBJ1tZSD1c6vAZoSEjD1c6vABVdkDD1c6vA-J2iDD1c6vCG9r4DD1c6vBu0eeWD1c6vBJYhDID1c6vO1K7zXD1c6vP1l_AgD1c6vBpxQRZD1c6vABQISYD1c6vAlxswhD1c6vBuliGeD1c6vAAcmCXD1c6vBKSjiWD1c6vAZopKWD1c6vABV0qeLiFRyC2tQ3iHb4wGHmwDYMHb4wGA09noDHb4wGCiZn4KHb4wGCiZRGKHb4wGCWPOWXHb4wGCTJoOeHb4wGBxzEqgHb4wGBtuJKeHb4wGBtsAgeHb4wGAktI8eHb4wGC2tXufHb4wGBttb0IHb4wGAkukQDHb4wGBulAyDHb4wGAlmJODHb4wGCGDd6DHb4wGA9EmWeHb4wGD_yp6iHb4wGBwYVERHb4wGAnZdgjPIhHJCeVG0FPIhHJCSMw6FGlJmbBxzE8SHJpCNR8S62ZHJpCNCibwYTHJpCNCimg4XHJpCNPfFosRHJpCNPeL-IRHJpCNAEeYOIHJpCNBx02YgHJpCNCiasaWHJpCNCGFmkDHJpCNBuz8ugHJpCNBwadujHJpCNCiYj4YHJpCNH_E7LjHJpCNGRnsLeHJpCNGSGpTNHJpCNGRp2jRLbUykGRp03XHoDOsBxzEwDHoDOsHmwC6XHoDOsBttbmDHoDOsCeewWXHoDOsCiYjcWHoDOsAAciYhHoDOsAAbzCWHoDOsABViqeHoDOsADI28eXBT8yAAb3QePUrlvBtr6AFHVzgzAEeYUhRyzzdFtHdpdRyzzdFIpGNeHh9_ZCibwkDHh9_ZCSKlaKHh9_ZWz2NiWHh9_ZCeewKXHh9_ZBtrOsSHh9_ZBtr8SeHh9_ZC226mfHh9_ZBttXmDHh9_ZCGDY2XGrO1uCGDdISGrO1uBulhyeHPuRgS1akORHPuRgS0_lERHPuRgDcJkIjHPuRgS1D3ARHPuRgdGQH-XHPuRgS4HTmRWo-_mS09eoXO8WojDfUa2FGY_H1ED8CeiGY_H1ED6RCiGY_H1ABDoWaGY_H1PaHiUhGY_H1ABDT0WGY_H1Rfw3OgGY_H1Buk0MSGY_H1CfOukSGY_H1X9OyaRGY_H1BxvykXGY_H1DcQP6jGY_H1AZe_UjGY_H1BKPTwhGY_H1ABVx6jGY_H1ABTXgjGY_H1BuzzieGY_H1ZrZ7WXGY_H1PdREcRGY_H1KWGlUDGY_H1CG8-WWGY_H1Buzw8jVyP17DcJzUjVyP17ABga1jVyP17PaHSAXVyP17AAmx9MVyP17AALBxMVyP17AAKUNMVyP17AAJ9dMOFne4P-oyEFOFne4PaHNuFOFne4K1rtKFTOCY6FIrO5ITOCY6AAJ9dMHsGuOABG1GRHsGuOS09cGIHsGuOABDVgIHsGuOPaHPehHsGuOAEeOUIHsGuOAAb00GHsGuOBuk0IGHsGuOBtrOoGHLqx-CeewWXGtQlfPaEtehGbA3mPycK4WGbA3mABQH2jGbA3mAlxsUjGbA3mBulhqjGbA3mPdN0yhGbA3mPaJViDGbA3mAAcgseGbA3mABQe8WGbA3mABVdmeJ_a9MKVNHUIUQQxQFQw53FUQQxQAs1bnFMjoaNAEebOSEkwVRBJZJjdT-BDXBt-rJFT-BDXAk_zlFMRYsUAEgMqfMRYsUAEgL0DXAos3CSM8QdFDKhwMjMXsjFDKhwCTTbyfMvy4zAEeaMgKFgMfDbQDsQKFgMfBJSUkQD0Ga5S1akOiJ1SOXKRJRAgHa_FiCTJp6eHa_FiCWPNgXE2xohBxzEGFMjZ_kAEeXkFLsq15Bxy_CXLsq15BZRNuCHIvXpPfFn2RO1XusAp3ZgXO1XusAFYEeFMRKRrAEeTKXMRKRrAHLZmFMRKRrAEgJSFHnJkICeewWXHnJkIC3jv4jMvkeKAEeXqFHhEU1AonYIRE8230Btt_EDEGHuJA0woiFHO0m8CWSbMXHO0m8AonTuXHO0m8BA_jARHO0m8Ao6m-RHO0m8ArUaKjHO0m8AphFCDHO0m8Buz1gSHO0m8PaHheSHO0m8BttgmRHO0m8BttWeeWoFVCBttRaFEqnJ7W0FKcDEqnJ7ED8CwiEqnJ7A1_pyDEqnJ7ED6RCfEqnJ7CTP_MDEqnJ7BttRwSEqnJ7BuzwGFMXPg-P-oyWfGYFdRX9OyagGYFdRBxvykXGYFdRABTZMFOEt0UDcJ12jHrNDqAlcZkDHrNDqA1qXsFHrNDqAonX8FHrNDqAlvn2FHrNDqAleiWXFG_mpBttRaeGsW67ABQ5uFHQ2WtA0wuWbHQ2WtAonUGFEso5sAlxsmjEso5sAlxsUjEso5sAAcgIeEso5sABVd4WEso5sABQe8WGlmbtCGDi-FV-3JzCGDTyFO2uOiAEeYOFHsjjgCSKlaFO2C-nAEeZ6FOFZEPDbQDsFOFZEPBJSUkSHawq5GRqJFFHawq5C2z8diHawq5IjooVjHawq5D_zkJeHawq5DbnWjgE2jN4BJ1o5jE2jN4DbXXFeUPz7-FQw53hUPz7-As1bnhBbmnMFpIXFhBbmnMBFM41hBbmnMHapApQBbmnMD_1vVfBbmnMKE7bPjBbmnMEH7qDfBbmnMGd1ZdeBbmnMBFMiFYBbmnMsek-jQJIO-PE8qITSGkBhOCGEQoeGkBhOCHG0oRV9SPUCGEBceV9SPUCHGlcDDtkWUBJZJjNDtkWUBJ1ZvjTG1EaAAjT9jTG1Eaj7fqLITG1Eagg8rvbTG1EafX90LSTG1EaBt-pdjTG1EaAk_x5jTG1EaezrLrhTG1Eae_o2JXXAL3lA9UfzhJUZc1DbXX5SHg16MAAOD1eHg16MABmkzhPNeRPABgVxFPNeRPAALBxSPNeRPAAJ9dFE8odLAAqyXeMpQ0OAAmwRFBhr2fFIrRbgBhr2fJINt9TBhr2fBFNmZhBhr2fGTKNZjBhr2fH_IbfjBhr2fABml_QBhr2fAAJuVaBhr2fAAN_nQBhr2fIjzWRjBhr2fDbWbLRJOUNiAAQGJXJOUNiABmtlFJOUNiAAJ9hQJOUNiAAOOzQGqGwhABkc7gOWvHkAAJ9dILyhqjAMXW3FLyhqjAAJrzaLyhqjAARKHSLyhqjAAN9FgLyhqjAAQE9hBPcImE8qITXLgR8qABml_FLgR8qAAN9FSGoFAwCGDjEGWBVu2CGDT4GHq-pBAlAkneHq-pBAAqv7eHq-pBAAkVzeFGxMAAAkXjXFGxMAAkjxBeBr0lUAktqfQBr0lUAkvhdTBr0lUAktY9XBr0lUAUcQPSBr0lUAAOD1gBr0lUAkvgvYJYc8XABgVxIL8qZYAAM3_gEH7DRBJZmVRGTITLGRp03IQ8TEbFIrO5QQ8TEbAAJ9dQGrdQXCqivoeG1l_MCSKlaDE9TtGAAN-xXFHcb7AkjufbOQWqFDcmgHaHINu0DcszZRHINu0ElsvTRHINu0DcmZXRWhec6Ik-I3jWhec6EBJErfWhec6DdJqXIWhec6DfV92LWhec6Ik3u1gWhec6DdDQVaO02F3ImUotjO02F3DbWTjdO02F3ECV65fO02F3DegKNST9Q_5Dcs6JjT9Q_5DcmgHjMQoo2DeDZ_LBJDrHBSt3phBJDrHjXk1xiBJDrHe2fGVNI1sCKBRXXzhGRelJBJsHJhGRelJf8oPpWGRelJEkmk3WGRelJGR00hIGRelJK1wSxCGRelJsf6btcGRelJE93ANDGRelJEkyWVRGRelJfZ-LxIGRelJf8n45NGRelJsf0BrcGRelJE9wmLNVqvTPDbXxfeN-G8MAAKUfLN-G8MDcm3_IN-G8ME8ggXDN-G8MBtreHLN-G8MABmthhN-G8MAAtMPNN-G8MAAQFPXN-G8MCGDVxXN-G8MAIV_9XN-G8MAksmRLN-G8MAAOO1LDtRIIEkychMLZ5fLEkyU7MHmn7TLO0HqeHmn7TWn4tSgHmn7TCGDeEIHmn7TWPl4ygHmn7TBtwpkTHmn7TPasxuIHmn7TAAFhQTHmn7TPzCz0bHmn7TAZe3iIHmn7TAYbjWbHmn7TAA_OKIHmn7TPbmcGIHmn7TAloRCRHmn7TPzCxabW_4pZC2g1TiW_4pZBVNAjeW_4pZBKSZGIW_4pZDfT1KLFCaeSBVMxReFCaeSBp7BrbFCaeSBtvi9eFCaeSBthppgFCaeSAMN05hFCaeSCeLkBDFCaeSDfV98MUbrMYBJF0DdBnd3mPbmdITBnd3mCHGvuMBnd3mWoyX2gBnd3mBuz7OMBnd3mWQfjWgBnd3mAA_MqTBnd3mPzWBcMBnd3mQju2UMBnd3mPbDM8MBnd3mAYuw-hBnd3mMXC4YjBnd3mKqePmgBnd3mPOQGwjBnd3mBJHl2MBnd3mAAb8ehBnd3mL-wD4jBnd3mPz8eYIBnd3mAZVN6bBnd3mPzC0SMRAulsWn4u-dRAulsWPl6eeGv4xoaEL1ghGv4xoKpklCRGv4xoAZoeoIGv4xoP0PskIGv4xoQ8U4uhGv4xoPzMbYSWJJfuezpFteWJJfughEMlTWJJfuBJpm7hWJJfuBuE2djTk8CtPaJiYdTk8CtPcgL6LTk8CtQi1JOLTk8CtAl1C0jL4TrqKqeQcMCL9TYBJFzxMCL9TYO01BfIHUYNaAda42bHUYNaPbDN4hHUYNaAFU4qjHUYNaAAb9aRHUYNaL-s28IHUYNaPzE8mIHUYNaFIq_zIHUYNaAksUhXHUYNaAYdsIbHUYNaCGFmkIHUYNaAlJarSHUYNaBuz8ueHUYNaACyjSjHUYNaAA_OKeHUYNaBwadujHUYNaAA2hTIHUYNaPasy0bHUYNaAFBqoRHUYNaAAprFWHUYNaAAqHreHUYNaAIxXnWHUYNaAIeLrRWto7gAAWk5SWto7gAAp4JdWto7gFLR2TaWto7gBwVPnSWto7gAAJ0_dWto7gFIn8DdWto7gBtrVXdWto7gAAp3TdWto7gezk5NdWto7gAApyrdWto7gAAW8BeEwKwZBJ1wxIEwKwZAkpPXIEwKwZAAZ0dIEwKwZgjJyZiEwKwZBJFfhMEwKwZBpeOvDEwKwZe2LhXbEwKwZezbSHdEwKwZj-GWjhEwKwZgjJv3REwKwZAAWmlREwKwZAAWlVREwKwZAAp4ljEwKwZAIeR3REwKwZB1pWLZEwKwZAUVhbDEwKwZC2kE7eEwKwZDnN_TeBVOJtBKvqhjBVOJtBJ2BpQBVOJtC2qrliBVOJtBJY6pXBVOJtEkyWnMBVOJtO1IIXXBVOJtBpxp3ZBVOJtABVnIgBVOJtPb81EgBVOJtK2np8eBVOJtEkWWfeBVOJtBJF0DMBVOJtO01BxMBVOJtBpejRSBVOJtBJaRRQBVOJtPzE5WMBVOJtPzV_CMQue3zBKUhCjQue3zBM_fiMQue3zBKSZiMGdpDvCqk9qcGdpDvPNiCCeGdpDvCroJIeGdpDvKpmt0eGdpDvCqflDiGdpDvCGBNnSGdpDvAZqmkeGdpDvCGgKvIGdpDvBtrLPfGdpDvBvBsXDGdpDvBu_jreGdpDvBuIDfgGdpDvBuF6zaGdpDvBtsTHIGdpDvBtrlveGdpDvBtpdDeV25x1ghDInIV25x1BtoDjSV25x1BuE95aV25x1BtrQvKV25x1BtrQddV25x1BtpHxdV25x1BtoaZeV25x1BJZlbMD5bmuBJFv1MD5bmuBJFu_RD5bmuO008tRD5bmuBpeeNZD5bmuBtoGFID5bmuCGDd5ID5bmuBtrWpID5bmuBtpN9RD5bmuBtoDtID5bmuB1vwPZLmD9xAAZs3ILmD9xCGDWTILmD9xAksjtLLmD9xAAWdvhLmD9xBtrMhDLmD9xAApudgLmD9xBtpD1eLmD9xAAb9keLmD9xBtn8HKLmD9xDbzF5WLmD9xDndiLKLmD9xD_yf7fLmD9xDbXVhILmD9xAIeKRgLmD9xDbWoJeLmD9xB1vopZLmD9xB1pOlZLmD9xAUVZ1ZGpziVsf0BvXGpziVE9wmPaHOS-HDct4BRWnjsNDcmb5MGXj0cAkvzLDGXj0cfZ-MhhGXj0cBJrwLMGXj0cf8n43DGXj0cGRqJFDGXj0cAFZT6hGXj0cAFYPkgVw0iiDbXateOEMLfDcmhTIOEMLfAAQXhLHqra1BJpnfeHqra1BJrx3jHqra1BJrwHYHqra1AFJR6GHqra1AFINkGFGd90BJr3xhBrhXIf9jsNXBrhXIf8n49QBrhXIf8qDVXBrhXIf8qBlYGz8RKDbnapgGz8RKAIyyxjGz8RKAFX5KYGz8RKAckUCGGz8RKAEUskYGz8RKKtjpShGz8RKKVUB0YGz8RKAdd5QYEPu0JDbzPfjCQAy6BJipbICQAy6BVNFbeCQAy6BJFzzeHYbs8BJsG3jE0OP7BVMxLeE0OP7BJiSXIE0OP7BJF2TZE0OP7BJFfjYBZRpPBKlzfIBZRpPBJPbPIBZRpPBVNFteBZRpPBJG4NbBZRpPf8qYVhBZRpPPzCwqGBZRpPBJFzzeQyiXVBKSYWjJF6ASBJPTpIGhsjRAYnSeeGhsjRKVOVQaGhsjRKVUCqgGhsjRKtjpSGGhsjRKVNtkGD9fGQBKcNPDD9fGQBJPWLRD9fGQBVNApeD9fGQBJih1ID9fGQBJGz_bD9fGQBJFz3ID9fGQBJF0DKLqHdTAAb9geBLFa4e2evjNGTgU6f8n43DCN_DJAAWntRCN_DJK1r3jDRnPxPAAp3ldBXP5eBKvTvjBXP5eBJ1q3QBXP5eC2qUziBXP5eO1HxlXBXP5eezoGhgBXP5eBJZ6fDQwgnkBtrVpdTUuElAAWpZdHQUt4FIrRhgHQUt4Ak2NVDHQUt4AksmPCHQUt4AAZs3XHQUt4AA2zBDHQUt4AApw5GWplb-FLRyFDWplb-ADDsLZWplb-FIkv3dWplb-AAWp9SWplb-AC28RCWplb-AAWpHSWplb-AAWlPGEsHQ3e2IUVRBRKqLBJZNNSQqbYRCHGyQLQqbYRBuz9wLGZlkNPzWCSRGZlkNCHGyQjGZlkNQju3KeGZlkNPbDNyeGZlkNBuz9weGZlkNBJHmsTGZlkNCGDWTIGZlkNABVcujGZlkNPdTKggGZlkNBtrc9CGZlkNBKBSweGZlkNBtpGXeGZlkNBtrO9GVy2STghDIhiVy2STBwVK1KVy2STBtoIndVy2STBtoDtdD1YHMj-GaHRD1YHMgjJzbRD1YHMezbTJID1YHMBJFftID1YHMBpeO7ID1YHMe2LhjgD1YHMBJFv_eD1YHMDnNonID1YHMC2ghHGLiAePAAZ-lLLiAePDbWRdGV-Vg-AALBzaHJkOqDfV92RVsFzFAkpwRNVsFzFABgxzjVsFzFAAnI7IVsFzFAANhPIVsFzFAALYjDHn-bJDfT1KIXBPJPCGDc8FGxPReXMX-8XGxPReMzbL0XGxPReA9-REeGxPReW0FJmIGxPReCjfCCWGxPReCqivceGxPReCrccieGxPReCTTOSIGxPReCibw2XGxPReWPkTuZGxPReBuz2WeGxPReWPd-uRGxPReBtwz4RGxPReBtvYwRGxPReL-v8ejGxPReL-uhWjGxPReWQXj8IGxPReBuya8IOd3ohKpkl4FENB0dMXC4YgENB0dAl1C0jENB0dCHGvcMGe_jlWQPXISGe_jlWQdQWgGe_jlBJ1WpIGe_jlL_jKYeGe_jlBuzw8eOLn6oAAb9aFVyLCYAkpZTCVyLCYABga1jVyLCYAAmx9CVyLCYAALBxDVyLCYAAKUNCDyrHgBJ_KMGG1SxABturMRG1SxAL-tzyjG1SxABuxtYIOHkbGAAbzWFFDFuNAM0KhjFDFuNBthiDDFDFuNAMNtTbUcWcTBJFu_FEMWkiABEdDDEMWkiezmIbREMWkiAB-WzREMWkij8AwvXEMWkiB51nvgWuULbABGk_FWuULbj7ZPRdPBr0YAATu_eEw2AUj-GSnSEw2AUezeqZDEw2AUAkslZSEw2AUezbKhREw2AUAAWc5hEw2AUDndiLDEw2AUAApwJDEw2AUD_yfFfEw2AUAMhTBeEw2AUB1pOlgEw2AUAUVZ1DEw2AUAIeJbDEw2AUDbWnTeMdeXXAAWpHSMdeXXezbSHdMdeXXAAWkfhMdeXXAAWkNhOK8qtBtoDtKD6G2pABDZFDD6G2pezlEdRD6G2pAB9S1jD6G2pj7_rpRD6G2pBtn8HID6G2pBtrONgD6G2pB1vopZLmvNsBtoDtKJ7SqHAAWqPgWqQr5ezbKhFEsygyDbWQnGD2DXHj-GShDD2DXHABDY_DD2DXHezlEXDD2DXHAB9SvjD2DXHezeqTDD2DXHezbLjDD2DXHj7_srXD2DXHAMg8PgHa6R_Ik3sTjHa6R_EA8ODfE2s0-Dcmg9aE2s0-DcmgHRCAPqECTGd8QCAPqEABFb4QCAPqEAl040hCAPqEMkFzMjCAPqEAFJSMFCAPqEPeNMKQCAPqEKVVh6gCAPqEBNelaQHIqkGEA8lFfHIqkGDdDk1RHIqkGABghxhHIqkGDcp9JSEkdHFDcm3_RBJggZAAL3OXBJggZC66w6fBJggZPeLJYgBJggZAET-6hBJggZCKHPcgBJggZMCugYjBJggZMCk5SjBJggZAEPtiXBJggZK5tgIaBJggZKRLMeeBJggZKVTUKhBJggZAFXKqjBJggZPhU4cgBJggZO5FLUfBJggZKVPCygBJggZKVM_KaBJggZBNWCqaBJggZABTUEgBJggZAFXKYjBJggZPhU4KhGR7abAdblYRGR7abAda5IFGR7abPeLEUFGR7abABFhyXGR7abPeLECFGR7abKWHXARDtt9aKSE3CeDtt9aABVdCFDtt9aABVm4eLaWUdDcmwZXCep2jPasxuICep2jWn4scICep2jCGDdOICep2jLO0ESeCep2jWPl38TCep2jBtwouICep2jAAFhQICep2jCTGYIMHnEwlAdZzeIHnEwlKVQ0aFXAVerADDhWXUcIBqPZzEoIMvfqnKpklCICMaIqAAVbASCMaIqPaJgyhCMaIqPcgG8QCMaIqQi1JUICMaIqAA_L6jCMaIqPbmZ2QCMaIqAloOyQCMaIqPZzE4MCMaIqAfa5sMCMaIqADCc4eRlq2wAct6AQRlq2wAAVdMeHU1CsAYnSqIWuFwyADFp-eEwnlrADCdOaEwnlrDeFdseEwnlrADI3WgUJ4TxAAVdiaUJ4TxDbYeAFMdP8uAAb9ahMdP8uBtrI3ZMdP8uBtoSzeBVq-_Ktm2CMBVq-_AAL7QMBVq-_AEPxkMBVq-_AlvjGMBVq-_KVNnqaBVq-_PeLDegBVq-_KVQMMMBVq-_BNZPsFBVq-_KVVzWMD54cADeDVEFD54cAABFb-MD54cAABFl0MD54cAKWHSOjHg_hSIk3sXjHg_hSEA8OHfHg_hSDcndrRHg_hSDcmZXRE8yERDcmhBRHOvzZDcmwHRHOvzZAFJSMRBPlvsK1xIOeGYApuK1xDKWDzzMtDcmhTRLgbjwDcmZbXBNj_7PeLDkFBNj_7PeLDShHY4iOKVNnqaBTpPOK1xCaeCIWpICHGvujCIWpIBuz7OgCIWpIABFbwTCIWpIAl04sTCIWpIPzWBcTCIWpIQju2UICIWpIPbDM8gCIWpIBJHl2QCIWpIAYbeSFCIWpIPzC0SbCIWpIDcLqMjCIWpIS4JXIiCIWpIABVcuhCIWpIS1cmoeHQxjKPaJV0gHQxjKBJHl8IHQxjKAl05WeHQxjKAl04ghMZMdMBtn8HGMZMdMAAbzWgBRnfdABTT8gBRnfdABVhseBRnfdBJXhqFBRnfdAFZuyjBRnfdAAPEUeBRnfdAFX-MgBRnfdAcqtyXBRnfdDfa6CgBRnfdBNZ94SBRnfdAAL3UXBRnfdKVNtqFBRnfdAEPtoXBRnfdKRLMkeBRnfdKVPC4gBRnfdKtjpAhBRnfdAlvpAjBRnfdKRRsceBRnfdAl040eGaCZfBKBS8FGaCZfAFX9uFGaCZfDb85kFGaCZfBJ_KcFGaCZfABFh4eGaCZfKRRnYFD108eDbDHaXD108eBJFYSXD108eKSE3IeD108eABVdIeHKBD8CHItQeGTR6RBJ_KGjDvEdQAYdruFHobQbCGDS0FHobQbBtwhUXHobQbCGCOqFHWLiiBujvOaD7O72AYdrqFEp3GdAYdrqIDzH8yAYdrqFGbY5VBJHmsTGbY5VDbDNUbGbY5VBJFeMFWhs3jDcmb5NVq9t4Dcmb5NEwZLCAApudFGd3eYAksmPSV3IMeAAWpHSD5qBXAAZs3SD5qBXCGDWTID5qBXe2IUVID5qBXAA2hvID5qBXBtuYtID5qBXAMg-BhD5qBXAksUrhD5qBXAAaxXID5qBXAAaD_eLmSYaDbWT1FG0KrzBJrwLDBZgD4BJFz3ID9tg5BJFfnIGZz-2AAZ-lDD1mh1AAZtTGHbXHRDcmZXFHJHZYDcmwZXWiYHeABghxXMdsyABtn8HFTTl_YezbKhFHhcWkDcmZbFHbyWCCimhKTHbyWCPfFo-THbyWCAp3hYTHbyWCArhPajHbyWCAEeYggHbyWCK5zoWTHbyWCED6a-iHbyWCApt3wJHbyWCBx02qJHbyWCAo1_GJHbyWCPeL9khHbyWCArhOkjHbyWCCiZswXHbyWCQnxSEbHbyWCP3HXsbHbyWCBQAqEjHbyWCBP9dCRHbyWCAfTiqRHbyWCRKDRcRHbyWCCU4W4MHbyWCRIQD6RHbyWCBtozcJHbyWCAdZz2JHbyWCAfNIsjHbyWCCU3qgJHbyWCRIPXiRHbyWCDdxSsjHbyWCBLzjkjPIatFBxy9WFPIatFBxPWGFMkNQEDb85gNGlDMXCibwqZGlDMXAp3hYNGlDMXAo1_GTGlDMXR8S6SCGlDMXAEeXqgGlDMXK5znghGlDMXBlolUhGlDMXBx010JGlDMXAo1-QfGlDMXBy2MANGlDMXG7JQ2CGlDMXBOW84NGlDMXBOKIwCGlDMXAdgOYCGlDMXBNKBmbGlDMXAcgHObGlDMXBlol4hGlDMXAdjY4CGlDMXBNVZwfGlDMXCiZoKCGlDMXRHWiEdGlDMXCSLngRGlDMXRHcqaSGlDMXCTFCmNGlDMXCqjfueGlDMXWPd4iCGlDMXBtopUCGlDMXbYo7GNGlDMXBuiWajGlDMXWPkVIgGlDMXBtvF6gGlDMXAcnk-gGlDMXCGA9qMGlDMXAch4eJGlDMXAdZ0aNGlDMXBNUsQfGlDMXBNRfOJGlDMXDbGCeeGlDMXBJITWeGlDMXDbDMaZGlDMXBJFdSZGlDMXCGDdWNGlDMXDb9-agGlDMXBKAPSbGlDMXCGDd6NV-T6dBNdReFV-T6dBNaEcFORrjaCF53GFHJioJCWPOWMHn80oCee0eHHn80oCGgSOCHn80oBtuhIJHn80oBtqOieGxNq9BxzD6MGxNq9AchK6CGxNq9WPdLKMGxNq9WPjnwMHVtGvBttbeeGe99ESQaxeWGe99EBy2MEjGe99ECGDdACGe99EBNLFKfGe99EWQW2uaGe99EBuxtugGe99EAEeTshGe99EBuxrMjGe99EAEeTagOLmUHAEUpmFHh3lVC2vgSfHh3lVBtvOWCHh3lVBtq8IeHh3lVBtwpqJHh3lVBux04CHh3lVBwbi6RHh3lVBuj8aeHh3lVBwXQsjHh3lVC226mfGrIbqCibw2MGrIbqCGDdaSGrIbqWQdQoDGrIbqBJpnZjLzjVsBJrwdXHPn3cBy2REjHPn3cCGFmecHPn3cCIwfKRHPn3cBuz8oeHPn3cBwadojHPn3cBP3C-RHPn3cCeewKSHPn3cBtrOsSHPn3cBxetQjHPn3cWQW7WCHPn3cBttXmJHPn3cCGDY2XO8QOfAC_QqXGY4txPzE8yRGY4txWQVx2CGY4txWP48kWGY4txBy396jGY4txCTJqkjGY4txBNJ8iXGY4txCHGxIjGY4txBODt2jGY4txBNLyqfGY4txSQax4MGY4txBy2MeCGY4txBux8wRGY4txBJs0bMGY4txAAb4EeGY4txAl0-aXGY4txAEgFKXGY4txBNLGAbGY4txBNLXsXVyJb3BuxtkjOFhE0AASOoFOFhE0BuqMijOFhE0ABVn4FOFhE0ABo2EFOFhE0KVUEsFHf11kCU3pUJGpGr5CSK58RGpGr5CTEVCNGpGr5CqiyKeGpGr5WPjnkgGpGr5BtuYWgGpGr5AcgGkSGpGr5DbEQkNGpGr5BJGhcNHsAUKSQaxaWHsAUKBy2MACHsAUKCGDc8CHsAUKBttbaCHsAUKBNKAwCHsAUKBuxrIgHsAUKBuxtYKHsAUKAEeTWSHsAUKBtugyJHsAUKWQW2SJHsAUKBtqOeCHsAUKBtrOoGHd0FzCeewWXGg_s1WPdLUYGtKLbQizBYbGtKLbBJ_H0bHRpnNWPdREXGa6diBy2MSCGa6diCGDeEcGa6diAEeYghGa6diWPjmEWGa6diBJHhyeJ_UjIKVNGeCUQKXMBuH-bFUQKXMFIn0fFUQKXMAAptNjMjiAJAFYFmNMjiAJAEgMGgMjiAJBODsKNMjiAJAdZxyNMjiAJBNdPyCMjiAJAczVaCMjiAJBP3C-jMjiAJAfNImjMjiAJBNLyqNMjiAJAch4SJMjiAJAchK6JMjiAJBNLFKNLmtnLAYu0ahLmtnLBJSTyCKFZybDbWdIQE8-4ZDjvaHTE8-4ZDjbeXgE8-4ZAIV9ThE8-4ZDjbdhWE8-4ZIrteljE8-4ZAksRhME8-4ZAs1ZLhLy4FxBJYuEhJzKEiDbQC2SJzKEiBJSTuQJzKEiDbSLwCKPihQDbQCyGFHHnOAksRLYE47Y3BJ1ZJjUSMG9ezeX1FE_AoKD_yfNSUYRWQAAM6bFJ1L0TKRJQKCHa4reApt6SRHa4rePfFoIhHa4reCXSe-CHa4reQnxROfHa4reP3HW2FHa4reRIQD6RHa4reBtozcFHa4reRIPXiRW0JZkCilb-HPHhChAFYFmTPHhChAp3Y8fE2rOdG7JQSNE2rOdBx010NE2rOdAo1-QNE2rOdWPd4iCE2rOdSQYRSfMjTlgBNJ7-JMjTlgAEeSmXMjTlgAHLZ4JMjTlgAEgJkJMjTlgBxy_CXMjTlgBZRNuNMjTlgDb85gJMjTlgCF2pONGkJhzBOKH6RGkJhzAdgNijGkJhzDbDMaFLskb1BNLy8FLskb1BNLFcFLskb1DbFVGFCeoQCW0cpOWHnDKEBtqOiCXAT4KCGDVaFXAT4KA0woOFFC1tDBxzD6FFC1tDWPdLKMHUzcLA06VIMHUzcLAonYARHUzcLA0wugYHUzcLAkugKJHUzcLBxsl4aHUzcLAk4GUhEwl_KAkukMMGeESgBNLFKfGeESgAEeTahD521fWQQbWMD521fWPzmEFD521fCGDdAFD521fWPZ96MD521fWPVsiFLmfMiBJHh4eLmfMiAAb4geLmfMiAAb3qeHg96xCWSbeTHg96xBtq8IeHg96xBxy_yXHg96xBtwpqJHg96xBuj8aJHg96xBxy-qgHg96xBwXQsjW6Oo3CGFeUTW6Oo3CHGqYCW6Oo3DPL2ieW6Oo3CIwXkXW6Oo3Bxy5mCGqOxGBA_icTEGBUFW0FJmCEGBUFHbke-jEGBUFWPcG0eEGBUFBy2MGWHOuM4A0wuQbHOuM4A08eCDHOuM4CTJqAjHOuM4AkufETHOuM4HanscTHOuM4PzE78RHOuM4EQAi2iHOuM4AonTuXHOuM4BA_jARHOuM4Ao6m-FHOuM4A08c6RHOuM4BP3C-jHOuM4ArUaKjHOuM4AphFCJHOuM4A06ViMHOuM4P-Z58SHOuM4BZRNuhHOuM4AAb3gRHOuM4Al092jHOuM4A9Gp8hHOuM4D_0tgiHOuM4WPaC6gHOuM4BtqJaeHOuM4WPVxiFHOuM4Al09keHOuM4C61DQfHOuM4BNLXITO7Wj7BuqOOjO7Wj7ABVpkjO7Wj7AC_P0FEqgv3WQfYYgEqgv3WQVxSgEqgv3WP48AgEqgv3WP1u-TEqgv3CGFl6JEqgv3CIwfKjEqgv3WPcG0JEqgv3BNLFcJMXJG6ABo2EJMXJG6AASNyJMXJG6AnbcOJGX_DNBNJ7sXGX_DNK5wVIhGX_DNCHGxIRGX_DNBODt2jGX_DNBNLyqFDzxmMWQdPggLgZ9PBJHgyTLgZ9PAAb3aTCirvkW0cpKCCirvkCfadmCHrGpmA06VEXHrGpmBNKAwFHrGpmAonX8FHrGpmAkue4eHrGpmBxskmXHrGpmBtqOeFXEXXsCGDVWFD31FuWPZ98CLkdcxAAb3mSLkdcxBJHgsSLkdcxAAb3USD74lQWPdLUYHi_qiA0wuWXHi_qiAonUGCW8QYoA0wocCE-yNhQizAiTMrakkBJ_KQJEIDD2A1qT2WHQv8pWPdREJHQv8pBJHg8REsifoBy2LcCEsifoCGDdOJEsifoAEeXqCHcPLUAo0MWFHcPLUCKH36WPI3iXAEeYgJOSIYsBNKBCFOSIYsAEeXqgGrlQ8Bxy6cWHQEsuBuxrCjGZVjDCGDdyFGZVjDWPZ-sFOF96GAAb4WFOF96GBJHhcFOF96GAAb4EXHSGcfWPdLKaPIMScAEeaMNO8Bz2AYu0WTOFSqLBJSTuFBbgNIFVYuLgBbgNIAxweHhBbgNIAOKs5jBbgNIB6vU1gBbgNIANbtfNV9L1QFIn1VJD_tqJANaolXD_tqJAAWiZJD_tqJezxmngTY-YPAApuDjE8iDHBVgHDeE8iDHBJY1TFQ62KhDct6LQEFy5cE8ghHJEFy5cDct3pJEFy5cBJZ5jREFy5cAAQGJhEFy5cD_sInfEFy5cDndkpJEFy5cIjnmljEFy5cDbXX5JEFy5cDbWSvJLybQfDbXXzMLybQfAAQDnMLybQfDbWTjJBPVuiANapbFBruLQghGQTgBruLQe_ybjSL8j_UAMXUVhL8j_UAAN6pJE4ejlBJ1ZJjURvRrezeYrXBdh85ANapVGWFS0UAAM6bSHaldSCidEMTWz2LYCic1ACWz2LYBxzD6LE2YARBy2WagE2YARPfFoIDE2YARB0gGIjE2YARAEeXqhE2YARMCyfEjE2YARBx010NE2YARBy2MADFCie3AEeXwMFCie3AEeTaMEwSw-AAptVgEwSw-AAM_pZEwSw-Ak4G4XEwSw-AANRReEwSw-AAb8WeMc7IBAAM4DZW57arABTZIjE8dPkAMXedcE8dPkAAcp8eE8dPkAAOEHhE8dPkAAQMjhMpFmnAMXW3cMpFmnAktWnhMpFmnAAN9XeMpFmnAAQE9ZEFuF5Rfw2qSEFuF5P-Z58CEFuF5BZRNuMEFuF5ABTW8SEFuF5ABZxBMEFuF5AAgGdMEFuF5Buzy-eEFuF5AMXedcEFuF5AAM6hXEFuF5AAOD1hEFuF5ABUEQeEFuF5AAQMjhLyWc8P-oyWWLyWc8AANHLLLyWc8PaHOAWWnrsyAAnnBaWnrsyAAm5daWnrsyAAb-0LWnrsyAAK2zdWnrsyAAKJPdMW14uABVn4TMW14uABo2ETMW14uIvu1bgMW14uDbnWbeMW14uKVUEsKMW14uDn6W7gMW14uDnwv1gMW14uDndkLdMrHWYBtrMRdHb79IBxzEwNHb79ICiZnsCGrSCwPaHPwSGrSCwABTXchHPxeiBy2MACHPxeiABG1GRHPxeiBuxrCjHPxeiWQW2SCHPxeiBuxtSjHPxeiAEeTQXHPxeiAAb9IeHRzOTWPdMACMjrnPAEeaMgMpw2iBJSUkCEGZV0AANJtcMXhIpAYu0WTMXhIpDbQDsDMXhIpBJSUkaCSnYiCTGYCCHbCSkAdZzwbHbCSkAYl3WDHbCSkD_gDeeHbCSkD_heyiHbCSkD_yk2iHbCSkAFH72jW0TAqBNKAwLW0TAqBto3GLW0TAqAA9GWLW0TAqAFH2yCE201jBNdPyfE201jBP3C-fE201jDgOFaWUQFjpBJFdSLUQFjpAAWp-LUQFjpACwiODMjdMmAEeXqFBb4O3AEPEACBb4O3BypYSCBb4O3ByoquCBb4O3MCvICjBb4O3PeLDeNBb4O3MCuaejBb4O3MCkzYjBb4O3K5taOhBb4O3AEUwshBb4O3AFH3oCGkTI5BODusRGkTI5D_gDeeGkTI5DfG9egGkTI5BNJOWNGkTI5E8W8qFGkTI5EAZBOiGkTI5AFIF-jGkTI5DbDHEgGkTI5BJFX8NGkTI5BKIpmhV9j2_BtopUCEAFr4BNLyqfEAFr4KRPMMeEAFr4BJYPsNEAFr4BNLFKCEAFr4AFIkcjEAFr4ABFb4eEAFr4AFX4OjCAXqpHaoxCQCAXqpGVpHoaCAXqpPzCw2DCAXqpDfUk-QCAXqpKVQL6FCAXqpAG7YkjHIykrA86_qeHIykrAk2DoRHIykrHafJ8XHIykrAkiviXHIykrAkufUNHIykrAnP20jHIykrAlchsDHIykrD_ioUiHIykrD_1yAiHIykrDbDHWgHIykrD_heyiHIykrE8W8qRHIykrD_yk2iBJog-KVQ6chBJog-HafEmFBJog-Alvi0DBJog-KVNnYCBJog-AFHJOCBJog-AAL7KeBJog-AEPxeCGSDbAHafKgbGSDbAA9EhaeDt19_KROeseDt19_BJXiMeDt19_KWHR8DDt19_ABFluDCex3IPZzEuDHnMxKAki0mDHnMxKAksWWCHnMxKD_fV0iFC_UJAAb1AMBoCtdAlmFyDGwdnfPaBlgRGwdnfBto7CMGwdnfPaHTCMGwdnfBtuokFEMQKeAAb1AMCMiJPPaJa-gCMiJPDbO8QgCMiJPAHE4EMRly3VAEX4YMHU9DRBwVPmRHU9DRABPHwMEwvmQADFp-DEwvmQADDhWFEwvmQADCc4eUKAUWAAYqSFBVy_kKVQ5ihBVy_kKVQ0aFGeN5mL-no0jGeN5mZrThMFGeN5mPdKs0DGeN5mBuh6ejGeN5mPaA5IFGeN5mBtoRMFGeN5mABPHweCYsn1K1sZ-eCYsn1AFHPIFBh9eKK1xCUCGqYYME8ggQFGqYYMABTZIFCGc58LaQjIQCGc58KRPd2gCGc58PdRCIgCGc58K1xCUQCGc58ABVh0FWoIiEACwikbVxZYZBtvEOFHfFyGAYlJyFGoWobD_ii8iCEbKLHaow-DHM2ENHafJ4SHM2END_ii8iBNsAgHafEiFGWG6iHafKcbGWG6iHaoroFCi1WqK1rsUGBsGM_AlmFuFCauXmAFX9KTCauXmAl04yCCauXmKRM-MeCauXmLaOVahE-70nBJFYObE-70nAA8-wFE-70nAAWiYFBj_N7BNKAwFBj_N7AFH3uFBj_N7AlvjGCBj_N7KRRmieEIMq8BJHl2eEIMq8DbDMeSEIMq8BJFdWSEIMq8ABFb-CCIeptS0_iKDCIeptABFbkCCIeptBum78DCIeptKRJDyaCIeptKRRmiQCIeptKVM6GaCIeptKRl-ICEssGuWPdMAWBRvgCAlvisCBRvgCKVNneCBRvgCAAL7QFBRvgCAAL7KDGlpovBNKBmFGlpovBJO_ChV-6W1DbDHENV-6W1BJFX8XEBcLuBtozcNEBcLuDbDMINDvMd1Aki0UMDvMd1DbDMIFDvMd1BJFdADDzP9XAki0QFE2ma6FIn1VFE2ma6AApuDFE2ma6AAWmngD5yB8AAM6lRE8rqNDndkLFE8rqNAAN8PeEF8giABml_FEF8giAAs7bjEF8giAMXZZhEF8giAAN_nXEF8giAAWiZgLyk3lAAQGJXVxK9wAAKylaVxK9wAAKFBMDzsypAAWiZgLgVJsDndifTLgVJsAAN6jWE9W6IAAN5tFWzxX1BtovgXWzxX1DfG9eKWzxX1BNJOWKWzxX1EAZBOKWzxX1DbDHEKWzxX1BJFX8KWzxX1BKIpmKE2TMuDfV92WUPj60BwV-YaUPj60L-oSQjUPj60C2xVwLUPj60ACwiPDBbWmCBqOP3DV9COKBtvEgNV9COKBuiUuCV9COKBuH-bjD_kDDe_ybJhD_kDDEAZu4eD_kDDDgAo4gD_kDDBOC5wbD_kDDDbD0ueD_kDDBJGFmeD_kDDBKJXQeD_kDDDb8yegD_kDDBJ_DWbD_kDDE9QnObB_2B0AOKs5hB_2B0PmOhZgEkDe1AAWiZNEkDe1ezxmngT9UM7ACw5RDGRhyLPzCxshVqygRC3qLOCVqygRFIn0fCVqygRAAptNCDtUVKDn6XdWDtUVKD_ijQiDtUVKANaolDDtUVKD_ij0iDtUVKBJYrfDCeQOTC3Al5iCeQOTBuIIZjCeQOTAki0LDCeQOTAM96djCeQOTAoTIATCeQOTAMqsthR3g8ZBKSYijKK4lWBuIAzgHmrIVG2GGZSHmrIVBvBsNSHmrIVFIo3ZCHmrIVABkdNCHmrIVAlMWRhHmrIVAM9zJgHmrIVBuIAzgHmrIVAAqxzjHmrIVAlmIUTW_72bAApyhCPTTfYBtrMXCPTTfYAksUhDPTTfYAksTrDFCdrUAlJKFRFCdrUAM9zJjFCdrUBuIAzjFCdrUAMhFdcFCdrUAksbjSFCdrUAk2CXcFCdrUBtrS1cFCdrUAksbRcFCdrUAApyrWFCdrUAApuVgFCdrUAAWmncMvGCXAksUzSMvGCXAAWmlcBnhEoK2lhOjBnhEoAl1CmCBnhEoPzCw2MGv7-qAYnSqeGv7-qE8ggUCELuhpBtpKJaELuhpAksZLRELuhpBtpHxaELuhpBtrOFcL4W4sAAqwHeL4W4sAMh_rDL4W4sBtsNVYL4W4sAMg93gL4W4sAksRlWL4W4sBtpALaCMAgaAAjx1eBVRWvDcsynMV28-3BtvESCD5ezwBtoaZRTSvh2ACwiocLmHKzBtoSzeHgl5CE_NieRGp2vXE8ggRDWDHddE8qJ4TCF7RHPdRICgWnm5PBtvJSSO6-iMDbWTjXEqIuIBJYrLZMWxFLAPEYnZMWxFLAC6-XhBPMHcDbXe7eBPMHcgI0fTeGXnBePdRC-CVw3vkBuyV4CTMqSjBLynKSLgB7gBJYmHDEDnilEAcOWGEDnilDbDHKGEDnilBKIpsGBNKXrPz8bMhBNKXrPzCw8GDxX0sD_ijMiCiTt1AoTH8RHqun3AlmIQCXD_V9ACwikCXD_V9BtvEOSFGhK2KRKPtDBrkkKK2lhKjBrkkKAl1CiTBZU2RghGPdiBZU2Re_yatgBTPm-PdRCOGURlqlACwifCWjjZtezeYrCEmFOmBJYsTNGTjh8BJ1ZJDFEfbFAAgN7jBpi0ZBNLFKYD7gjhABZxFRD7gjhAAgGhECaMuxPzWBcTCaMuxQju2UQCaMuxPbDM8TCaMuxBP3C-jCaMuxPzC0SSHinozBNKBmTE-aLyj7ZX5DE-aLyggcxNDE-aLyBVMxReE-aLyBJiSdjE-aLyezefVgE-aLyBJPGhRE-aLyBtoFzaBjdlGCHGvuDBjdlGBuz7OgBjdlGBJHl2eBjdlGBODsKTBjdlGBNLyqCGr4fIPaJV0eGr4fIBJHl8eEHrCHj7ZX5DEHrCHggcxNDEHrCHezefVREHrCHezcXNdEHrCHezk5HRCH9A4KUvzGjEsKd5AAzVZjEsKd5BJFfhDEsKd5ezbSHDVy5fVAAM6bCD1bUOAkpPXDD1bUOBtoGFSD1bUOezbSHdD1bUOBtoDtGLiDrRBtn_VHLiDrRBtn8HGW1H3rBto3GFW1H3rBtozcFW1H3rDbDMIFE3pskBwV1qRE3pskBJ_KYNE3pskDdwOWjGlH_6BtvOoSGlH_6DfG-UgGlH_6BNJPMbGlH_6BJPsseGlH_6DbDH6XGlH_6BJFYybGlH_6BKSRiNGlH_6BKIqcXGlH_6EAZBOXEA6i5Buie2aEA6i5DbD5yeEA6i5Db83iNElZ-rAnP2ijElZ-rDdwOWjElZ-rBLyfOjGS4SBHafKyCGS4SBHafKgXGS4SBA0z7QXGS4SBAkiwGXGS4SBA86_YeGS4SBDbDIMXGS4SBBJFZEXDuq1AD_ioCiGpLfcBJO_IGEE-CbAYdrqeEE-CbDbDMOGEpdeNAnP2ejGW7xjHafKuCGW7xjHafKcXGW7xjA0z7MXGW7xjAkiwCXGW7xjA86_UeDyuUiD_in-iDyuUiDbDMOGDyuUiBJFdGGFDI7PAAprFDEMZxkAksRlREMZxkBtpALaD6KDrBtoSzeE9Dr8AMXZZhE9Dr8AAN_5hEqz-DAAQfXMEqz-DBJYmHZFHMaxKRKIHeEQdRGAksRhWD2GkJBtn8HGLspPYBODnYfLspPYBNLt4FLspPYBNLAYFEkgUHRHXoKaDtxKcWPjlYNDtxKcBtugSFD57pCBuxn0gLmkAFAASN2gHOzAbBuxtkjMXN6dAC_QATOEsNzABVh-FLgewyAASgWFLgewyKRRo8gDx0p-WPjlUSDx0p-BtugOFD355RBuxnwSOSNMPBNJ80XGZaWmBuxogjOGCtpAASOoTGXYm1BtuYWXV9QozDbD0ueV9QozBJGFmeV9QozDb8yegV9QozBJ_DWbGRwM0AkpwRNWBUIVDbDHKGWBUIVBJFYCGG0N41KRKH1DN_aPAKVNAGFN_aPADgNX8FN_aPAKVTU0FN_aPAAFXLUFN_aPAK1xDKFN_aPAAl05qFN_aPADcJhiFWKcyiAARBwMHVrgOWPkTugHVrgOMjKuajHVrgOCSNb8JHVrgOWPd-uMHVrgOBtovgMHVrgOL-oEwjHVrgOBtqySJHVrgOBtvEOgHVrgOCqjdMeOLktmAFX7MFHh1-0BJ1WpjW7Gs6FIk3ZgW7Gs6FIk03dW7Gs6AkpWndGY3HQBJ_KGjVyH1WAki_FHHr-tpBJFdGGHRoAsL-oKqjHRoAsC2xOKfV0JlHAki_DHTZZnADcmbDFT95CyDjcQJFEMTXgBtuYtCEMTXgAMg-BXEMTXgBtrLrCD6DpnAkjWNBD6DpnAksT1DEGOINAIJ5NaTfe2TDbP7TFDz-aUAki_jGFHGAtAIMWDYE02S0AsryLbE02S0Akj0ZeD-HJJAki-PYD2AKFAki_bCCAMdCBuz7WJHInXEABFeaaHInXEBum-yNHInXEAFJUuRHInXEAZg2OJHInXEDcO5yRHInXEAD1tYFO1PuHAfNJcjO1PuHAdZ0UjO1PuHAch5IFO1PuHAchMCSO1PuHKVNAGXMRCRGK1xDKWMRCRGAl05qhBJdTXCG9IejBJdTXBuz6OFQiuBdDbSD4eGR4NZBulAyjHnBjjPZ5XUJHnBjjABIrQMPTp6mAcgHOFHUx1qLF87ARHUx1qA0_oiJHUx1qA2AzwFHUx1qA3qhyJHUx1qA09xSJHUx1qEQDtWiHUx1qA09gCJBVnx9DbSBuFBVnx9BttboMQu4gDDfUfWMOKrDCAFX84jOKrDCDcJlwjCYhaOQkmWiQHMq2mDbYbyRHrFDFAkk1KJXEVxLAlefuJD94ugAl07OeHQuWIAl09wjHQuWIA9-LueHQuWIEAsPSiHQuWIAlmB-JOGnjgAYdsCFOGnjgAA_OEeLiaGfZrATYSVq6g2DcmZXJDtcVvBpxkbTDtcVvDcsz1FLaEsyDbWT_FEL2iOBtuYtDEL2iOAMg-BhEL2iOBtrLrFD5m0VAksT1JHgt5nGRtWVFGp-v8FIrRvhGp-v8AkvzfJGp-v8GRtWDTGp-v8D_vm7fGp-v8sedgPaGp-v8IjnkFjEFxS7AIJ5NMEFxS7DbWSvJLyZp-DbWRbFEP6BwDcmZbRHYm6jGRtWBFBZc22f8qBphGZwx0FIrRtgGZwx0AkvzdJGlLM8AEeYshGS7fDAFYFUjGS7fDAEgKIhVsMNJAEeawFHoE1NAEeYgCHoE1NWPd40DHoE1NCSLS-MHoE1NBtopUDHZ4m2DcJkIjGjJdLKSCw8jHkBVrBtovgaE3BprAksTtXE9G4-BthkdbJzSFHDbSL0aJzSFHBJUcshEq3LFAki-PMEq3LFAkisnbKPqh1DbQC2HKPqh1BJSTuHE5DZcAksT9cEs462Aki-NTEAEFXDbSv2eEAEFXDbD5yeCAWEIKVPFUQCAWEIBuk-QQRZmyODfUf6FEkjhJAEgKaTEkjhJDbFVGDEkjhJDbWbKFGSB0fDcLvSjGSB0fDbST6FGSB0fDb85ODTHFFkDbSEuDD5-2EDbSCkeCYrBUAEXbOQCYrBUAFQzyQCYrBUAHEKmQRx7vaAEXK6XCGbTbADFp6DDx33ADbDMOGR8EePBtoGKaHY-8SAni9KDL0zbePZtqCCGTYUVDbSCMFGTYUVDbDM-bE8qDsBthlTFE8qDsAMNvtbEqaVzAkitdMVqw5wDjcQJDVqw5wDcmZXDVqw5wDcmbDDGv6YJABFxEaEwMW6BpeOpTEwMW6Bt04rCD5dNPAkpPhhD5dNPBtoGPCLmFkSBt0xFCGfBKGBtxNMgGfBKGBtq4MeGfBKGL-qNcjEw3m1Bt0wPCEw3m1AMg8DhHIsKnKVPC4RGR9A8ABg0VjGR9A8DcmwZNGR9A8DcmZXZHnGXGKROZmMHnGXGABFegaHU2pNKRRmoWG0as9AlejGFHWNJDBtqySWD_w3LAksTtcBJTsRIr3INjCedCbBuH-bjHgytKBtoP3FE8lQJBthlTgMpNnMAIJKJYLyedhDbP3FDMW95TAIJKJCGXz1mAki_FTHYruGAAkV3CEsXSBAMOBTFEsXSBAki_DFGZ1lXAki_DDHbwNWHaxZcJGlBDrCfO7UTGlBDrMvUoijGlBDrCibwYZGlBDrCjfHGiGlBDrCeev-XGlBDrCimg4XGlBDrCicEoRGlBDrCrjAueGlBDrCfYiINGlBDrCqix-eGlBDrXMOaGeGlBDrCGDdyJGlBDrCekJ6eGlBDrCiZoKMGlBDrCibzYSGlBDrCiZn4MGlBDrCWPOWXGlBDrCGA-gMGlBDrDPCVueGlBDrCG598IGlBDrAdZ0aNGlBDrCGARSNV-RxxCee2uFLtb9tPzE8ybLtb9tDb86EFGxLiRCee0eIGxLiRCibwkZGxLiRCeewKIGxLiRCqiyKeGxLiRCGDd-SGe70YCGDdIMGe70YRHXn2MGe70YbYU6gaGe70YRHb5-MGY2lFCjfCCWGY2lFSEZ56eGY2lFCrcfEjGY2lFCTTRqjGY2lFCG9K4jGY2lFBuz9ejGY2lFRsHEkfOFe8IBuqMiFHr-LeWPwhaWHr-LeCTEU2IHr-LeBulAqIHr-LeRHVe8AHr-LeRsBu2KHr-LeRHb7igGnCzcCeewWIGtICvBKIvYIGtICvBJ_IYbOHgr5DbR_wFMjf3dAl1DqfMjf3dD_0ywiMjf3dAnbmWjMjf3dCGFl6JMjf3dK1t_ShLswtyCGDgydLswtyAaFR2hPT3zEBJSTqMJUtvXBKL_EMJCeBeBJUccMHa2iyAx8W6jHa2iyP_V0mAHa2iyA19teAW0HQ4CTP_qWW0HQ4CqhrMeOQvwKAp3ZgXLsiTJDb86EFXARveWPdLMJXARveCSKkyAXARveBtn7sAXARveWPTj0AXARveAkiqEFXARveAll7ujFCzkXBuzysJFCzkXAl046hFCzkXBuzxCeMvb7aABIpAMMvb7aABIpkJGwR3tAonYIMGwR3tBuhzwMGwR3tAlciIbGwR3tAlmAyjEMEasA1z56AEMEasAlmpYeEMEasWQW2mMEMEasCTEQMIEMEasK2lXKjEMEasBuhnGMEMEasWQNPOaEMEasAlcVeML4sxvAlcaiXWuCBlBttRgFWuCBlRHVfEMEwj2eWPY5meEwj2eWPVs4MEwj2eRHXoIJEwj2eL-ss8jEwj2ebYU6gJMdMNhAkk4MMMdMNhDbVL8FGeCJ0A00AiFGeCJ0A0wyYSGeCJ0L-nhQjGeCJ0Ak2CqhD50szWPfT-FD50szL-nXIjD50szMjJ_8jLmdD2BtqO2SLmdD2Akk9OeLmdD2Ak19mAW6MgLA1z5uFW6MgLBuz1CeW6MgLAl04geE8uVEAl04sTE8uVEA2C20jE8uVEBxg0ujMpWsHBuj6EJMpWsHAl07OjOW0_dBuj8mTOW0_dAleq-bEF_LZA1qTebEF_LZHbkfifWn8ySBttRSAWn8ySWPY5aAO7UbPBuqOOgLgX0jL-pp0jLgX0jAk7YQAL8wRRBuhxGaL8wRRAll-IjL0pSNBJ_LGTHcNCoCKH3ogHiSR7BuzzWJHiSR7Al05WhGbVKIBuhnGFGbVKIAlcVeFHb50cCiZnsDHb50cCiby6DHb50cCiYjcKHb50cCGAQ2DGrP6EBuk0IROFojOA0z4eFHsHykWPTmOAJ5WyPBJSUgAHnKoeAlcZsAEwtdkWPdMCWHO1rSP-SbWXHO1rSA00AERGYGhnQWodceGYGhnA1qXsXHrOIAP-QSYXGsX_RBtoF4FEsp-CBuhnGFEsp-CAlcVeFGaIRYDcJl0FEA4aNBJ_K8bGxQV0BujvyMOHlfcAEErGFGkMMqAdZ0URD_-vpABFcuND_-vpKWHSyND_-vpABFmkaCAQuaAkukQQCeq65ABIzAIMvgu9BttRwSEMJOPAloEeMW6RTuAloESTGqRb9AloJWREGD-8CTTM4IWoBl1BujvMaGYBuEABFhgXDz0RDMjPVieDz0RDDcLqOeCgsqqZq2nKABp9g_KSCw4ACOc8xPapk4SCOc8xBtqO2SCOc8xS0_iQiD77QHKRMV8SD77QHDbDMeSD77QHBJFdWSCanbXPbhHOIBj4RsBuhxMICIXtePa6q2FCIXteADygURCIXtePandGYOGr04AEErGAHn94-BtqOkCHh4prBtrOoXGrJgABy2MACGrJgAAEeTQXJ5QYLBJSTqMLy5KHAYu0WhGlN3zAEeYOhMjeQ8AEIfyMMjeQ8BNJ3AFMjeQ8AFBdiFEAGwOAkjh0ALsvHRDbQkoeLsvHRAED6MFLsvHRDbWRUNO1cAEAEIBUdO1cAEAEH3MAO1cAEDbP8CAMROjDAEbBKWMROjDDbR_8AN-s2ZDbQGKdDt3CVDbDMIDLafZYAkismAMvoviAEHyIFLmp3-DbP3QAOADWPDbP2-CGY-lqAkiwGXGpMjyAkiv-bEAB8rBuiWaAORrBPBODkkFHn8SdCSLS-MOFgipDcJhiFOFgipDbP8CFOFgipBJSM6FHp-COBtovgJEIQ8UAki-NcHscnRRHVe8ABnqJjBKcNJMBnqJjBJFzxQQiz5WDbSD4FHPlMlBJ1WpMT93-cDjcQJFUcSK7DnNhBFFA_tEAkj0lAFA_tEAsryFbWhomLAArD_jDtbRZBpxktZTS2eFAA3l1JHaxNEIjooZjHIhfLDbnVxeWt8r3AY4QNIFDGQYDnKT_AEw2ifBt0wPWEw2ifAMg7fWFHIJZKRKIHWE04bgAksRhJFDH25AkiqNAD6I_VBtn8HWGe7G0Haox0cXAfcjA0w8UdXAfcjAkuaOXPT3FgDbTP4IPT3FgDbQCyJPT3FgBJSTqJFDBRcA1ELoIFDBRcA0zFSJFDBRcA1qnuIFDBRcA0w9oIFDBRcD_314iFDBRcAl05wMFDBRcAkugIMFDBRcK1t1YIJCdT6DbQDIaJCdT6BJSUASJCdT6DbYlmeJCdT6DbSLkIJCdT6BJUccIJEfDrKRJQcAGfX8GCWSWIFHnrjvA0w8UFHVz3lS09cYRGfEt6P-oyWeGfEt6A02BcTGfEt6PaHQmRGfEt6Ak7RseGfEt6PaHPwSGfEt6Ak7RmeOLtE9A0z4eFGhGdrPaEAGAKLlykDbTQuIHnYVjA0w8UDJ5WErDbQDocJ5WErBJSUgQD6MA-S1aeUSLm0YBDbQD-SLm0YBBJSU2SOd3_TAnPwAXFHJkhAMNtThFHJkhBthh9gFHJkhAMNtNhD-Ks9Btn8HKJ5PqnDbTP4QJ5PqnDbQDECJ5PqnDbQCyDJ5PqnBJSTqDLmt99AYu0WhLmt99BJSUASJ5XrMDbQDIaJ5XrMBJSUASJCohhDbQD-SJCohhBJSU2SUWWL8BtrNrFEGRgoezlEFREGRgoj7_sZXWoPHhezbKhFEGUtqBtn71RTP6pLBuE2NaE2oJBIk3sTjE2oJBEA8ODRE2oJBBKlcXhE2oJBDcpljgMjQgEBtrMZLMjQgEBtrLjXMjQgEAMXWzhMjQgEBJO8hhDzugwDcmZXXEkdOrDcmZXXE2pviDcmYhaDtq3-DcmZXXE8u-1AMOCLCE8u-1AMOBVcEqfQ8Aki_FHFG3tqAkisrXFG3tqAMNvfXFG3tqAMNvnXE0n_xAkitXHEshAtAki_DHD1x3CAMOCJCHhGC8FIklrXHhGC8AkpHbCEsqnzAMNvlCEsqnzAkitVRUW38XBuE17aEqfcVAki_DHHhGOVFIklpCN-tcXAEgL0dN-tcXAEebOdN-tcXAZVQkjPT2yhAEeaMMPT2yhAYbjeMOEyrqDcLqOeOCw75AYbjkGPX6SDDbR_qeO7-qnDbR_8aHanHmDfTtYJBbdD5DfaHuNGRoQCCildALHmxmMCilb-IHmxmMBJFX8JXACUSAk4ukMBnnifDfTtqMGwCchDbFU6RGwCchDbD5yeGwCchBJ_H2jGwCchDbWamMGwCchDb86EMGwCchAZVOCbDzgCUEPwiKiGVrvkBJFYCGHq1FuCibwqWHq1FuAnjDEjHq1FuCU3paXHq1FuAnR8ujHq1FuA0z18IHq1FuAoJhsjHq1FuA_n-0jHq1FuAnPusXHq1FuAoTAWjHq1FuA09dgZHq1FuCGDY6XXEFz0AnP7WLXEFz0AnPvKXBrrCBCjfCUIBrrCBCib1uTBrrCBCVxU0QBrrCBMzbK-jBrrCBAni9KhBrrCBMl3EkjBrrCBK5SbyjBrrCBAoJaGbBrrCBAoh9KRBrrCBA2AvKZBrrCBA09ikZBrrCBAnPwAQBrrCBAoTBqQBrrCBLF830hG0F8DDbDMOGWNWqJAlvoCLWNWqJA90iGeEP4fCAoJakbEP4fCECPi4XGZD_LEPwdGbGXCPaBuzwKYHsLlkCSP7ORO1mNIAYbjeKO7rcbDbR_qeCT6vJDfTvEIEHeRyA0woiIFIWKSA0woEDGttekBtrIySHSM6WBttRkTGbdwrCGDTqWCSV0qDfUB6ZCSV0qDfaJagCSV0qDfV4CDCSV0qDgNaegCSV0qDiAxSDRrmiwDfTxmICegTQDfTvWgW6GsFA0woiDE8og-A1D3kMGqG0UA0w3uMEF5XTA1qT8MEF5XTA0wucDEF5XTEPwcQbHq-s0A0w3QDXEPa6A0woEDFGxPzA1D3YCFGxPzA0yxCCFGxPzA1qTeWEQCGIA0woiDGj8xeDcmZXXBJSJjAFYOudGRtDlKVTVAgGRtDlAFXLggGd3iLBJHguMGd3iLBJYmaMBNVpFAET_AXBNVpFKVTUQhBNVpFAFXKwhGh7BtBJFYCGBRZInAYbewhBRZInBJXi-hBRZInDO4pkeBRZInCF2lIYORAXSAYcRGbORAXSAYbj4KORAXSAYbjwKOVD20AYbjiJHaqUoBwV1qjHaqUoBJFYOZHaqUoDdwOojWz7CuBtr7sLWz7CuBtopULE2c3nBtovgaE2c3nBulnGME2c3nC23nYfE2c3nL-rW2jGj7K9BtvOoSGj7K9BuihYRGj7K9DbD6EeGj7K9BJIOSeGj7K9Db86WRGj7K9BKAHsbD_tt8BuiUuCXAFhUBtqEaCEwXoUBtqKsRGd17qAlmAuXD5oepL-pf2jLmQ1sBJHg2XGn-qfDbDMgGGn-qfBJGcYNCidYuCU3paHCidYuAnPusJCidYuAoTAWjHq4SwAlmAqjFGq1vAnPvKJW18yfBtr2iCE4enYBtr8cJEBvdtBulh8CEBvdtL-rRsjUQY1oBtovgXUQY1oBtvDqXUQY1oBtqySeUQY1oBuiUuaBK_EnAkj0cDBK_EnHafEmDBK_EnAkiqMDDvMhoAk14YDBPCkJHafEiDBtcwoAnPusDCcE7PDbWRACCJ1NWAYbeqhCAJTzHafKyQCAJTzHayToDEkWw0Ak1-kZGR1EKHafFcbGR1EKAk2HkhCEMzVHafKuQCEMzVHayTkDGV4jsHafFYRDtizmBuxn0gDxmTIBuxnwSHq9GTAnPusCBrzCmAni9KhBrzCmAoJaGQBrzCmAnPwAQPT4ZCDcJh0JHmzMtDbSBuJBVZbHDbSUSMQuqJNDbSEQMHq2sPAk7RgTBZc6pAk7jOhQytovAk7TMhO1nzpDcJhiWOQ-OmAYbjehOdItMDbR_wMWJUO9Akky2MWJUO9AkjXueWJUO9Ak14iLWJUO9A861IeWJUO9AlcVebEFw0jA1rX0bHq2KEWPTpmXHq2KEWPTowAXEG4KAll7mjG0HAZAk2CiAG0HAZAlciAIG0HAZA86_IeWNXufAll7mjEP5jYK2lXChEP5jYAl04ajBpvKJAYbisGHiz-jAYbjWbBjp62AZVN6bPH6MZKRJEWCPH6MZDbP2-COQ_1HKRJxKeOQ_1HKRPesgOQ_1HKSCu6JOQ_1HDcJhiNOdKTtKRJDyAOK4RvDbR_8eWJThZAo6cSTWJThZBA_Y4bWJThZApg5OWGfJlQCSP7OTLmRMeBJHgyXG1q1RCSKlaFCeR3WC20gQfCeR3WC2zywfFCfUXDfT1KCBnitrBx01igBnitrBJGKoMBnitrCGA9qHBnitrBZSXAhBrmNNBJFdEHCaOX0CIwY4RCaOX0AbbrchRzfF6CGDZMQRzfF6AYurwIBjfOJPzC0SbBjfOJBJ_2CIBjfOJAYbisIGr6ILAYlJyRGr6ILBto4ieEHsrKAYuyASL0VCNAYuqaSCH-p7CIygigCH-p7PzWCAQCH-p7AYuxiQCH-p7AbbrUhCH-p7DR42OeCH-p7CJzpOjCH-p7BJa0yeCH-p7BJZZqIRhPYBCGFg2XRhPYBAYurohRhPYBDPL2ieRhPYBCHGpijHQZj9CIwYaDHQZj9DzrYOgWpqSDCGDYuTBRPgQQju2UTBRPgQAdZxygBRPgQBJ_I0YGZqaSAYxEoeGZqaSPzCz0RGZqaSAZodyjGZqaSBJHmmeGZqaSBJGLeRGZqaSBJ_K6jGZqaSBtulygOGSxVAYu7qdTOtrXAYw0meTOtrXAYu0ELGxUHjWPd4iMGxUHjBtvF6gEE_reAYdrYCG1XnFBtuYWSGtQoBCSKkkSGtQoBBtopWeGbA6IAYwy6eGbA6IAYuxihOHpRLAYup8FGkP-ZCGDi-FV9gsfCGDTyFEIJgcDbDMebEIJgcBJFdWSCIbfNBJHmCDBbbcHPzC0WNBnl6tAlmFyjCMFWfPzCzUMCYP1FAYuxqQCYP1FAbIk2jBhgraAZVOCCWDMTiBtvEOCGXr3jAki_SRBfe7pPzCzKCGn51rAYlJySCiYj6PzCzQDBrpaPAlmFuCCaRk2CGDoMTCaRk2CIwX2QCaRk2PzCzQTCaRk2AYuxohCaRk2AbIk0jRziS8CGDYKTBjibLBNKAwfBjibLBJHmCeBjibLBJGK6HBjibLBJ_IqZBjibLAZVOACGr9VNAYlJ4TGlM1_BJO_ChEA_Y-Aki0UCEA_Y-DbDMICEFC4gAki0QCV9j5hDbDHENV9j5hBJFX8XGdvgVBJFeQMGhy_3BJFd6bGZsAzDbWgSRBj9p8BJFdWFCIdFuBJYsMQGaI2FBJFeADBfcy9QizAcABXVz5BJHlweBXVz5BJGKoABjgSfBJ_IYIGZreoAk4QAeBRwm6BJFdKTHqwzFBJFd6GCQGLKBJYsYQBrp8aBJFdWDGv9-fA3g6sDBXziIBJFdKALgDv8AkiqNWE9FgYAkiqNXMRAw6BJHg6JGwQ5sDbDMIMLeVGxBJFYCGHrDi5AnPzwjG0UZOAnPvKRWNlHUAlcXCjWp9kCBttRkTVzOaXCGDTqWN_1kGBJFYyXHSDVyBttRkTGbUMHCGDTqWMjTr1BJFYOhGkJoIDbDMaDBr34rAnPusDWJisIAkiqEMG0VdkAki0EAWJh-kAonN0IB_y2DFIpf5eHINwFBJZJjRWheeLC2g2JiWheeLBJ1tZCWheeLBJY6XCT9RBKBJFzxdVqvUgDbMuLgCF4FWDbWbLHCF4FWDbWaVRJygcZDbWT3IWjgN8BJ1WnCWjgN8BJYjlCT_Sw7BJYpxdVsxERC2qAjSD1YIdBKvEdRE2ebmDcmZXFMdBjWBtn8HFHOUl5Aki_FCHQWVqAki_DCE2ZvpDcmZXLEkFGMDfV92WN-LwlDfT8edFCfSrDfT1KMLmIyKBJXdsWLmIyKDbXVggLmIyKDfTtkZCOD3iAkscZICaOWIDbYjEeCaOWIBJXm6hCH-oPPzWCSTCH-oPCHGvujCH-oPBuz7OjCH-oPDztg6gCH-oPS1fzkiCH-oPDeCYEjCH-oPBMEo8jCH-oPPzC0SbRhPWVDbVYYLRhPWVBJXpQLMY0cTDbQnIcGZqYmKqLLQjGZqYmD0R94jD1c7lBJiSdTN_iQbDfTtSFV9gqzCGDTyFD15w3DbDMMFBXOTzQjsrKYL0OmdBKSOUjGZj-iQjsr8TGZj-iBJ1qwhGZj-iDcGoETCIVDdQjsrGJB_62NAkj41eCaRjKBJa0CTCIZ3ABLyfYjLsPFzDfTtSILsQsUDbQkoeBXOqlQjsrGAQi2GrAlvjqhQi2GrKVNoOW"/*END*/, m = new Map();
+    const num = t => { let v = 0; for (const ch of t) v = v * 64 + BOOK_ABC.indexOf(ch); return v; };
+    for (let i = 0; i + 11 <= s.length; i += 11) m.set(num(s.slice(i, i + 5)) + "," + num(s.slice(i + 5, i + 10)), BOOK_ABC.indexOf(s[i + 10]));
+    return m;
+  })();
+  const SYM = [(r, c) => [r, c], (r, c) => [c, N - 1 - r], (r, c) => [N - 1 - r, N - 1 - c], (r, c) => [N - 1 - c, r],
+               (r, c) => [r, N - 1 - c], (r, c) => [N - 1 - r, c], (r, c) => [c, r], (r, c) => [N - 1 - c, N - 1 - r]]
+    .map(t => Array.from({ length: N * N }, (_, i) => { const [r, c] = t((i / N) | 0, i % N); return r * N + c; }));
+  function bookPick(bd, p) {
+    const legal = legalMoves(bd, p);
+    for (const map of SYM) {
+      const a = new Array(N * N);
+      for (let i = 0; i < N * N; i++) a[map[i]] = bd[i] === "B" ? 1 : bd[i] === "W" ? 2 : 0;
+      let h1 = 0, h2 = 0;
+      for (let i = 17; i >= 0; i--) h1 = h1 * 3 + a[i];
+      for (let i = 35; i >= 18; i--) h2 = h2 * 3 + a[i];
+      const m = OPENING_BOOK.get(h1 + "," + (h2 * 2 + (p === "W" ? 1 : 0)));
+      if (m === undefined) continue;
+      const idx = map.indexOf(m);
+      if (legal.has(idx)) return idx;
+    }
+    return null;
+  }
+
   // 依難易度挑一步：弱取勝率最低、中取中位數、強取最會贏的一步。
+  // 開局庫保證離開庫時局面仍在理論值以上（執白最多輸 4 子、執黑至少贏 4 子），之後最強每一手只要選
+  // 「下完仍保得住」的點，就一直維持；剩 17～20 格時完整算到終局常超過 1.5 秒，就先用窄窗口找一個
+  // 保得住的點（比求精確子數差快約 10 倍）。所有點都保不住（之前超時下錯）就停用，回到一般搜尋
+  let theoryOk = true;
+  const KEEP_MIN_EMPTIES = 17;
+  function keepPick(bd, p) {
+    const T = p === "W" ? -10004 : 10004;
+    const kids = [...legalMoves(bd, p)].map(([idx, flips]) => {
+      const nb = bd.slice();
+      nb[idx] = p;
+      for (const f of flips) nb[f] = p;
+      return { idx, nb };
+    });
+    deadline = Infinity;
+    ENGINE.newSearch();
+    for (const k of kids) k.h = -deepNegamax(k.nb, foe(p), 8, -Infinity, Infinity); // 先試看起來好的點
+    kids.sort((a, b) => b.h - a.h);
+    deadline = Date.now() + EXPERT_BUDGET_MS;
+    try {
+      for (const k of kids) if (-deepNegamax(k.nb, foe(p), 64, -T, -T + 1) >= T) return k.idx;
+      return false;
+    } catch (e) {
+      if (e !== TIMEOUT) throw e;
+      return null;
+    } finally {
+      deadline = Infinity;
+    }
+  }
+
   function aiPick(bd, p) {
+    let keep = null;
+    if (aiLevel === "expert") {
+      const b = bookPick(bd, p);
+      if (b !== null) return b;
+      const empties = bd.filter(v => !v).length;
+      if (theoryOk && empties >= KEEP_MIN_EMPTIES && empties <= EXPERT_SOLVE_EMPTIES) {
+        keep = keepPick(bd, p);
+        if (keep === false) { theoryOk = false; keep = null; }
+      }
+    }
     const scored = rankMoves(bd, p);
     if (!scored.length) return null;
 
     let choice;
     if (aiLevel === "expert") {
       const deep = expertPick(bd, p);
-      choice = (deep.idx !== null && scored.find(s => s.idx === deep.idx)) || searchPick(scored);
+      const solved = deep.idx !== null && deep.depth >= bd.filter(v => !v).length;
+      // 算到終局就用最佳點（也一定保得住）；沒算完則用保得住的點
+      const idx = solved ? deep.idx : keep !== null ? keep : deep.idx;
+      choice = (idx !== null && scored.find(s => s.idx === idx)) || searchPick(scored);
     } else {
       choice = aiLevel === "easy" ? lowPick(scored)
         : aiLevel === "hard" ? searchPick(scored)
@@ -1563,6 +1900,7 @@
     suggestUsed = 0;
     undoUsed = 0;
     undoStack = [];
+    theoryOk = true;
     closeWarn(false);
     openSetup();
     render();
@@ -1706,7 +2044,10 @@
       me: cnt[me],
       ai: cnt[aiSide],
       at: Date.now(),
-      secs: Math.round((Date.now() - gameStartAt) / 1000)
+      secs: Math.round((Date.now() - gameStartAt) / 1000),
+      kifu: log.filter(m => m.at).map(m => m.at).join(""), // 依序每一手的座標，跳過不記
+      sug: suggestUsed, // 這局按過幾次建議一手
+      undo: undoUsed    // 這局按過幾次反悔
     };
     records.push(rec);
     keepTop();
@@ -1789,6 +2130,8 @@
     return s >= 60 ? `${Math.floor(s / 60)} 分 ${s % 60} 秒` : `${s} 秒`;
   }
   let openRec = null; // 排名裡展開詳細資訊的那一局（recordKey），重畫排名時保持展開
+  let openKifu = false; // 展開的那一局是否也展開了棋譜
+  let copiedKifu = null; // 剛按「複製」的那一局，按鈕暫時顯示「已複製」
 
   const TOP_N = 20; // 排名只秀前 20 名（保存與匯出是前 50 名）
   const RESULT_TEXT = { win: "玩家勝", lose: "電腦勝", draw: "和局" };
@@ -1798,6 +2141,65 @@
       if (li.dataset.key === key) { li.focus(); break; }
     }
   }
+  // 「棋譜」那一格：有棋譜就放「看棋譜／收起」與「複製」兩個按鈕（點按鈕不收起整列）
+  function kifuCell(r, key) {
+    const dd = document.createElement("dd");
+    dd.className = "v-kifu";
+    if (!r.kifu) { dd.textContent = "未記錄（v2.0 以前的勝局）"; return dd; }
+    const btn = (text, fn) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "smallbtn";
+      b.textContent = text;
+      b.addEventListener("click", e => { e.stopPropagation(); fn(b); });
+      b.addEventListener("keydown", e => e.stopPropagation());
+      return b;
+    };
+    const span = document.createElement("span");
+    span.textContent = `${r.kifu.length / 2} 手`;
+    dd.append(
+      span,
+      btn(openKifu ? "收起" : "看棋譜", () => { openKifu = !openKifu; drawTally(); focusRec(key); }),
+      btn(copiedKifu === key ? "已複製" : "複製", async b => {
+        // 複製成一行文字，貼給別人或 AI 就能重播、分析這局
+        const text = `六路黑白棋 ${LEVELS[r.level]} 玩家執${SHORT[r.side]} 玩家${r.me}:電腦${r.ai} 棋譜 ${r.kifu}`;
+        try { await navigator.clipboard.writeText(text); }
+        catch (e) { openKifu = true; drawTally(); focusRec(key); return; } // 不能用剪貼簿：展開棋譜，改長按下方那串座標複製
+        copiedKifu = key;
+        drawTally();
+        focusRec(key);
+        setTimeout(() => { if (copiedKifu === key) { copiedKifu = null; drawTally(); } }, 1500);
+      })
+    );
+    return dd;
+  }
+  // 展開的棋譜：從開局重下一遍，每一手標出誰下、座標、翻幾子，跳過也列出；玩家下的那幾手用黃銅色
+  function kifuList(r) {
+    const g = replayKifu(r.kifu);
+    const ol = document.createElement("ol");
+    ol.className = "kifu";
+    ol.addEventListener("click", e => e.stopPropagation()); // 選取文字時不收起整列
+    g.steps.forEach((m, i) => {
+      const li = document.createElement("li");
+      const n = document.createElement("span");
+      n.className = "n";
+      n.textContent = String(i + 1);
+      const t = document.createElement("span");
+      if (m.side === r.side) t.className = "pc";
+      t.textContent = `${PIP[m.side]}${m.pass ? "跳過" : m.at + " " + m.flips}`;
+      li.append(n, t);
+      ol.appendChild(li);
+    });
+    const raw = document.createElement("p");
+    raw.className = "kifu-raw";
+    raw.textContent = r.kifu;
+    raw.addEventListener("click", e => e.stopPropagation());
+    const note = document.createElement("p");
+    note.className = "kifu-raw";
+    note.textContent = `黃色是玩家（${PIP[r.side]}${SHORT[r.side]}）；數字是翻幾子`;
+    return [ol, note, raw];
+  }
+
   function drawTally() {
     const list = document.getElementById("records");
     list.innerHTML = "";
@@ -1848,15 +2250,19 @@
           ["玩家執棋", `${SHORT[r.side]}棋（${r.side === "W" ? "先下" : "後下"}）`],
           ["比分", `玩家 ${r.me} : 電腦 ${r.ai}`],
           ["差距", `贏 ${diff} 子`],
-          ["空格", `${N * N - r.me - r.ai} 格`],
+          // v2.0 以前的勝局沒有記這兩項
+          ["建議一手", r.sug == null ? "未記錄" : `${r.sug} 次`],
+          ["反悔", r.undo == null ? "未記錄" : `${r.undo} 次`],
           ["結束時間", fmtFull(r.at)],
           ["對局長度", fmtLong(r.secs)]
         ]) {
           dl.append(cell("dt", "", k), cell("dd", cls || "", v));
         }
+        dl.append(cell("dt", "", "棋譜"), kifuCell(r, key));
+        if (openKifu && r.kifu) dl.append(...kifuList(r));
         li.appendChild(dl);
       }
-      const toggle = () => { openRec = openRec === key ? null : key; drawTally(); focusRec(key); };
+      const toggle = () => { openRec = openRec === key ? null : key; openKifu = false; drawTally(); focusRec(key); };
       li.addEventListener("click", toggle);
       li.addEventListener("keydown", e => {
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
@@ -1945,6 +2351,17 @@
     gameStartAt = Date.now(); // 對局長度從按「開始」起算
     render();
   });
+  // 開局視窗左下角：「演算法邏輯」「必勝口訣」點一下展開說明，再點收起；同時只開一個
+  const setupNotes = [["aboutAiBtn", "aboutAi"], ["winTipsBtn", "winTips"]]
+    .map(([b, n]) => [document.getElementById(b), document.getElementById(n)]);
+  for (const [btn, note] of setupNotes) {
+    btn.addEventListener("click", () => {
+      const open = note.hidden;
+      for (const [b, n] of setupNotes) { n.hidden = true; b.setAttribute("aria-expanded", "false"); }
+      note.hidden = !open;
+      btn.setAttribute("aria-expanded", String(open));
+    });
+  }
   // 匯出／匯入：把計分板存成 JSON 檔備份，或帶到別台電腦、別的瀏覽器
   const tallyMsg = document.getElementById("tallyMsg");
   function showTallyMsg(text) {
@@ -2013,8 +2430,38 @@
         !Number.isFinite(r.at) || !int(r.secs, 0, 1e7)) return null;
     return {
       name: r.name.trim().slice(0, 12) || "玩家", result: r.result, level: r.level,
-      side: r.side, me: r.me, ai: r.ai, at: r.at, secs: r.secs
+      side: r.side, me: r.me, ai: r.ai, at: r.at, secs: r.secs,
+      kifu: kifuOk(r) ? r.kifu : "", // 棋譜不對（或沒有）只丟掉棋譜，紀錄照留
+      sug: int(r.sug, 0, 99) ? r.sug : null, // 沒記（舊紀錄）是 null
+      undo: int(r.undo, 0, 99) ? r.undo : null
     };
+  }
+  // 棋譜：依序每一手的座標（例：D2E4C5…），跳過不記，重下時自動補上。
+  // 重下一遍要每手合法、最後雙方都無處可下才算數，否則回傳 null；scoreboard_apps_script.gs 收件時也做同樣的檢查
+  function replayKifu(s) {
+    if (typeof s !== "string" || !/^([A-F][1-6]){1,32}$/.test(s)) return null;
+    const bd = Array(N * N).fill(null);
+    bd[2 * N + 2] = "W"; bd[3 * N + 3] = "W";
+    bd[2 * N + 3] = "B"; bd[3 * N + 2] = "B";
+    const steps = [];
+    let p = "W";
+    for (let k = 0; k < s.length; k += 2) {
+      if (!legalMoves(bd, p).size) { steps.push({ side: p, pass: true }); p = foe(p); }
+      const i = (Number(s[k + 1]) - 1) * N + FILES.indexOf(s[k]);
+      const f = flipsAt(bd, p, i);
+      if (!f.length) return null;
+      bd[i] = p;
+      for (const x of f) bd[x] = p;
+      steps.push({ side: p, at: s.slice(k, k + 2), flips: f.length });
+      p = foe(p);
+    }
+    if (legalMoves(bd, p).size || legalMoves(bd, foe(p)).size) return null;
+    return { steps, B: bd.filter(v => v === "B").length, W: bd.filter(v => v === "W").length };
+  }
+  // 棋譜要和紀錄的比分相符（玩家執 side）
+  function kifuOk(r) {
+    const g = replayKifu(r.kifu);
+    return !!g && g[r.side] === r.me && g[foe(r.side)] === r.ai;
   }
   // 同一局：結束時間只比到秒（試算表存成日期時間，讀回來的毫秒不保證一樣），和 scoreboard_apps_script.gs 的 keyOf 一致
   const recordKey = r => [Math.floor(r.at / 1000), r.name, r.me, r.ai, r.side, r.level].join("|");
@@ -2236,8 +2683,11 @@
     const tipEl = document.getElementById("tipText");
     tipEl.hidden = !showTip;
     if (showTip) {
-      tipEl.innerHTML = `建議下 <b>${coord(tip.idx)}</b>，估計勝率 <b>${Math.round(tip.rate * 100)}%</b>` +
-        `<br>翻 ${tip.flips} 子 · ` + (tip.solved ? "已算到終局" : `往後算 ${tip.depth} 步的局面換算`);
+      tipEl.innerHTML = tip.book
+        ? `建議下 <b>${coord(tip.idx)}</b>，開局庫最佳下法` +
+          `<br>翻 ${tip.flips} 子 · 已算到終局：雙方都不失誤時${tip.side === "W" ? "先手白棋輸 4 子" : "後手黑棋贏 4 子以上"}`
+        : `建議下 <b>${coord(tip.idx)}</b>，估計勝率 <b>${Math.round(tip.rate * 100)}%</b>` +
+          `<br>翻 ${tip.flips} 子 · ` + (tip.solved ? "已算到終局" : `往後算 ${tip.depth} 步的局面換算`);
     }
 
     const placed = b + w;
@@ -2571,6 +3021,7 @@
     rateCache.wantTip = false;
     moves = legalMoves(board, turn);
     undoUsed++;
+    theoryOk = true; // 退回較早的局面，可能又回到理論值上
     if (undoUsed > FREE_UNDO && aiOn) hinted = true;
     render();
   }
