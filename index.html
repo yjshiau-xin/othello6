@@ -1076,7 +1076,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <span class="ver">v2.0.113</span>
+        <span class="ver">v2.0.114</span>
       </div>
     </form>
   </div>
@@ -3092,7 +3092,9 @@
     helpEl.hidden = !open;
     if (open) {
       cancelAi(); // 電腦暫停；關掉說明頁後 render() 會重新排程
-      document.getElementById("helpBack").focus();
+      // 「返回遊戲」在頁尾，聚焦時不要捲過去，從頭開始看
+      helpEl.scrollTop = 0;
+      document.getElementById("helpBack").focus({ preventScroll: true });
     } else {
       helpFromLink = false;
       if (setupWait) entryName.focus();
