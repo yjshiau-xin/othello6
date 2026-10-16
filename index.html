@@ -1073,7 +1073,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <span class="ver">v2.0.108</span>
+        <span class="ver">v2.0.111</span>
       </div>
     </form>
   </div>
@@ -1118,9 +1118,9 @@
         <p><b>規則</b>　白棋先行。落子必須夾住對手至少一顆棋子，被夾住的棋子全部翻面。</p>
         <p>一方無合法棋步時跳過，棋盤上會跳出視窗告知，按「確認」後改由對方繼續下（棋譜記「跳過」）；雙方皆無棋可下則比賽結束，子數多的一方獲勝。</p>
         <p><b>排名</b>　只記勝局（輸、和局不記錄）。對局中打開「提示」卡片的任一項（被翻子的黃線、落子提示、顯示勝率），或「建議一手」用到第 4 次、「反悔」用到第 2 次，這局贏了就不寫進排名；每局前 3 次建議一手、第 1 次反悔不影響，按鈕下方會顯示還剩幾次。這些操作之前都會先跳出視窗，可以選「取消」或「照樣使用」。開局時提示已經開著，這局一開始就不記錄。</p>
-        <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：前 12 手查開局庫（顯示「開局庫最佳下法」），之後往後算 6～12 步（剩 20 格以內就試著算到終局，最多想 3 秒），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），查開局庫以外，建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
+        <p><b>建議一手</b>　按下後用和「最強」相同的方式替你挑一步：前 12 手查開局庫（顯示「開局庫最佳下法」），之後往後算 6～12 步（最多想 3 秒），剩 20 格以內則不限時間、一定算到終局（挑子數差最大的點，計算中按鈕顯示「計算中⋯」），挑出勝率最高的位置，棋盤上以金圈標示。參考欄顯示的估計勝率由往後算的局面分數換算（已算到終局時直接是 100%／0%／50%），查開局庫以外，建議的點就是所有落點中勝率最高的；落子或重新開始後即清除。</p>
         <p><b>電腦對手</b>　在開局視窗的「玩家選棋」選白棋或黑棋，預設玩家執白、電腦執黑；選定後對局中不能更改，要換邊請按「重新開始」重選。白棋固定先下，所以玩家選黑棋時由電腦（白棋）先下、玩家後手（6×6 黑白棋雙方都下最佳棋時後手以 20:16 獲勝，後手較有利）。預設「逐步進行」：電腦選好點後會顯示它選的格子與翻轉預覽，停下來等你確認，點它選的那格（和自己下棋時「再點一下」相同）才真的落下；取消「逐步進行」則電腦自動落子。</p>
-        <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>前 12 手查開局庫（離線算到終局得出，執白最多輸 4 子、執黑至少贏 4 子，6×6 雙方完美下棋時就是先手 16:20 落敗），離開開局庫後每一手先確認仍保得住這個結果，再往後算 6～12 步，剩 20 格以內會試著直接算到終局（每步最多想 1.5 秒）。</p>
+        <p><b>難易度</b>　每局開始時跳出視窗，輸入名字並選擇電腦的弱／中／強／最強；對局中只顯示、不能更改，要換難度請按「重新開始」。電腦每步先用模擬對局估出每個可落點的勝率，再依難度取名次：<b>弱</b>取勝率最低、<b>中</b>取中位數、<b>強</b>取最會贏的一步（往後算 4 步，實測比只看取樣勝率更強）、<b>最強</b>前 12 手查開局庫（離線算到終局得出，執白最多輸 4 子、執黑至少贏 4 子，6×6 雙方完美下棋時就是先手 16:20 落敗），離開開局庫後往後算 6～12 步，剩 20 格以內直接算到終局（剩 20 格以上每步最多想 1.5 秒，以內不限時間）。</p>
       </section>
       <button class="act help-back" id="helpBack" type="button">返回遊戲</button>
     </div>
@@ -1134,11 +1134,12 @@
         <ol>
           <li><b>開局查表</b>：前 12 手查開局庫。庫裡 5199 個局面都事先算到終局，電腦執白最多輸 4 子、執黑至少贏 4 子（6×6 雙方都不失誤時，先手 16:20 輸）。</li>
           <li><b>中盤往後算</b>：往後算 6～12 步，算過的局面記在表裡不重算，明顯較差的分支直接跳過。局面好壞看位置（角最好，角旁最差）和雙方各有幾個點能下。</li>
-          <li><b>殘局算到底</b>：剩 20 格以內直接算到終局，挑子數差最大的一步；剩 17～20 格時先確保不掉出上面的理論結果。</li>
-          <li><b>想多久</b>：每一步最多想 1.5 秒。</li>
+          <li><b>殘局算到底</b>：剩 20 格以內直接算到終局。先快速判斷每一點下了是贏、輸還是和，再只在結果最好的那幾點裡算出最後差幾子，挑差最多的一步（比每一點都算子數差快約一倍，挑出的點相同）。</li>
+          <li><b>想多久</b>：剩 20 格以上每一步最多想 1.5 秒；剩 20 格以內不限時間，一定算到終局。電腦上剩 20 格平均約 5 秒、最久約 12 秒，剩 19 格以下多半 1～2 秒內；較慢的手機會更久，這時會顯示「思考中」。</li>
         </ol>
         <p class="note-h">補充</p>
         <ul class="flat">
+          <li><b>建議一手</b>：和最強同一套。前 12 手查開局庫，之後往後算 6～12 步（最多 3 秒），剩 20 格以內不限時間、一定算到終局；每一點顯示的勝率在算到終局時就是贏 100%、和 50%、輸 0%。</li>
           <li><b>強</b>：往後算 4 步，挑局面最好的點。</li>
           <li><b>中</b>：每個點模擬下完 160 盤，挑勝率排在中間的點。</li>
           <li><b>弱</b>：同樣模擬，挑勝率最低的點。</li>
@@ -1209,16 +1210,19 @@
   const AI_DEPTH = 4;
   // 難易度：在「依估計勝率排好的落點名單」上取不同名次（強另走搜尋，見 aiPick）
   const LEVELS = { easy: "弱", normal: "中", hard: "強", expert: "最強" };
-  // 最強：逐步加深搜尋（6 → 12 步；剩 20 格以內再加深到終局），每步最多想這麼久，超時就用已算完的最深結果。
+  // 最強：逐步加深搜尋（6 → 12 步；剩 20 格以內再加深到終局）。剩 20 格以上每步最多想 EXPERT_BUDGET_MS，
+  // 超時就用已算完的最深結果；剩 20 格以內不限時間，一定算到終局（在背景執行緒算，畫面顯示「思考中」）。
   // 搜尋核心換成就地落子＋置換表後（makeEngine），jsc 實測剩 28 格算 12 步約 0.1～0.3 秒、
-  // 剩 18 格算到終局約 0.1～0.6 秒、剩 20 格約 0.6～4.5 秒（超時就退回 18 步的結果）
+  // 剩 18 格算到終局約 0.1～0.6 秒、剩 20 格約 0.6～4.5 秒（第 98 項那批局面；第 111 項改用 solveScores 後，
+  // 另一批 8 個局面剩 20 格平均 4.6 秒、最久 11.5 秒）
   const EXPERT_MIN_DEPTH = 6;
   const EXPERT_MAX_DEPTH = 12;
   const EXPERT_SOLVE_EMPTIES = 20; // 剩這麼多格以內才繼續加深、試著算到終局
   // 「建議一手」與最強相同（以前因搜尋慢，最強只能從 12 格、建議一手從 16 格起算終局）
   const SUGGEST_SOLVE_EMPTIES = 20;
   const EXPERT_BUDGET_MS = 1500;
-  // 建議一手／提示勝率：每一點都要算出確切分數，比只挑最佳點慢約三倍，給 3 秒才算得到和以前一樣深
+  // 建議一手／提示勝率（剩 20 格以上）：每一點都要算出確切分數，比只挑最佳點慢約三倍，給 3 秒才算得到和以前一樣深；
+  // 剩 20 格以內不限時間，見 solveScores
   const RATE_BUDGET_MS = 3000;
   const AI_PICK_MS = 380;
   const AI_COMMIT_MS = 420;
@@ -1626,11 +1630,16 @@
 
   // 逐步加深：每一層都完整算完才採用；上一層的最佳點排第一個先算，剪枝更有效。
   // 空格數以內就等於算到終局，不必再加深。
-  function expertPick(bd, p, solveEmpties = EXPERT_SOLVE_EMPTIES) {
+  function expertPick(bd, p, solveEmpties = EXPERT_SOLVE_EMPTIES, budget = EXPERT_BUDGET_MS) {
     let order = [...legalMoves(bd, p)].sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]]);
     const empties = bd.filter(v => !v).length;
+    // 不限時間算到終局：和建議一手同樣先分勝負和、再在最好的一類裡求精確子數差（solveScores），
+    // 挑出的點相同（子數差最大），jsc 實測剩 20 格平均快約一倍
+    if (budget === Infinity && empties <= solveEmpties) {
+      return { idx: solveScores(bd, p, order, empties).scores.keys().next().value, depth: empties };
+    }
     let bestIdx = order[0][0], reached = 0;
-    deadline = Date.now() + EXPERT_BUDGET_MS;
+    deadline = Date.now() + budget;
     nodeCount = 0;
     ENGINE.newSearch();
     try {
@@ -1664,9 +1673,11 @@
 
   // 「建議一手」與提示勝率：每個合法點都完整算出往後 6～12 步（剩 solveEmpties 格以內算到終局）的分數。
   // 和 expertPick 同樣逐步加深，但每點都用全窗口，才有每一點的確切分數可換成勝率。
+  // 剩 solveEmpties 格以內和最強一樣不限時間，一定算到終局（solveScores；平常在背景執行緒算，見 rateWorker）
   function searchScores(bd, p, solveEmpties) {
     const order = [...legalMoves(bd, p)].sort((a, b) => WEIGHTS[b[0]] - WEIGHTS[a[0]]);
     const empties = bd.filter(v => !v).length;
+    if (empties <= solveEmpties) return solveScores(bd, p, order, empties);
     let scores = null, reached = 0;
     deadline = Date.now() + RATE_BUDGET_MS;
     nodeCount = 0;
@@ -1705,6 +1716,36 @@
     return { scores, depth: Math.min(reached, empties) };
   }
 
+  // 算到終局時，勝率只看勝、負、和（scoreToRate：贏 100%、輸 0%、和 50%），不必每一點都求精確子數差。
+  // 先用窄窗口 (−1, 1) 判斷每一點勝負和，再只在最好的那一類點裡求精確子數差、挑出建議點；
+  // 每一點都用全窗口求精確值，剩 20 格時平均要 22 秒、最久 65 秒（jsc 實測）
+  function solveScores(bd, p, order, empties) {
+    deadline = Infinity;
+    nodeCount = 0;
+    ENGINE.newSearch();
+    const kids = order.map(([idx, flips]) => {
+      const nb = bd.slice();
+      nb[idx] = p;
+      for (const f of flips) nb[f] = p;
+      return { idx, nb };
+    });
+    for (const k of kids) k.h = -deepNegamax(k.nb, foe(p), 5, -Infinity, Infinity); // 看起來好的點先算
+    kids.sort((a, b) => b.h - a.h);
+    for (const k of kids) k.wld = Math.sign(-deepNegamax(k.nb, foe(p), 64, -1, 1));
+    const top = Math.max(...kids.map(k => k.wld));
+    let best = null, alpha = -Infinity;
+    for (const k of kids) {
+      if (k.wld !== top) continue;
+      const v = -deepNegamax(k.nb, foe(p), 64, -Infinity, -alpha);
+      if (best === null || v > alpha) { alpha = v; best = k; }
+    }
+    // 建議點放第一個、存精確分數；其餘只存勝負和：贏 10000、和 0、輸 −10100（換成勝率正好是 100%／50%／0%，
+    // 而且不會高過建議點：精確的贏至少 10001，輸最多到 −10036）
+    const scores = new Map([[best.idx, alpha]]);
+    for (const k of kids) if (k !== best) scores.set(k.idx, k.wld > 0 ? 10000 : k.wld < 0 ? -10100 : 0);
+    return { scores, depth: empties };
+  }
+
   // 局面分數換成勝率：算到終局的點直接是 100%／0%（和局 0 分即 50%），
   // 其餘用 1 / (1 + e^(−分數／RATE_SCALE))。RATE_SCALE 以約 200 個局面接著強下到終局的
   // 實際勝負校正：分數 −100 以下約一成勝、±10 約五成、+100 以上約九成。
@@ -1717,14 +1758,17 @@
 
   // 提示勝率在背景執行緒先算好，滑鼠移過去不必卡住畫面；
   // 背景執行緒用的是上面同一份搜尋程式碼（以原始碼組成）。
-  const rateWorker = (() => {
+  // 殘局不限時間，可能算上十幾秒：還沒算完盤面就變了（玩家已落子、反悔、重新開始），
+  // 就結束這個執行緒重開一個，不讓它繼續算已經用不到的盤面（見 currentRates）
+  let rateJob = null; // 背景正在算的盤面 key
+  function makeRateWorker() {
     if (typeof Worker === "undefined" || typeof Blob === "undefined") return null;
     const src = [
       `const N = ${N}, DIRS = ${JSON.stringify(DIRS)}, WEIGHTS = ${JSON.stringify(WEIGHTS)};`,
       `const AI_DEPTH = ${AI_DEPTH}, EXPERT_MIN_DEPTH = ${EXPERT_MIN_DEPTH}, EXPERT_MAX_DEPTH = ${EXPERT_MAX_DEPTH}, RATE_BUDGET_MS = ${RATE_BUDGET_MS};`,
       "const TIMEOUT = {}; let deadline = Infinity, nodeCount = 0;",
       `const foe = ${foe};`,
-      flipsAt, legalMoves, discDiff, negamax, makeEngine, deepNegamax, searchScores,
+      flipsAt, legalMoves, discDiff, negamax, makeEngine, deepNegamax, searchScores, solveScores,
       `const ENGINE = makeEngine(WEIGHTS, ${TT_BITS});`,
       "onmessage = e => { const { key, bd, p, solve } = e.data; const r = searchScores(bd, p, solve);" +
         " postMessage({ key, scores: [...r.scores], depth: r.depth }); };"
@@ -1733,6 +1777,7 @@
       const w = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
       w.onmessage = e => {
         const { key, scores, depth } = e.data;
+        if (rateJob === key) rateJob = null;
         if (rateCache.key !== key || rateCache.scores) return;
         rateCache.scores = new Map(scores);
         rateCache.depth = depth;
@@ -1743,7 +1788,8 @@
     } catch (e) {
       return null; // 不支援背景執行緒時改為用到才算
     }
-  })();
+  }
+  let rateWorker = makeRateWorker();
 
   function suggest() {
     rateCache.wantTip = false;
@@ -1763,7 +1809,7 @@
     const v = scores.get(best);
     tip = {
       side: turn, idx: best, rate: scoreToRate(v), flips: moves.get(best).length,
-      depth, solved: Math.abs(v) >= 9000
+      depth, solved: depth >= board.filter(v => !v).length // 和局（0 分）也算是已算到終局
     };
     render();
   }
@@ -1800,6 +1846,11 @@
   }
 
   // 依難易度挑一步：弱取勝率最低、中取中位數、強取最會贏的一步。
+  //
+  // 【停用，保留備查】keepPick：剩 17～20 格時先用窄窗口找一個「下完仍保得住理論值」的點當保底，
+  // 以免 1.5 秒內算不完終局時退回估分下錯（第 99 項）。現在剩 20 格以內不限時間、一定算到終局，
+  // 算出的最佳點必然保得住，所以不再執行。要恢復時拿掉這段註解，並恢復 aiPick、start、undo 裡標註的幾行。
+  /*
   // 開局庫保證離開庫時局面仍在理論值以上（執白最多輸 4 子、執黑至少贏 4 子），之後最強每一手只要選
   // 「下完仍保得住」的點，就一直維持；剩 17～20 格時完整算到終局常超過 1.5 秒，就先用窄窗口找一個
   // 保得住的點（比求精確子數差快約 10 倍）。所有點都保不住（之前超時下錯）就停用，回到一般搜尋
@@ -1828,27 +1879,34 @@
       deadline = Infinity;
     }
   }
+  */
 
-  function aiPick(bd, p) {
-    let keep = null;
+  // 剩這麼多格以內，最強不限時間算到終局
+  const expertSolves = bd => bd.filter(v => !v).length <= EXPERT_SOLVE_EMPTIES;
+
+  // deep：背景執行緒已算好的 expertPick 結果（見 scheduleAi），沒有就在這裡算
+  function aiPick(bd, p, deep = null) {
+    // let keep = null; // 【停用】keepPick
     if (aiLevel === "expert") {
       const b = bookPick(bd, p);
       if (b !== null) return b;
-      const empties = bd.filter(v => !v).length;
-      if (theoryOk && empties >= KEEP_MIN_EMPTIES && empties <= EXPERT_SOLVE_EMPTIES) {
-        keep = keepPick(bd, p);
-        if (keep === false) { theoryOk = false; keep = null; }
-      }
+      // 【停用】keepPick：
+      // const empties = bd.filter(v => !v).length;
+      // if (theoryOk && empties >= KEEP_MIN_EMPTIES && empties <= EXPERT_SOLVE_EMPTIES) {
+      //   keep = keepPick(bd, p);
+      //   if (keep === false) { theoryOk = false; keep = null; }
+      // }
     }
     const scored = rankMoves(bd, p);
     if (!scored.length) return null;
 
     let choice;
     if (aiLevel === "expert") {
-      const deep = expertPick(bd, p);
-      const solved = deep.idx !== null && deep.depth >= bd.filter(v => !v).length;
-      // 算到終局就用最佳點（也一定保得住）；沒算完則用保得住的點
-      const idx = solved ? deep.idx : keep !== null ? keep : deep.idx;
+      if (!deep) deep = expertPick(bd, p, EXPERT_SOLVE_EMPTIES, expertSolves(bd) ? Infinity : EXPERT_BUDGET_MS);
+      // 【停用】keepPick：算到終局就用最佳點（也一定保得住）；沒算完則用保得住的點
+      // const solved = deep.idx !== null && deep.depth >= bd.filter(v => !v).length;
+      // const idx = solved ? deep.idx : keep !== null ? keep : deep.idx;
+      const idx = deep.idx;
       choice = (idx !== null && scored.find(s => s.idx === idx)) || searchPick(scored);
     } else {
       choice = aiLevel === "easy" ? lowPick(scored)
@@ -1859,9 +1917,34 @@
     return choice.idx;
   }
 
+  // 最強剩 20 格以內不限時間算到終局，手機上可能要十幾秒，放到背景執行緒算，畫面才不會卡住；
+  // 等待時標題顯示「思考中」。中途重新開始或反悔就直接結束這個執行緒，下次再開新的
+  let solveWorker = null, solving = false;
+  function getSolveWorker() {
+    if (solveWorker) return solveWorker;
+    if (typeof Worker === "undefined" || typeof Blob === "undefined") return null;
+    const src = [
+      `const N = ${N}, DIRS = ${JSON.stringify(DIRS)}, WEIGHTS = ${JSON.stringify(WEIGHTS)};`,
+      `const EXPERT_MIN_DEPTH = ${EXPERT_MIN_DEPTH}, EXPERT_MAX_DEPTH = ${EXPERT_MAX_DEPTH}, EXPERT_SOLVE_EMPTIES = ${EXPERT_SOLVE_EMPTIES}, EXPERT_BUDGET_MS = ${EXPERT_BUDGET_MS}, AI_DEPTH = ${AI_DEPTH};`,
+      "const TIMEOUT = {}; let deadline = Infinity, nodeCount = 0;",
+      `const foe = ${foe};`,
+      flipsAt, legalMoves, discDiff, negamax, makeEngine, deepNegamax, solveScores, expertPick,
+      `const ENGINE = makeEngine(WEIGHTS, ${TT_BITS});`,
+      "onmessage = e => { const { bd, p } = e.data; postMessage(expertPick(bd, p, EXPERT_SOLVE_EMPTIES, Infinity)); };"
+    ].join("\n");
+    try {
+      solveWorker = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+    } catch (e) {
+      solveWorker = null; // 不支援背景執行緒就在主執行緒算（會卡住畫面但結果相同）
+    }
+    return solveWorker;
+  }
+
   function cancelAi() {
     gen++;
     thinking = false;
+    if (solving && solveWorker) { solveWorker.terminate(); solveWorker = null; }
+    solving = false;
   }
 
   // 輪到電腦就自動選點；自動模式隨後自行落子，逐步模式則停在選點，
@@ -1881,18 +1964,30 @@
     setTimeout(() => {
       if (my !== gen) return;
       if (!isAiTurn()) { thinking = false; render(); return; }
-      const idx = aiPick(board, turn);
-      if (idx === null) { thinking = false; return; }
-      pending = { idx, flips: moves.get(idx) };
-      playSelect();
-      if (aiStep) { thinking = false; render(); return; }
+      const picked = idx => {
+        if (idx === null) { thinking = false; return; }
+        pending = { idx, flips: moves.get(idx) };
+        playSelect();
+        if (aiStep) { thinking = false; render(); return; }
+        render();
+        commitLater();
+      };
+      const w = aiLevel === "expert" && expertSolves(board) && bookPick(board, turn) === null && getSolveWorker();
+      if (!w) { picked(aiPick(board, turn)); return; }
+      const bd = board.slice(), p = turn;
+      solving = true;
       render();
-      commitLater();
+      w.onmessage = e => {
+        if (my !== gen) return;
+        solving = false;
+        picked(aiPick(bd, p, e.data));
+      };
+      w.postMessage({ bd, p });
     }, slowFlip ? SLOW_FLIP_MS : AI_PICK_MS);
   }
 
   function start() {
-    gen++;
+    cancelAi(); // 也結束背景執行緒裡還沒算完的殘局
     gameStartAt = Date.now();
     saved = false;
     // 新局重新落子：清掉沿用的棋子，開局四子重播落下動畫
@@ -1914,7 +2009,7 @@
     suggestUsed = 0;
     undoUsed = 0;
     undoStack = [];
-    theoryOk = true;
+    // theoryOk = true; // 【停用】keepPick
     closeWarn(false);
     openSetup();
     render();
@@ -2592,7 +2687,11 @@
   // sync 為真時若還沒算好就當場算（建議一手、或沒有背景執行緒時）。
   function currentRates(sync) {
     const key = board.map(v => v || "-").join("") + turn;
-    if (rateCache.key !== key) rateCache = { key, scores: null, depth: 0 };
+    if (rateCache.key !== key) {
+      rateCache = { key, scores: null, depth: 0 };
+      if (rateJob && rateWorker) { rateWorker.terminate(); rateWorker = makeRateWorker(); }
+      rateJob = null;
+    }
     if (!rateCache.scores && sync) Object.assign(rateCache, searchScores(board, turn, SUGGEST_SOLVE_EMPTIES));
     return rateCache;
   }
@@ -2603,6 +2702,7 @@
     const c = currentRates(false);
     if (c.scores || c.asked) return;
     c.asked = true;
+    rateJob = c.key;
     rateWorker.postMessage({ key: c.key, bd: board.slice(), p: turn, solve: SUGGEST_SOLVE_EMPTIES });
   }
 
@@ -2785,7 +2885,7 @@
     } else {
       disc.dataset.side = turn;
       title.innerHTML = `輪到${NAME[turn]}` +
-        (ai ? `<small>電腦</small>${aiStep && pending ? "" : '<i class="thinking"></i>'}` : "");
+        (ai ? `<small>電腦</small>${aiStep && pending ? "" : '<i class="thinking"></i>'}${solving ? "<small>思考中⋯</small>" : ""}` : "");
     }
 
     hintBtn.disabled = over || ai || !moves.size || !!rateCache.wantTip;
@@ -3044,7 +3144,7 @@
     rateCache.wantTip = false;
     moves = legalMoves(board, turn);
     undoUsed++;
-    theoryOk = true; // 退回較早的局面，可能又回到理論值上
+    // theoryOk = true; // 【停用】keepPick：退回較早的局面，可能又回到理論值上
     if (undoUsed > FREE_UNDO && aiOn) hinted = true;
     render();
   }
