@@ -187,6 +187,9 @@
   .setup-more { display: flex; flex-wrap: wrap; gap: 4px 14px; }
   .setup-more button.linkbtn { margin: 0; font-size: 13px; color: var(--brass); }
   .ver { flex: none; font-size: 11px; letter-spacing: .04em; color: var(--ink-soft); }
+  /* 版號可以點：打開「版本紀錄」，看各版的大改動 */
+  button.linkbtn.ver-btn { flex: none; margin: 0; line-height: 1; }
+  .info-body ul.ver-list { margin: 0; padding-left: 1.3em; }
   /* 「演算法邏輯」「必勝口訣」：和遊戲說明一樣蓋住整頁的獨立頁，不用在開局視窗裡上下捲；「返回」固定在畫面下方 */
   .info-body {
     margin-top: 16px;
@@ -275,6 +278,10 @@
   }
   .setup-card { width: min(100%, 320px); margin: 0; text-align: left; }
   .setup-card strong { text-align: center; }
+  /* 標題列：「開始對局」維持正中，「覆盤」（有存對局才顯示）靠最右邊；小字、黃色連結，和左下兩個按鈕同色 */
+  .setup-title { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 8px; }
+  .setup-title strong { grid-column: 2; }
+  .setup-title button.linkbtn { grid-column: 3; justify-self: end; margin: 0; font-size: 14px; color: var(--brass); }
   .setup-card > .act { margin-top: 12px; padding: 9px; font-size: 16px; }
   .entry-done { margin: 6px 0 0; font-size: 13px; color: var(--brass); font-weight: 700; }
   .records {
@@ -656,7 +663,7 @@
   }
   .result-card .act { margin-top: 8px; }
   /* 不寫進排名的警告視窗：蓋住整個畫面，卡片由程式放在按下的開關或按鈕旁邊 */
-  .warn { position: fixed; inset: 0; z-index: 30; background: rgba(8, 26, 18, .45); animation: fade .2s ease-out; }
+  .warn { position: fixed; inset: 0; z-index: 40; background: rgba(8, 26, 18, .45); animation: fade .2s ease-out; }
   .warn .result-card { position: absolute; width: min(300px, calc(100vw - 32px)); box-sizing: border-box; }
   .warn .result-note { font-size: 15px; color: var(--brass); }
   .warn .result-eyebrow { font-size: 13px; }
@@ -909,6 +916,116 @@
   .log li.end { color: var(--brass); }
   .log .empty { grid-template-columns: 1fr; }
 
+  /* 終局視窗：「覆盤」（框線）與「再來一局」（實心主按鈕）並排 */
+  .end-acts { display: flex; gap: 8px; }
+  .end-acts .act { flex: 1; }
+  /* 覆盤頁：和說明頁一樣蓋住整頁。桌機棋盤（含控制列）在左、說明在右；
+     手機上下排：棋盤 → 控制列 → 說明 → 曲線 → 手順（控制列緊接棋盤，連按「下一手」時不會跳動） */
+  .review { padding-top: 24px; }
+  .review-inner { max-width: 820px; margin: 0 auto; }
+  .rv-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .help .rv-head h2 { margin: 0; font-size: 26px; text-align: left; }
+  .rv-head select {
+    flex: 1 1 150px;
+    min-width: 0;
+    padding: 6px 8px;
+    font: 14px var(--sans);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+  }
+  .rv-head .act { padding: 7px 16px; font-size: 15px; }
+  .rv-meta { margin: 8px 0 0; font-size: 14px; color: var(--ink-soft); }
+  .rv-meta .ref-lv { font-size: 14px; }
+  .rv-sum { margin: 4px 0 0; font-size: 14px; color: var(--ink); }
+  .rv-sum button.linkbtn { margin: 0; font-size: 14px; color: var(--brass); }
+  .rv-main {
+    display: grid;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    gap: 16px 24px;
+    align-items: start;
+    margin-top: 14px;
+  }
+  .rv-area.board-area { max-width: 380px; }
+  .rv-board .disc, .rv-board .ghost { transition: none; animation: none; }
+  .rv-board .ghost.mine { border: 3px solid var(--ai-red); }
+  .rv-board .rv-best {
+    font-size: clamp(13px, 2.8vw, 18px);
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--brass-line);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .6);
+  }
+  .rv-ctrl { display: grid; grid-template-columns: repeat(5, auto); gap: 6px; align-items: center; margin-top: 10px; }
+  .rv-ctrl .rv-bad { grid-column: span 2; }
+  .rv-ctrl button.act { margin: 0; padding: 6px 4px; font-size: 14px; letter-spacing: .02em; }
+  .rv-pos { text-align: center; font: 14px var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-soft); white-space: nowrap; }
+  .rv-side { display: grid; gap: 12px; min-width: 0; }
+  .rv-note {
+    min-height: 132px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .rv-note p { margin: 0; }
+  .rv-note .rv-title { margin-bottom: 4px; font-size: 16px; color: var(--ink); }
+  .rv-note .rv-title b { margin-left: 8px; }
+  .rv-note .rv-why { margin-top: 4px; color: var(--ink); }
+  .rv-note .rv-key { margin-top: 6px; color: var(--ai-red); font-weight: 700; }
+  .rv-note button.act { margin-top: 10px; padding: 7px 16px; font-size: 15px; }
+  .rv-g { font-weight: 700; }
+  .rv-g.best { color: var(--lv-easy); }
+  .rv-g.dubious { color: var(--lv-normal); }
+  .rv-g.mistake { color: var(--lv-hard); }
+  .rv-g.blunder { color: var(--ai-red); }
+  .rv-g.book, .rv-g.only { color: var(--ink-soft); }
+  .rv-chart { display: block; width: 100%; height: auto; background: var(--surface); border: 1px solid var(--rule); }
+  .rv-chart .half { stroke: var(--rule); stroke-dasharray: 4 4; }
+  .rv-chart .now { stroke: var(--brass-line); }
+  .rv-chart polyline { fill: none; stroke: var(--ink-soft); stroke-width: 1.5; }
+  .rv-chart circle { cursor: pointer; stroke: var(--surface); stroke-width: 1; }
+  .rv-chart circle.best { fill: var(--lv-easy); }
+  .rv-chart circle.dubious { fill: var(--lv-normal); }
+  .rv-chart circle.mistake { fill: var(--lv-hard); }
+  .rv-chart circle.blunder { fill: var(--ai-red); }
+  .rv-chart circle.book, .rv-chart circle.only { fill: var(--ink-soft); }
+  .rv-chart circle.on { stroke: var(--ink); stroke-width: 2; }
+  .rv-chart text { font: 9px var(--mono); fill: var(--ink-soft); }
+  .rv-moves {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 2px 8px;
+    font: 13px var(--mono);
+  }
+  .rv-moves button {
+    width: 100%;
+    padding: 2px 4px;
+    text-align: left;
+    font: inherit;
+    color: var(--ink-soft);
+    background: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .rv-moves button:hover { border-color: var(--rule); }
+  .rv-moves button.on { border-color: var(--brass-line); background: color-mix(in srgb, var(--brass-line) 14%, transparent); }
+  .rv-moves .n { display: inline-block; min-width: 2em; text-align: right; margin-right: 4px; }
+  .rv-moves .pc { color: var(--brass); font-weight: 700; }
+  .rv-moves .rv-g { font-family: var(--sans); font-size: 12px; margin-left: 4px; }
+  @media (max-width: 700px) {
+    /* 標題列：「覆盤」靠左、「保留」「關閉」靠右；選局選單自己一行 */
+    .help .rv-head h2 { margin-right: auto; }
+    .rv-head select { order: 1; flex-basis: 100%; }
+    .rv-main { grid-template-columns: minmax(0, 1fr); }
+    .rv-area.board-area { max-width: none; }
+  }
+
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -955,7 +1072,10 @@
               <p class="result-score" id="resultScore">● 2 ： 2 ○</p>
               <p class="result-note" id="resultNote"></p>
               <p class="entry-done" id="entryDone" hidden>已記錄</p>
-              <button class="act" id="again">再來一局</button>
+              <div class="end-acts">
+                <button class="act alt" id="reviewBtn" type="button" aria-haspopup="dialog" aria-controls="review">覆盤</button>
+                <button class="act" id="again">再來一局</button>
+              </div>
             </div>
           </div>
           <div class="result" id="passBox" role="alertdialog" aria-modal="true" aria-labelledby="passTitle" aria-describedby="passNote" hidden>
@@ -1047,7 +1167,10 @@
 
   <div class="setup" id="setup" role="dialog" aria-modal="true" aria-labelledby="setupTitle" hidden>
     <form class="result-card setup-card" id="setupForm">
-      <strong id="setupTitle">開始對局</strong>
+      <div class="setup-title">
+        <strong id="setupTitle">開始對局</strong>
+        <button class="linkbtn" type="button" id="reviewOpenBtn" aria-haspopup="dialog" aria-controls="review" hidden>覆盤</button>
+      </div>
       <div class="entry">
         <label for="entryName">輸入名字</label>
         <input id="entryName" maxlength="12" placeholder="玩家" autocomplete="off" enterkeyhint="done">
@@ -1076,7 +1199,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <span class="ver">v2.0.114</span>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.116</span></button>
       </div>
     </form>
   </div>
@@ -1135,6 +1258,7 @@
           <li><b>建議一手</b>：金圈標出建議點，參考欄顯示勝率；每局前 3 次不影響排名。</li>
           <li><b>反悔</b>：退回上一手（連同電腦那手）；每局第 1 次不影響排名。</li>
           <li><b>逐步進行</b>：在「操作」卡片，預設開啟；電腦選好點後，點它選的那格才落子。</li>
+          <li><b>覆盤</b>：終局或開局視窗按「覆盤」，一手一手回放最近 10 局（按「保留」的局不會被新局擠掉），標出下錯的手、該下哪裡與原因；可從下錯的那手重下（重下的局不寫進排名）。</li>
         </ol>
         <p class="help-sub"><b>難易度</b>　開局時選，對局中不能改（要換請按「重新開始」）。</p>
         <ol class="help-list">
@@ -1182,6 +1306,67 @@
       <button class="act help-back" type="button">返回</button>
     </div>
   </div>
+  <div class="help info-page" id="verInfo" role="dialog" aria-modal="true" aria-labelledby="verInfoTitle" hidden>
+    <div class="help-inner">
+      <h2 id="verInfoTitle">版本紀錄</h2>
+      <div class="info-body">
+        <p class="note-h">v2.1　加入覆盤（2026-10-18）</p>
+        <ul class="ver-list">
+          <li>終局或開局視窗按「覆盤」，一手一手回放最近 10 局（可保留），標出下錯的手、該下哪裡與原因。</li>
+          <li>可以從下錯的那手重下（重下的局不寫進排名）。</li>
+        </ul>
+        <p class="note-h">v2.0　最強修正到完美（2026-10-15～16）</p>
+        <ul class="ver-list">
+          <li>最強：前 12 手查開局庫，之後算到終局，不會再下錯；建議一手也一樣強。</li>
+          <li>排名記錄勝局的棋譜、建議一手與反悔次數。</li>
+          <li>開局視窗加「演算法邏輯」「必勝口訣」。</li>
+        </ul>
+        <p class="note-h">v1　第一版（2026-09-22～10-10）</p>
+        <ul class="ver-list">
+          <li>六路黑白棋：四種難易度、提示、建議一手、反悔。</li>
+          <li>大家共用的排名；網站版，離線也能玩。</li>
+        </ul>
+      </div>
+      <button class="act help-back" type="button">返回</button>
+    </div>
+  </div>
+  <!-- 覆盤：終局視窗或開局視窗按「覆盤」開，一手一手回放最近 10 局（可保留），標出下錯的手、該下哪裡與原因，可從那手重下（md/GAME_REVIEW_SPEC.md） -->
+  <div class="help review" id="review" role="dialog" aria-modal="true" aria-labelledby="reviewTitle" hidden>
+    <div class="review-inner">
+      <div class="rv-head">
+        <h2 id="reviewTitle">覆盤</h2>
+        <select id="rvGame" aria-label="選擇對局"></select>
+        <button class="act alt" id="rvKeep" type="button" aria-pressed="false">保留</button>
+        <button class="act alt" id="rvClose" type="button">關閉</button>
+      </div>
+      <p class="rv-meta" id="rvMeta"></p>
+      <p class="rv-sum" id="rvSum"></p>
+      <div class="rv-main">
+        <div>
+          <div class="board-area coords rv-area">
+            <div class="files" id="rvFiles" aria-hidden="true"></div>
+            <div class="ranks" id="rvRanks" aria-hidden="true"></div>
+            <div class="board rv-board" id="rvBoard" role="img" aria-label="覆盤棋盤"></div>
+          </div>
+          <div class="rv-ctrl">
+            <button class="act alt" id="rvFirst" type="button">第一手</button>
+            <button class="act alt" id="rvPrev" type="button">上一手</button>
+            <span class="rv-pos" id="rvPos" aria-live="polite"></span>
+            <button class="act alt" id="rvNext" type="button">下一手</button>
+            <button class="act alt" id="rvLast" type="button">終局</button>
+            <button class="act alt rv-bad" id="rvPrevBad" type="button">上一個失誤</button>
+            <span></span>
+            <button class="act alt rv-bad" id="rvNextBad" type="button">下一個失誤</button>
+          </div>
+        </div>
+        <div class="rv-side">
+          <div class="rv-note" id="rvNote" aria-live="polite"></div>
+          <svg class="rv-chart" id="rvChart" viewBox="0 0 300 96" role="img" aria-label="勝率曲線：玩家每一手下完後的估計勝率"></svg>
+          <ol class="rv-moves" id="rvMoves" aria-label="手順"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 
@@ -1197,6 +1382,9 @@
   const restartBtn = document.getElementById("restart");
   const hintBtn = document.getElementById("hint");
   const undoBtn = document.getElementById("undo");
+  const reviewBtn = document.getElementById("reviewBtn");     // 終局視窗的「覆盤」
+  const againBtn = document.getElementById("again");
+  const reviewOpenBtn = document.getElementById("reviewOpenBtn"); // 開局視窗標題「開始對局」右邊的「覆盤」
 
   let board, turn, pending, moves, over, log;
   let showHint = false; // 提示＞落子提示：顯示可落子位置的提示點（預設關閉）
@@ -1776,11 +1964,131 @@
     return 1 / (1 + Math.exp(-v / RATE_SCALE));
   }
 
+  // ---- 覆盤：分析玩家的一手（md/GAME_REVIEW_SPEC.md 第 4、5 節）----
+  // 這幾個函式也組進覆盤的背景執行緒（makeReviewWorker），只能用搜尋程式與那裡列出的常數。
+  const CORNER_LIST = [...CORNERS];
+  function playOn(bd, p, idx) {
+    const nb = bd.slice();
+    nb[idx] = p;
+    for (const f of flipsAt(bd, p, idx)) nb[f] = p;
+    return nb;
+  }
+  // 算到終局的分數（±10000＋子數差）換回子數差
+  function discOf(v) { return v > 0 ? v - 10000 : v < 0 ? v + 10000 : 0; }
+  // 殘局勝率曲線的高度：勝率只剩 100%／50%／0% 會變成直線，改用子數差換算
+  function discRate(d) { return 1 / (1 + Math.exp(-d / 8)); }
+
+  // bd：落子前盤面；p：玩家；u：玩家下的點；bk：開局庫的點（查不到為 null）；
+  // pre：對局中背景已算好的各點分數（{ scores: [[點, 分數]…], depth }），沒有就重算。
+  // 回傳等級（best 最佳／dubious 疑問手／mistake 失誤／blunder 惡手／book 離開開局庫／only 只能下這裡）、
+  // 推薦的點、分數與說明；pre、post 是這手下之前、之後的勝率（畫曲線、找敗因用）
+  function reviewStep(bd, p, u, bk, pre) {
+    const legal = legalMoves(bd, p);
+    if (legal.size === 1) return { grade: "only", best: u, why: [] };
+    const empties = bd.filter(v => !v).length;
+    const r = pre ? { scores: new Map(pre.scores), depth: pre.depth } : searchScores(bd, p, SUGGEST_SOLVE_EMPTIES);
+    let best = null;
+    for (const [i, v] of r.scores) if (best === null || v > r.scores.get(best)) best = i;
+    const solved = r.depth >= empties;
+    // 推薦的點：開局庫優先（和對局中按「建議一手」看到的金圈一致）；已算到終局則用算出的最佳點
+    const book = bk !== null && !solved;
+    const ref = book ? bk : best;
+    const top = r.scores.get(best), vRef = r.scores.get(ref);
+    let vU = r.scores.get(u);
+    // 殘局：solveScores 只給最佳點精確值（並列最佳的另一點只存勝負和），玩家沒下它就單獨算到終局
+    if (solved && u !== best) {
+      deadline = Infinity;
+      if (pre) ENGINE.newSearch();
+      vU = -deepNegamax(playOn(bd, p, u), foe(p), 64, -Infinity, Infinity);
+    }
+    const e = { best: ref, book, solved, depth: r.depth };
+    let grade;
+    if (solved) {
+      const db = discOf(vRef), du = u === ref ? db : discOf(vU), dd = db - du;
+      Object.assign(e, { db, du, pre: discRate(discOf(top)), post: discRate(du) });
+      grade = Math.sign(du) < Math.sign(db) ? (db > 0 && du < 0 ? "blunder" : "mistake")
+        : dd >= 13 ? "blunder" : dd >= 7 ? "mistake" : dd >= 1 ? "dubious" : "best";
+    } else {
+      // 中盤：勝率差 ΔR 或分數差 Δv 任一達到就算（劣勢時勝率已壓縮，只看 ΔR 不會有惡手）
+      const rb = scoreToRate(vRef), ru = scoreToRate(vU), dR = rb - ru, dv = vRef - vU;
+      // 開局庫內以開局庫的點為準：12 步估分常有走出開局庫、估分較高的點（第 99 項），用它當「下之前」
+      // 會讓照開局庫下的手在曲線上往下掉、也可能找不到敗因
+      Object.assign(e, { rb, ru, pre: book ? Math.max(rb, ru) : scoreToRate(top), post: ru });
+      grade = u === ref ? "best"
+        : dR >= .3 || dv >= 90 ? "blunder" : dR >= .15 || dv >= 40 ? "mistake" : dR >= .05 || dv >= 15 ? "dubious" : "best";
+      // 沒下開局庫的點、估分又不比它差：開局庫每個局面只存一個點，別的點也可能一樣好，無法斷定
+      if (book && u !== ref && grade === "best") grade = "book";
+    }
+    e.grade = grade;
+    e.why = grade === "best" ? []
+      : grade === "book" ? [`開局常用的是 ${coord(ref)}。你這手好不好，要再看後面幾手。`]
+      : reviewWhy(bd, p, u, ref, e);
+    return e;
+  }
+
+  // 「錯在哪裡」：依第 5 節的順序只取第一條，用小朋友看得懂的短句；每一句都是實際算出來的
+  // （殘局的勝負子數由畫面上的比較那一行說，這裡不重複；第 6 條殘局奇偶留到第二階段）。
+  // 已算到終局時只說確定的事（角、被跳過），不說空角旁、邊上、下法多寡這類中盤的經驗法則
+  function reviewWhy(bd, p, u, ref, e) {
+    const o = foe(p), U = coord(u), R = coord(ref);
+    const nbU = playOn(bd, p, u), nbR = playOn(bd, p, ref);
+    const o0 = legalMoves(bd, o), oU = legalMoves(nbU, o), oR = legalMoves(nbR, o);
+    const out = [];
+    // 2. 送角：下完後對手能下某個角，下推薦的點則不能
+    let gave = null;
+    for (const c of CORNER_LIST) if (c !== ref && oU.has(c) && !oR.has(c)) { gave = c; break; }
+    if (gave !== null) out.push(o0.has(gave) ? `下 ${R} 可以擋住對手搶 ${coord(gave)} 角。` : `對手可以搶到 ${coord(gave)} 角了。`);
+    // 3. 有角不拿
+    if (CORNER_LIST.includes(ref) && !CORNER_LIST.includes(u)) out.push(`${R} 是角，可以先搶！角不會被翻掉。`);
+    // 4. 讓自己被跳過：只看對手最好的應手（往後算 4 步），不拿對手自己吃虧的下法來說。
+    //    用不帶置換表的 negamax：剛算完終局時置換表存的是 ±10000 的終局分，會和 3 步估分混在一起比
+    const stuck = nb => {
+      let m = null, mv = -Infinity;
+      deadline = Infinity;
+      for (const [x] of legalMoves(nb, o)) {
+        const v = -negamax(playOn(nb, o, x), p, 3, -Infinity, Infinity); // 不用置換表（見下）
+        if (v > mv) { mv = v; m = x; }
+      }
+      if (m === null) return null;
+      const nb2 = playOn(nb, o, m);
+      return !legalMoves(nb2, p).size && legalMoves(nb2, o).size ? m : null;
+    };
+    const sm = oU.size ? stuck(nbU) : null;
+    if (sm !== null && stuck(nbR) === null) out.push(`對手下 ${coord(sm)} 之後，你會沒地方下。`);
+    if (e.solved || out.length) return out.slice(0, 1);
+    // 5. 空角旁的格子（推薦的點也在同一個角旁時不說）
+    for (const c of CORNER_LIST) {
+      if (bd[c]) continue;
+      const cr = (c / N) | 0, cc = c % N, dr = cr ? -1 : 1, dc = cc ? -1 : 1;
+      const x = (cr + dr) * N + cc + dc, near = [x, cr * N + cc + dc, (cr + dr) * N + cc];
+      if (!near.includes(u) || near.includes(ref)) continue;
+      out.push(u === x ? `${U} 在 ${coord(c)} 角的斜對面，很容易把角送給對手。` : `${U} 緊貼著空的 ${coord(c)} 角，容易把角送給對手。`);
+    }
+    // 7. 邊上的好位置（權重 16 的邊中間格）：沒搶，或讓對手能搶
+    const edge = i => WEIGHTS[i] === 16;
+    if (edge(ref) && !edge(u)) {
+      out.push(`${R} 在邊上，不容易被翻掉，應該先搶。`);
+    } else {
+      for (const [x] of oU) {
+        if (edge(x) && !oR.has(x) && !o0.has(x)) { out.push(`對手可以搶到邊上的 ${coord(x)} 了。`); break; }
+      }
+    }
+    // 8. 讓對手變多下法
+    if (oU.size - oR.size >= 3) out.push(`對手可以下的地方變多了（${oR.size} 個變 ${oU.size} 個）。`);
+    // 9. 翻太多
+    const fU = flipsAt(bd, p, u).length, fR = flipsAt(bd, p, ref).length;
+    if (fU - fR >= 2) out.push(`翻太多子不一定好（${U} 翻 ${fU} 子，${R} 只翻 ${fR} 子）。`);
+    // 10. 保底說明：前面都沒說到時
+    if (!out.length) out.push(`電腦往後想了 ${e.depth} 步，${R} 之後的局面比較好。`);
+    return out.slice(0, 1);
+  }
+
   // 提示勝率在背景執行緒先算好，滑鼠移過去不必卡住畫面；
   // 背景執行緒用的是上面同一份搜尋程式碼（以原始碼組成）。
   // 殘局不限時間，可能算上十幾秒：還沒算完盤面就變了（玩家已落子、反悔、重新開始），
   // 就結束這個執行緒重開一個，不讓它繼續算已經用不到的盤面（見 currentRates）
   let rateJob = null; // 背景正在算的盤面 key
+  let gameRates = new Map(); // 本局每個輪到玩家的盤面（key 同 rateCache）算好的各點分數：終局覆盤直接用，不必重算
   function makeRateWorker() {
     if (typeof Worker === "undefined" || typeof Blob === "undefined") return null;
     const src = [
@@ -1798,6 +2106,7 @@
       w.onmessage = e => {
         const { key, scores, depth } = e.data;
         if (rateJob === key) rateJob = null;
+        gameRates.set(key, { scores, depth });
         if (rateCache.key !== key || rateCache.scores) return;
         rateCache.scores = new Map(scores);
         rateCache.depth = depth;
@@ -1810,6 +2119,27 @@
     }
   }
   let rateWorker = makeRateWorker();
+
+  // 覆盤的背景執行緒：一次分析一手（reviewStep），和提示勝率用同一份搜尋程式碼
+  function makeReviewWorker() {
+    if (typeof Worker === "undefined" || typeof Blob === "undefined") return null;
+    const src = [
+      `const N = ${N}, DIRS = ${JSON.stringify(DIRS)}, WEIGHTS = ${JSON.stringify(WEIGHTS)}, FILES = ${JSON.stringify(FILES)};`,
+      `const AI_DEPTH = ${AI_DEPTH}, EXPERT_MIN_DEPTH = ${EXPERT_MIN_DEPTH}, EXPERT_MAX_DEPTH = ${EXPERT_MAX_DEPTH}, RATE_BUDGET_MS = ${RATE_BUDGET_MS};`,
+      `const SUGGEST_SOLVE_EMPTIES = ${SUGGEST_SOLVE_EMPTIES}, RATE_SCALE = ${RATE_SCALE}, CORNER_LIST = ${JSON.stringify(CORNER_LIST)};`,
+      "const TIMEOUT = {}; let deadline = Infinity, nodeCount = 0;",
+      `const foe = ${foe}, coord = ${coord};`,
+      flipsAt, legalMoves, discDiff, negamax, makeEngine, deepNegamax, searchScores, solveScores, scoreToRate,
+      playOn, discOf, discRate, reviewStep, reviewWhy,
+      `const ENGINE = makeEngine(WEIGHTS, ${TT_BITS});`,
+      "onmessage = e => { const { id, k, bd, p, u, bk, pre } = e.data; postMessage({ id, k, r: reviewStep(bd, p, u, bk, pre) }); };"
+    ].join("\n");
+    try {
+      return new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+    } catch (e) {
+      return null; // 不支援背景執行緒就在主執行緒一手一手算
+    }
+  }
 
   function suggest() {
     rateCache.wantTip = false;
@@ -2029,6 +2359,8 @@
     suggestUsed = 0;
     undoUsed = 0;
     undoStack = [];
+    gameRates = new Map();
+    replayStep = null;
     // theoryOk = true; // 【停用】keepPick
     closeWarn(false);
     openSetup();
@@ -2455,6 +2787,7 @@
     markLevel(LEVELS[lv] ? lv : aiLevel);
     markSide(side === "B" || side === "W" ? side : curSide()); // 以前存的「兩人對下」改回上次的執色
     setupEl.hidden = false;
+    reviewOpenBtn.hidden = !recentGames.length;
     syncShared(); // 每局開始順便更新共用計分板
     setTimeout(() => {
       if (!setupWait) return;
@@ -2480,7 +2813,7 @@
     gameStartAt = Date.now(); // 對局長度從按「開始」起算
     render();
   });
-  // 開局視窗左下角：「演算法邏輯」「必勝口訣」各開一頁蓋住整頁的說明，按「返回」或 Esc 回到開局視窗
+  // 開局視窗左下角「演算法邏輯」「必勝口訣」與右下角版號（版本紀錄）：各開一頁蓋住整頁的說明，按「返回」或 Esc 回到開局視窗
   let infoOpen = null; // [按鈕, 說明頁]
   function closeInfo() {
     if (!infoOpen) return;
@@ -2489,7 +2822,7 @@
     page.hidden = true;
     btn.focus();
   }
-  for (const [b, n] of [["aboutAiBtn", "aboutAi"], ["winTipsBtn", "winTips"]]) {
+  for (const [b, n] of [["aboutAiBtn", "aboutAi"], ["winTipsBtn", "winTips"], ["verBtn", "verInfo"]]) {
     const btn = document.getElementById(b), page = document.getElementById(n);
     btn.addEventListener("click", () => {
       infoOpen = [btn, page];
@@ -2692,6 +3025,7 @@
           b: board.filter(v => v === "B").length,
           w: board.filter(v => v === "W").length
         });
+        saveRecentGame();
         addRecord();
         render();
         return;
@@ -2712,7 +3046,10 @@
       if (rateJob && rateWorker) { rateWorker.terminate(); rateWorker = makeRateWorker(); }
       rateJob = null;
     }
-    if (!rateCache.scores && sync) Object.assign(rateCache, searchScores(board, turn, SUGGEST_SOLVE_EMPTIES));
+    if (!rateCache.scores && sync) {
+      Object.assign(rateCache, searchScores(board, turn, SUGGEST_SOLVE_EMPTIES));
+      gameRates.set(key, { scores: [...rateCache.scores], depth: rateCache.depth });
+    }
     return rateCache;
   }
 
@@ -2856,6 +3193,8 @@
     const doneEl = document.getElementById("entryDone");
     doneEl.hidden = !(over && saved);
     doneEl.textContent = `已記錄（${playerName}）`;
+    // 終局的「覆盤」：兩人對下不存、沒有覆盤
+    reviewBtn.hidden = !over || !aiOn;
 
     // 建議一手下面的小字：還剩幾次不影響排名（兩人對下不記錄，不顯示）
     const warnEl = document.getElementById("hintWarn");
@@ -2995,16 +3334,21 @@
   addEventListener("scroll", placeWarn, { passive: true });
   function closeWarn(yes) {
     if (!warnOpen) return;
-    const f = warnYes;
+    const f = warnYes, a = warnAnchor;
     warnYes = null;
+    warnAnchor = null;
     warnOpen = false;
     warnBox.hidden = true;
     if (yes && f) f();
+    else if (a && a.focus) a.focus({ preventScroll: true }); // 取消：焦點還給觸發的按鈕（例如覆盤頁的「從這手重下」）
     render(); // 電腦的回合會重新排程
   }
   document.getElementById("warnYes").addEventListener("click", () => closeWarn(true));
   document.getElementById("warnNo").addEventListener("click", () => closeWarn(false));
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && warnOpen) closeWarn(false); });
+  // Esc 只關警告視窗（底下開著覆盤頁時不要一起關掉）
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && warnOpen) { closeWarn(false); e.stopImmediatePropagation(); }
+  });
   // 提示三個開關：對局中打開前先警告，選取消就維持關閉
   function guardHint(box, label, apply) {
     box.addEventListener("change", () => {
@@ -3171,8 +3515,433 @@
     render();
   }
 
+  // ---- 覆盤頁（md/GAME_REVIEW_SPEC.md 第一階段）----
+  // 最近 10 局（輸、和、開過提示、從覆盤重下的局也存；兩人對下不存）：新的一局放最前面，分析結果寫回同一筆，再開不必重算。
+  // 按「保留」的局（keep）不算在 10 局裡、不會被新局擠掉，最多保留 MAX_KEEP 局
+  const RECENT_KEY = "othello6.recentGames";
+  const MAX_RECENT = 10;
+  const MAX_KEEP = 10;
+  const RV_GRADE = { best: "最佳", dubious: "疑問手", mistake: "失誤", blunder: "惡手", book: "離開開局庫", only: "只能下這裡" };
+  const RV_BAD = new Set(["dubious", "mistake", "blunder"]); // 「上一個／下一個失誤」跳的手
+  const RV_VER = 3; // 分析結果的版本：說明文字或判斷改了就加 1，舊版存的分析作廢重算
+  let recentGames = [];
+  try { recentGames = JSON.parse(localStorage.getItem(RECENT_KEY)) || []; } catch (e) { recentGames = []; }
+  if (!Array.isArray(recentGames)) recentGames = [];
+  recentGames = recentGames.filter(g => {
+    if (!g || (g.side !== "B" && g.side !== "W") || !LEVELS[g.level]) return false;
+    const r = replayKifu(g.kifu);
+    if (!r || r[g.side] !== g.me || r[foe(g.side)] !== g.ai) return false;
+    g.an = Array.isArray(g.an) ? g.an.map(a => (a && a.v === RV_VER && RV_GRADE[a.grade] && Array.isArray(a.why) ? a : null)) : [];
+    g.keep = g.keep === true;
+    return true;
+  });
+  trimRecent();
+  // 沒保留的局只留最新的 MAX_RECENT 局（recentGames 新的在前）；取消保留時不馬上刪，等下一局存檔或下次載入
+  function trimRecent() {
+    let n = 0;
+    recentGames = recentGames.filter(g => g.keep || ++n <= MAX_RECENT);
+  }
+  let reviewPre = null; // { at, rates }：剛下完那局對局中算好的各點分數（gameRates），只留在記憶體
+  let replayStep = null; // 這局是從覆盤第幾手重下的（1 起算）；一般開局為 null
+  function saveRecent() {
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentGames)); } catch (e) {}
+  }
+  // 終局時（commit）無條件存：addRecord 遇到輸、和、開過提示都不記，但這些正是最需要覆盤的局
+  function saveRecentGame() {
+    if (!aiOn) return;
+    const me = foe(aiSide);
+    recentGames.unshift({
+      at: Date.now(), side: me, level: aiLevel,
+      me: board.filter(v => v === me).length, ai: board.filter(v => v === aiSide).length,
+      kifu: log.filter(m => m.at).map(m => m.at).join(""), an: [],
+      ...(replayStep ? { re: replayStep } : {})
+    });
+    trimRecent();
+    reviewPre = { at: recentGames[0].at, rates: gameRates };
+    saveRecent();
+  }
+
+  const reviewEl = document.getElementById("review");
+  const rvBoardEl = document.getElementById("rvBoard");
+  const rvCells = [];
+  document.getElementById("rvFiles").innerHTML = FILES.map(f => `<span>${f}</span>`).join("");
+  document.getElementById("rvRanks").innerHTML = FILES.map((_, i) => `<span>${i + 1}</span>`).join("");
+  for (let i = 0; i < N * N; i++) {
+    const c = document.createElement("div");
+    c.className = "cell";
+    rvBoardEl.appendChild(c);
+    rvCells.push(c);
+  }
+  for (const y of [2, 4]) for (const x of [2, 4]) {
+    const d = document.createElement("i");
+    d.className = "guide";
+    d.style.left = (x / N * 100) + "%";
+    d.style.top = (y / N * 100) + "%";
+    rvBoardEl.appendChild(d);
+  }
+  // rv：開著的覆盤 { g（recentGames 的一筆）, steps（含跳過）, boards（每一手下之前的盤面，最後一個是終局）,
+  //   view（停在第幾手，0 起算；等於手數時是終局）, id, moved（玩家自己換過手）, opener（關掉後聚焦回去的按鈕） }
+  let rv = null, rvSeq = 0, rvWorker = null, rvBusy = false;
+  const idxOf = at => (Number(at[1]) - 1) * N + FILES.indexOf(at[0]);
+  const esc = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+  const pct = v => Math.round(v * 100) + "%";
+
+  function gameLabel(g) {
+    const t = new Date(g.at);
+    const res = g.me > g.ai ? "贏" : g.me < g.ai ? "輸" : "和";
+    return `${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())}　${LEVELS[g.level]}　${res} ${g.me}：${g.ai}` +
+      (Number.isInteger(g.re) ? `　第 ${g.re} 手重下` : "") + (g.keep ? "　（保留）" : "");
+  }
+  function reviewData(g) {
+    const steps = replayKifu(g.kifu).steps;
+    let bd = Array(N * N).fill(null);
+    bd[2 * N + 2] = "W"; bd[3 * N + 3] = "W";
+    bd[2 * N + 3] = "B"; bd[3 * N + 2] = "B";
+    const boards = [];
+    for (const s of steps) {
+      boards.push(bd);
+      if (s.pass) continue;
+      s.idx = idxOf(s.at);
+      bd = playOn(bd, s.side, s.idx);
+    }
+    boards.push(bd);
+    return { steps, boards };
+  }
+  // 玩家下的那幾手（跳過不算）
+  const rvMine = () => rv.steps.map((s, k) => k).filter(k => !rv.steps[k].pass && rv.steps[k].side === rv.g.side);
+
+  // 敗因：玩家最後一次在五成以上是在某一手「下之前」，那手下完就掉到五成以下、之後再也沒回到五成以上；
+  // 那手本身不是疑問手以上就不算（例如第 13 手起改算到終局，勝率直接跳到 0%，不是玩家下錯）。
+  // 找不到敗因（例如一開始就不到五成）：第一個失誤或惡手、或讓終局子數差多差 4 子以上的手算「關鍵失誤」
+  function reviewFacts() {
+    const ks = rvMine(), an = rv.g.an;
+    const f = { total: ks.length, done: 0, count: {}, loss: null, key: null };
+    for (const g in RV_GRADE) f.count[g] = 0;
+    for (const k of ks) if (an[k]) { f.done++; f.count[an[k].grade]++; }
+    if (f.done < f.total) return f;
+    let last = null;
+    for (const k of ks) {
+      if (an[k].pre === undefined) continue; // 只能下這裡：沒算分數
+      if (an[k].pre >= .5) last = { k, pre: true };
+      if (an[k].post >= .5) last = { k, pre: false };
+    }
+    // 贏或和的局不標敗因（電腦後來下錯、或最後幾手只能下那裡沒算分數時，勝率序列會停在五成以下）
+    if (rv.g.me < rv.g.ai && last && last.pre && RV_BAD.has(an[last.k].grade)) f.loss = last.k;
+    else {
+      f.key = ks.find(k => an[k].grade === "mistake" || an[k].grade === "blunder"
+        || (an[k].solved && RV_BAD.has(an[k].grade) && an[k].db - an[k].du >= 4)) ?? null;
+    }
+    return f;
+  }
+  // 打開時停在哪一手：敗因 → 關鍵失誤 → 第一個失誤或惡手 → 第一個疑問手 → 第一手（還沒分析完先停在第一手）
+  function startView() {
+    const f = reviewFacts(), an = rv.g.an, ks = rvMine();
+    if (f.done < f.total) return 0;
+    return f.loss ?? f.key ?? ks.find(k => an[k].grade === "mistake" || an[k].grade === "blunder")
+      ?? ks.find(k => RV_BAD.has(an[k].grade)) ?? 0;
+  }
+
+  function openReview(i, opener) {
+    if (!recentGames[i]) return;
+    fillGames(i);
+    reviewEl.hidden = false;
+    reviewEl.scrollTop = 0;
+    loadReview(i, opener);
+    document.getElementById("rvNext").focus({ preventScroll: true });
+  }
+  function fillGames(i) {
+    const sel = document.getElementById("rvGame");
+    sel.innerHTML = recentGames.map((g, j) => `<option value="${j}">${esc(gameLabel(g))}</option>`).join("");
+    sel.value = String(i);
+  }
+  function loadReview(i, opener = rv && rv.opener) {
+    stopReview();
+    const g = recentGames[i];
+    rv = { g, ...reviewData(g), view: 0, id: ++rvSeq, moved: false, opener };
+    rv.view = startView();
+    drawReview();
+    runReview();
+  }
+  // 關掉覆盤（或換一局）就停掉背景分析，不拖慢新局；已算好的手留著，下次接著算
+  function stopReview() {
+    if (rvWorker) { rvWorker.terminate(); rvWorker = null; }
+    rvBusy = false;
+  }
+  function closeReview() {
+    if (!rv) return;
+    stopReview();
+    const opener = rv.opener;
+    rv = null;
+    reviewEl.hidden = true;
+    if (opener) opener.focus();
+  }
+
+  // 依手順一次分析一手；剛下完那局先用對局中背景算好的分數（reviewPre），沒有的才重算
+  function runReview() {
+    if (!rv || rvBusy) return;
+    const k = rvMine().find(k => !rv.g.an[k]);
+    if (k === undefined) return;
+    const bd = rv.boards[k], p = rv.g.side, u = rv.steps[k].idx, id = rv.id;
+    const key = bd.map(v => v || "-").join("") + p;
+    const pre = (reviewPre && reviewPre.at === rv.g.at && reviewPre.rates.get(key)) || null;
+    const bk = bookPick(bd, p);
+    rvBusy = true;
+    if (!rvWorker) rvWorker = makeReviewWorker();
+    if (rvWorker) {
+      rvWorker.onmessage = e => doneStep(e.data);
+      rvWorker.postMessage({ id, k, bd, p, u, bk, pre });
+    } else {
+      setTimeout(() => { if (rv && rv.id === id) doneStep({ id, k, r: reviewStep(bd, p, u, bk, pre) }); }, 30);
+    }
+  }
+  function doneStep({ id, k, r }) {
+    if (!rv || id !== rv.id) return;
+    rvBusy = false;
+    r.v = RV_VER;
+    rv.g.an[k] = r;
+    saveRecent();
+    if (!rv.moved && rvMine().every(j => rv.g.an[j])) rv.view = startView(); // 分析完跳到敗因
+    drawReview();
+    runReview();
+  }
+
+  function goReview(k) {
+    if (!rv) return;
+    rv.view = Math.max(0, Math.min(rv.steps.length, k));
+    rv.moved = true;
+    drawReview();
+  }
+
+  function drawReview() {
+    if (!rv) return;
+    const { g, steps, boards } = rv, an = g.an, S = steps.length, v = rv.view, f = reviewFacts();
+    const st = v < S ? steps[v] : null, a = st ? an[v] : null;
+
+    // 「保留」：保留中是實心按鈕「取消保留」；已保留 MAX_KEEP 局時不能再保留
+    const keepBtn = document.getElementById("rvKeep");
+    const full = !g.keep && recentGames.filter(x => x.keep).length >= MAX_KEEP;
+    keepBtn.textContent = g.keep ? "取消保留" : "保留";
+    keepBtn.classList.toggle("alt", !g.keep);
+    keepBtn.setAttribute("aria-pressed", String(g.keep));
+    keepBtn.disabled = full;
+    keepBtn.title = full ? `最多保留 ${MAX_KEEP} 局` : g.keep ? "取消後，這局可能被新的對局擠掉" : `保留這局，不會被新的對局擠掉（最多 ${MAX_KEEP} 局）`;
+
+    document.getElementById("rvMeta").innerHTML =
+      `玩家執${NAME[g.side]}（${g.side === "W" ? "先下" : "後下"}）　電腦 <b class="ref-lv ${g.level}">${LEVELS[g.level]}</b>　` +
+      (f.done < f.total ? `分析中 ${f.done}／${f.total}<i class="thinking"></i>` : "分析完成");
+
+    // 摘要：各等級幾手；分析完再標敗因（或關鍵失誤）
+    const parts = ["best", "dubious", "mistake", "blunder", "book"]
+      .filter(x => x !== "book" || f.count.book).map(x => `${RV_GRADE[x]} ${f.count[x]}`);
+    let sum = parts.join(" · ");
+    const jump = (k, label) => `　${label}：<button class="linkbtn" type="button" data-k="${k}">第 ${k + 1} 手 ${steps[k].at}</button>`;
+    if (f.done === f.total) {
+      if (f.loss !== null) sum += jump(f.loss, "敗因");
+      else if (f.key !== null) sum += jump(f.key, "關鍵失誤");
+      else {
+        sum += "　本局沒有明顯失誤" +
+          (g.side === "W" && g.level === "expert" && g.me < g.ai ? "（先下的一方，就算每手都下最好，也會輸 4 子）" : "");
+      }
+    }
+    document.getElementById("rvSum").innerHTML = sum;
+
+    // 棋盤：停在第 k 手時顯示這手「下之前」的盤面；這手下的點畫虛影（玩家紅框），推薦的點金圈，會被翻的子黃框
+    const bd = boards[v];
+    const flips = new Set(st && !st.pass ? flipsAt(bd, st.side, st.idx) : []);
+    const mine = st && !st.pass && st.side === g.side;
+    for (let i = 0; i < N * N; i++) {
+      const c = rvCells[i];
+      c.className = "cell";
+      if (bd[i]) {
+        c.innerHTML = `<div class="disc" data-owner="${bd[i]}"><div class="face b"></div><div class="face w"></div></div>`;
+        if (flips.has(i)) c.classList.add("willflip");
+      } else if (st && !st.pass && st.idx === i) {
+        c.innerHTML = `<div class="ghost${mine ? " mine" : ""}" data-side="${st.side}"><span class="who">${mine ? "你" : "電腦"}</span></div>`;
+      } else {
+        c.innerHTML = "";
+      }
+      if (a && a.grade !== "only" && a.best === i) {
+        c.classList.add("suggest");
+        if (i !== st.idx) c.innerHTML = '<span class="rv-best">改</span>'; // 金圈裡寫「改」，對應說明的「改 E5 …」
+      }
+    }
+    rvBoardEl.setAttribute("aria-label", st ? `第 ${v + 1} 手下之前的盤面` : "終局盤面");
+
+    // 說明
+    const who = s => (s === g.side ? "（你）" : "（電腦）");
+    let html;
+    if (!st) {
+      html = `<p class="rv-title">終局　你 ${g.me}：電腦 ${g.ai}　${g.me > g.ai ? "你贏了" : g.me < g.ai ? "你輸了" : "和局"}</p>` +
+        "<p>按「上一個失誤」可以從最後一個失誤往回看。</p>";
+    } else if (st.pass) {
+      html = `<p class="rv-title">第 ${v + 1} 手　${NAME[st.side]}${who(st.side)}無處可下，跳過</p>`;
+    } else if (!mine) {
+      html = `<p class="rv-title">第 ${v + 1} 手　電腦下 ${st.at}，翻 ${st.flips} 子</p>`;
+    } else if (!a) {
+      html = `<p class="rv-title">第 ${v + 1} 手　你下 ${st.at}</p><p>分析中⋯</p>`;
+    } else {
+      const B = coord(a.best);
+      html = `<p class="rv-title">第 ${v + 1} 手　${st.at}<b class="rv-g ${a.grade}">${RV_GRADE[a.grade]}</b></p>`;
+      const will = d => (d > 0 ? `會贏 ${d} 子` : d < 0 ? `會輸 ${-d} 子` : "會和局");
+      const res = d => (d > 0 ? `贏 ${d} 子` : d < 0 ? `輸 ${-d} 子` : "和局");
+      if (a.grade === "only") {
+        html += "<p>只有這裡可以下。</p>";
+      } else if (a.solved) {
+        html += a.du === a.db ? `<p>這是最好的一步${a.du < 0 ? `（但最後還是${will(a.du)}）` : `（最後${will(a.du)}）`}。</p>`
+          : `<p>改 ${B} ${res(a.db)}，原本${res(a.du)}</p>`;
+      } else if (a.book) {
+        html += a.best === st.idx ? "<p>這是開局常用的下法。</p>"
+          : a.grade === "book" ? "" : `<p>改 ${B}（開局常用的下法）</p>`;
+      } else {
+        html += a.best === st.idx ? "<p>這是最好的一步。</p>"
+          : a.grade === "best" ? `<p>這手不錯，和 ${B} 差不多。</p>`
+          : `<p>改 ${B} 勝率 ${pct(a.rb)}，原本 ${pct(a.ru)}</p>`;
+      }
+      for (const t of a.why) html += `<p class="rv-why">${esc(t)}</p>`;
+      if (f.loss === v) html += '<p class="rv-key">這手之後就追不回來了，是輸棋的關鍵。</p>';
+      if (f.key === v) {
+        html += `<p class="rv-key">這是關鍵失誤：${a.solved ? `少了 ${a.db - a.du} 子` : `勝率少了 ${pct(a.rb - a.ru)}`}。</p>`;
+      }
+      if (RV_BAD.has(a.grade)) html += `<button class="act" type="button" id="rvRetry" data-retry="${v}">從這手重下</button>`;
+    }
+    document.getElementById("rvNote").innerHTML = html;
+
+    // 勝率曲線：橫軸是盤面（第 k 手下之前在 k，終局在最右邊），玩家每一手畫「下之前 → 下之後」一段，
+    // 圓點是下完後的勝率、顏色是等級；兩手之間的一段是電腦那手造成的變化。殘局用子數差換算，中間虛線是五成
+    const CW = 300, CH = 96, x = k => 12 + k / S * (CW - 24), y = p => 6 + (1 - p) * (CH - 22);
+    const pts = rvMine().filter(k => an[k] && an[k].post !== undefined);
+    let svg = `<line class="half" x1="12" x2="${CW - 12}" y1="${y(.5)}" y2="${y(.5)}"/>` +
+      `<text x="12" y="${CH - 4}">1</text><text x="${CW - 12}" y="${CH - 4}" text-anchor="end">終</text>` +
+      `<text x="${CW / 2}" y="${CH - 4}" text-anchor="middle">手數（虛線以上是你佔優）</text>` +
+      `<line class="now" x1="${x(v)}" x2="${x(v)}" y1="2" y2="${CH - 16}"/>`;
+    const line = pts.flatMap(k => [[x(k), y(an[k].pre)], [x(k + 1), y(an[k].post)]]);
+    if (line.length) svg += `<polyline points="${line.map(([a, b]) => `${a.toFixed(1)},${b.toFixed(1)}`).join(" ")}"/>`;
+    for (const k of pts) {
+      svg += `<circle class="${an[k].grade}${k === v ? " on" : ""}" cx="${x(k + 1).toFixed(1)}" cy="${y(an[k].post).toFixed(1)}"` +
+        ` r="${k === v ? 5 : 3.5}" data-k="${k}"><title>第 ${k + 1} 手 ${steps[k].at} ${RV_GRADE[an[k].grade]}</title></circle>`;
+    }
+    document.getElementById("rvChart").innerHTML = svg;
+
+    // 手順：玩家的手黃色，疑問手以上與離開開局庫標出等級
+    const tag = k => {
+      const x = an[k];
+      if (!x || x.grade === "best" || x.grade === "only") return "";
+      return ` <span class="rv-g ${x.grade}">${k === f.loss ? "敗因" : RV_GRADE[x.grade]}</span>`;
+    };
+    document.getElementById("rvMoves").innerHTML = steps.map((s, k) => {
+      const me = !s.pass && s.side === g.side;
+      return `<li><button type="button" data-k="${k}"${k === v ? ' class="on" aria-current="step"' : ""}>` +
+        `<span class="n">${k + 1}</span><span${me ? ' class="pc"' : ""}>${PIP[s.side]}${s.pass ? "跳過" : s.at}</span>${me ? tag(k) : ""}</button></li>`;
+    }).join("") + `<li><button type="button" data-k="${S}"${v === S ? ' class="on" aria-current="step"' : ""}>` +
+      `<span class="n">終</span>${g.me}：${g.ai}</button></li>`;
+
+    // 控制列
+    const bad = rvMine().filter(k => an[k] && RV_BAD.has(an[k].grade));
+    document.getElementById("rvPos").textContent = st ? `${v + 1} / ${S}` : "終局";
+    document.getElementById("rvFirst").disabled = document.getElementById("rvPrev").disabled = v === 0;
+    document.getElementById("rvNext").disabled = document.getElementById("rvLast").disabled = v === S;
+    document.getElementById("rvPrevBad").disabled = !bad.some(k => k < v);
+    document.getElementById("rvNextBad").disabled = !bad.some(k => k > v);
+  }
+
+  reviewBtn.addEventListener("click", () => openReview(0, reviewBtn));
+  reviewOpenBtn.addEventListener("click", () => openReview(0, reviewOpenBtn));
+  document.getElementById("rvClose").addEventListener("click", closeReview);
+  document.getElementById("rvKeep").addEventListener("click", () => {
+    if (!rv) return;
+    const g = rv.g;
+    if (!g.keep && recentGames.filter(x => x.keep).length >= MAX_KEEP) return;
+    g.keep = !g.keep;
+    saveRecent();
+    fillGames(recentGames.indexOf(g));
+    drawReview();
+  });
+  document.getElementById("rvGame").addEventListener("change", e => loadReview(Number(e.target.value)));
+  document.getElementById("rvFirst").addEventListener("click", () => goReview(0));
+  document.getElementById("rvPrev").addEventListener("click", () => goReview(rv.view - 1));
+  document.getElementById("rvNext").addEventListener("click", () => goReview(rv.view + 1));
+  document.getElementById("rvLast").addEventListener("click", () => goReview(rv.steps.length));
+  const rvBadList = () => rvMine().filter(k => rv.g.an[k] && RV_BAD.has(rv.g.an[k].grade));
+  document.getElementById("rvPrevBad").addEventListener("click", () => {
+    const k = rvBadList().filter(k => k < rv.view).pop();
+    if (k !== undefined) goReview(k);
+  });
+  document.getElementById("rvNextBad").addEventListener("click", () => {
+    const k = rvBadList().find(k => k > rv.view);
+    if (k !== undefined) goReview(k);
+  });
+  // 手順、摘要裡的「第 N 手」、曲線上的點：點了跳到那一手
+  for (const id of ["rvMoves", "rvSum", "rvChart"]) {
+    document.getElementById(id).addEventListener("click", e => {
+      const t = e.target.closest && e.target.closest("[data-k]");
+      if (!t) return;
+      const k = Number(t.getAttribute("data-k"));
+      goReview(k);
+      if (id === "rvMoves") {
+        const b = document.querySelector(`#rvMoves button[data-k="${k}"]`);
+        if (b) b.focus();
+      }
+    });
+  }
+  // 從覆盤的第 k 手重下：回到那手下之前的盤面、輪到玩家，難易度與執色同原本那局，金圈標出推薦的點（同建議一手）。
+  // 從中途接著下等於可以反覆重來，所以不寫進排名；下完照樣存進最近 10 局，可以再覆盤比較
+  function replayFrom(k) {
+    if (!rv) return;
+    const { g, steps, boards } = rv, a = g.an[k];
+    closeReview();
+    cancelAi();
+    if (setupWait) { // 從開局視窗進來（例如重新整理後）：名字還沒按「開始」，用輸入框裡的
+      playerName = entryName.value.trim() || "玩家";
+      showPlayer();
+    }
+    setupEl.hidden = true;
+    setupWait = false;
+    gameStartAt = Date.now();
+    saved = false;
+    discEls = [];
+    for (const c of cells) c.innerHTML = "";
+    board = boards[k].slice();
+    turn = g.side;
+    passed = null;
+    passWait = false;
+    over = false;
+    log = steps.slice(0, k).map(s => (s.pass ? { side: s.side, pass: true } : { side: s.side, at: s.at, flips: s.flips }));
+    hinted = true;
+    suggestUsed = 0;
+    undoUsed = 0;
+    undoStack = [];
+    gameRates = new Map();
+    replayStep = k + 1;
+    moves = legalMoves(board, turn);
+    aiLevel = g.level;
+    setAiSide(foe(g.side)); // 也會清掉 pending、tip 並重畫
+    if (a && a.grade !== "only" && moves.has(a.best)) {
+      const flips = moves.get(a.best).length;
+      tip = a.book ? { side: turn, idx: a.best, flips, book: true }
+        : { side: turn, idx: a.best, flips, depth: a.depth, solved: a.solved,
+            rate: a.solved ? (a.db > 0 ? 1 : a.db < 0 ? 0 : .5) : a.rb };
+    }
+    render();
+    boardEl.scrollIntoView({ block: "nearest" });
+  }
+  document.getElementById("rvNote").addEventListener("click", e => {
+    const t = e.target.closest && e.target.closest("[data-retry]");
+    if (!t) return;
+    const k = Number(t.getAttribute("data-retry"));
+    askNoRank(`從第 ${k + 1} 手重下？`, t, () => replayFrom(k));
+  });
+
+  document.addEventListener("keydown", e => {
+    if (!rv || warnOpen) return;
+    if (e.key === "Escape") { closeReview(); return; }
+    if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && !(e.target && e.target.tagName === "SELECT")) {
+      e.preventDefault();
+      goReview(rv.view + (e.key === "ArrowLeft" ? -1 : 1));
+    }
+  });
+
   restartBtn.addEventListener("click", start);
-  document.getElementById("again").addEventListener("click", start);
+  againBtn.addEventListener("click", start);
 
   start();
   syncHelp();
