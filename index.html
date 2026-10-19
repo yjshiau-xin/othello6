@@ -891,6 +891,11 @@
   button#undo { background: #2D4E86; border-color: #1E3760; }
   button#undo:hover:not(:disabled) { background: #1B3260; border-color: #112142; }
   button#restart { background: #8E2626; border-color: #641A1A; }
+  /* 「認輸並覆盤」放在重新開始左邊，兩顆平分一行；深黃銅色，和開局視窗的「覆盤」同色系、不撞建議一手的橘（白字對比 5.3） */
+  .ctl-row { display: flex; gap: 8px; }
+  .ctl-row > button { flex: 1 1 0; }
+  button#quitReview { background: #8A6516; border-color: #5E450F; }
+  button#quitReview:hover:not(:disabled) { background: #5E450F; border-color: #3F2E0A; }
   button#restart:hover:not(:disabled) { background: #4F1212; border-color: #380C0C; }
   button:focus-visible { outline: 2px solid var(--brass-line); outline-offset: 2px; }
 
@@ -1019,9 +1024,11 @@
   .rv-moves .pc { color: var(--brass); font-weight: 700; }
   .rv-moves .rv-g { font-family: var(--sans); font-size: 12px; margin-left: 4px; }
   @media (max-width: 700px) {
-    /* 標題列：「覆盤」靠左、「保留」「關閉」靠右；選局選單自己一行 */
+    /* 標題列：「覆盤」靠左、「保留」「刪除」「關閉」靠右；選局選單自己一行 */
     .help .rv-head h2 { margin-right: auto; }
     .rv-head select { order: 1; flex-basis: 100%; }
+    .rv-head { column-gap: 8px; }
+    .rv-head .act { padding: 7px 11px; } /* 保留、刪除、關閉在 320px 寬的手機也排得進標題那一行 */
     .rv-main { grid-template-columns: minmax(0, 1fr); }
     .rv-area.board-area { max-width: none; }
   }
@@ -1121,7 +1128,10 @@
       <section class="card">
         <h2 class="big-title">操作</h2>
         <div class="controls">
-          <button class="ghostbtn" id="restart">重新開始</button>
+          <div class="ctl-row">
+            <button class="ghostbtn" id="quitReview" type="button" aria-haspopup="dialog" aria-controls="review" title="認輸，結束這局並看覆盤">認輸並覆盤</button>
+            <button class="ghostbtn" id="restart">重新開始</button>
+          </div>
           <label class="opt on" id="stepOpt">
             <input type="checkbox" id="aiStep" checked autocomplete="off">
             <span>逐步進行（手動確認）</span>
@@ -1199,7 +1209,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.117</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.121</span></button>
       </div>
     </form>
   </div>
@@ -1258,7 +1268,7 @@
           <li><b>建議一手</b>：金圈標出建議點，參考欄顯示勝率；每局前 3 次不影響排名。</li>
           <li><b>反悔</b>：退回上一手（連同電腦那手）；每局第 1 次不影響排名。</li>
           <li><b>逐步進行</b>：在「操作」卡片，預設開啟；電腦選好點後，點它選的那格才落子。</li>
-          <li><b>覆盤</b>：終局或開局視窗按「覆盤」，一手一手回放最近 10 局（按「保留」的局不會被新局擠掉），標出下錯的手、該下哪裡與原因；可從下錯的那手重下（重下的局不寫進排名）。</li>
+          <li><b>覆盤</b>：終局或開局視窗按「覆盤」，對局中覺得贏不了也可以按「重新開始」左邊的「認輸並覆盤」，一手一手回放最近 10 局（按「保留」的局不會被新局擠掉，不要的局可以「刪除」），標出下錯的手、該下哪裡與原因；可從自己下的任何一手重下（重下的局不寫進排名）。</li>
         </ol>
         <p class="help-sub"><b>難易度</b>　開局時選，對局中不能改（要換請按「重新開始」）。</p>
         <ol class="help-list">
@@ -1313,7 +1323,8 @@
         <p class="note-h">v2.1　加入覆盤（2026-10-18）</p>
         <ul class="ver-list">
           <li>終局或開局視窗按「覆盤」，一手一手回放最近 10 局（可保留），標出下錯的手、該下哪裡與原因。</li>
-          <li>可以從下錯的那手重下（重下的局不寫進排名）。</li>
+          <li>可以從自己下的任何一手重下（重下的局不寫進排名）。</li>
+          <li>對局中可以「認輸並覆盤」；不要的局可以刪除。</li>
         </ul>
         <p class="note-h">v2.0　最強修正到完美（2026-10-15～16）</p>
         <ul class="ver-list">
@@ -1330,13 +1341,14 @@
       <button class="act help-back" type="button">返回</button>
     </div>
   </div>
-  <!-- 覆盤：終局視窗或開局視窗按「覆盤」開，一手一手回放最近 10 局（可保留），標出下錯的手、該下哪裡與原因，可從那手重下（md/GAME_REVIEW_SPEC.md） -->
+  <!-- 覆盤：終局視窗或開局視窗按「覆盤」開，一手一手回放最近 10 局（可保留），標出下錯的手、該下哪裡與原因，可從玩家的任何一手重下（md/GAME_REVIEW_SPEC.md） -->
   <div class="help review" id="review" role="dialog" aria-modal="true" aria-labelledby="reviewTitle" hidden>
     <div class="review-inner">
       <div class="rv-head">
         <h2 id="reviewTitle">覆盤</h2>
         <select id="rvGame" aria-label="選擇對局"></select>
         <button class="act alt" id="rvKeep" type="button" aria-pressed="false">保留</button>
+        <button class="act alt" id="rvDel" type="button" title="從最近的對局刪掉這局">刪除</button>
         <button class="act alt" id="rvClose" type="button">關閉</button>
       </div>
       <p class="rv-meta" id="rvMeta"></p>
@@ -1385,6 +1397,7 @@
   const reviewBtn = document.getElementById("reviewBtn");     // 終局視窗的「覆盤」
   const againBtn = document.getElementById("again");
   const reviewOpenBtn = document.getElementById("reviewOpenBtn"); // 開局視窗標題「開始對局」右邊的「覆盤」
+  const quitBtn = document.getElementById("quitReview");        // 操作區「重新開始」左邊的「認輸並覆盤」
 
   let board, turn, pending, moves, over, log;
   let showHint = false; // 提示＞落子提示：顯示可落子位置的提示點（預設關閉）
@@ -2361,6 +2374,10 @@
     undoStack = [];
     gameRates = new Map();
     replayStep = null;
+    // 上一局背景還在算的勝率不要了（例如建議一手「計算中⋯」時按重新開始或認輸）：停掉執行緒，按鈕不會一直停在計算中，也不和覆盤搶運算
+    rateCache = { key: "", scores: null, depth: 0 };
+    if (rateJob && rateWorker) { rateWorker.terminate(); rateWorker = makeRateWorker(); }
+    rateJob = null;
     // theoryOk = true; // 【停用】keepPick
     closeWarn(false);
     openSetup();
@@ -2790,7 +2807,7 @@
     reviewOpenBtn.hidden = !recentGames.length;
     syncShared(); // 每局開始順便更新共用計分板
     setTimeout(() => {
-      if (!setupWait) return;
+      if (!setupWait || !reviewEl.hidden) return; // 認輸後直接開覆盤：焦點留在覆盤頁
       entryName.focus();
       if (entryName.select) entryName.select();
     }, 60);
@@ -2909,7 +2926,8 @@
   }
   // 棋譜：依序每一手的座標（例：D2E4C5…），跳過不記，重下時自動補上。
   // 重下一遍要每手合法、最後雙方都無處可下才算數，否則回傳 null；scoreboard_apps_script.gs 收件時也做同樣的檢查
-  function replayKifu(s) {
+  // open：認輸的局（覆盤用）沒下完，不檢查最後雙方是否都無處可下
+  function replayKifu(s, open = false) {
     if (typeof s !== "string" || !/^([A-F][1-6]){1,32}$/.test(s)) return null;
     const bd = Array(N * N).fill(null);
     bd[2 * N + 2] = "W"; bd[3 * N + 3] = "W";
@@ -2926,7 +2944,7 @@
       steps.push({ side: p, at: s.slice(k, k + 2), flips: f.length });
       p = foe(p);
     }
-    if (legalMoves(bd, p).size || legalMoves(bd, foe(p)).size) return null;
+    if (!open && (legalMoves(bd, p).size || legalMoves(bd, foe(p)).size)) return null;
     return { steps, B: bd.filter(v => v === "B").length, W: bd.filter(v => v === "W").length };
   }
   // 棋譜要和紀錄的比分相符（玩家執 side）
@@ -3194,7 +3212,10 @@
     doneEl.hidden = !(over && saved);
     doneEl.textContent = `已記錄（${playerName}）`;
     // 終局的「覆盤」：兩人對下不存、沒有覆盤
-    reviewBtn.hidden = !over || !aiOn;
+    reviewBtn.hidden = !over || !aiOn || !recentGames.length; // 覆盤頁把局都刪光了就不顯示
+    // 「認輸並覆盤」：對局中、玩家下過至少一手才能按（終局改用結果視窗的「覆盤」）
+    quitBtn.hidden = !aiOn;
+    quitBtn.disabled = over || setupWait || passWait || warnOpen || !log.some(m => m.at && m.side !== aiSide);
 
     // 建議一手下面的小字：還剩幾次不影響排名（兩人對下不記錄，不顯示）
     const warnEl = document.getElementById("hintWarn");
@@ -3305,13 +3326,14 @@
   let warnYes = null;
   function needsWarn() { return aiOn && !over && !hinted; }
   let warnAnchor = null;
-  function askNoRank(title, anchor, onYes) {
+  function askNoRank(title, anchor, onYes, note = "贏了將「不」寫進排名", yes = "照樣使用") {
     warnYes = onYes;
     warnAnchor = anchor;
     warnOpen = true;
     cancelAi();
     document.getElementById("warnTitle").textContent = title;
-    document.getElementById("warnNote").textContent = "贏了將「不」寫進排名";
+    document.getElementById("warnNote").textContent = note;
+    document.getElementById("warnYes").textContent = yes;
     warnBox.hidden = false;
     placeWarn();
     document.getElementById("warnNo").focus({ preventScroll: true }); // 預設停在「取消」，按 Enter 不會誤用
@@ -3529,7 +3551,8 @@
   if (!Array.isArray(recentGames)) recentGames = [];
   recentGames = recentGames.filter(g => {
     if (!g || (g.side !== "B" && g.side !== "W") || !LEVELS[g.level]) return false;
-    const r = replayKifu(g.kifu);
+    g.quit = g.quit === true;
+    const r = replayKifu(g.kifu, g.quit);
     if (!r || r[g.side] !== g.me || r[foe(g.side)] !== g.ai) return false;
     g.an = Array.isArray(g.an) ? g.an.map(a => (a && a.v === RV_VER && RV_GRADE[a.grade] && Array.isArray(a.why) ? a : null)) : [];
     g.keep = g.keep === true;
@@ -3546,15 +3569,16 @@
   function saveRecent() {
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentGames)); } catch (e) {}
   }
-  // 終局時（commit）無條件存：addRecord 遇到輸、和、開過提示都不記，但這些正是最需要覆盤的局
-  function saveRecentGame() {
+  // 終局時（commit）無條件存：addRecord 遇到輸、和、開過提示都不記，但這些正是最需要覆盤的局。
+  // quit：對局中按「覆盤」認輸，存到目前為止的棋譜與子數（quit: true）
+  function saveRecentGame(quit = false) {
     if (!aiOn) return;
     const me = foe(aiSide);
     recentGames.unshift({
       at: Date.now(), side: me, level: aiLevel,
       me: board.filter(v => v === me).length, ai: board.filter(v => v === aiSide).length,
       kifu: log.filter(m => m.at).map(m => m.at).join(""), an: [],
-      ...(replayStep ? { re: replayStep } : {})
+      ...(replayStep ? { re: replayStep } : {}), ...(quit ? { quit: true } : {})
     });
     trimRecent();
     reviewPre = { at: recentGames[0].at, rates: gameRates };
@@ -3588,12 +3612,12 @@
 
   function gameLabel(g) {
     const t = new Date(g.at);
-    const res = g.me > g.ai ? "贏" : g.me < g.ai ? "輸" : "和";
+    const res = g.quit ? "認輸" : g.me > g.ai ? "贏" : g.me < g.ai ? "輸" : "和";
     return `${t.getMonth() + 1}/${t.getDate()} ${pad2(t.getHours())}:${pad2(t.getMinutes())}　${LEVELS[g.level]}　${res} ${g.me}：${g.ai}` +
       (Number.isInteger(g.re) ? `　第 ${g.re} 手重下` : "") + (g.keep ? "　（保留）" : "");
   }
   function reviewData(g) {
-    const steps = replayKifu(g.kifu).steps;
+    const steps = replayKifu(g.kifu, g.quit).steps;
     let bd = Array(N * N).fill(null);
     bd[2 * N + 2] = "W"; bd[3 * N + 3] = "W";
     bd[2 * N + 3] = "B"; bd[3 * N + 2] = "B";
@@ -3625,8 +3649,8 @@
       if (an[k].pre >= .5) last = { k, pre: true };
       if (an[k].post >= .5) last = { k, pre: false };
     }
-    // 贏或和的局不標敗因（電腦後來下錯、或最後幾手只能下那裡沒算分數時，勝率序列會停在五成以下）
-    if (rv.g.me < rv.g.ai && last && last.pre && RV_BAD.has(an[last.k].grade)) f.loss = last.k;
+    // 贏或和的局不標敗因（電腦後來下錯、或最後幾手只能下那裡沒算分數時，勝率序列會停在五成以下）；認輸的局算輸
+    if ((rv.g.quit || rv.g.me < rv.g.ai) && last && last.pre && RV_BAD.has(an[last.k].grade)) f.loss = last.k;
     else {
       f.key = ks.find(k => an[k].grade === "mistake" || an[k].grade === "blunder"
         || (an[k].solved && RV_BAD.has(an[k].grade) && an[k].db - an[k].du >= 4)) ?? null;
@@ -3765,13 +3789,14 @@
         if (i !== st.idx) c.innerHTML = '<span class="rv-best">改</span>'; // 金圈裡寫「改」，對應說明的「改 E5 …」
       }
     }
-    rvBoardEl.setAttribute("aria-label", st ? `第 ${v + 1} 手下之前的盤面` : "終局盤面");
+    rvBoardEl.setAttribute("aria-label", st ? `第 ${v + 1} 手下之前的盤面` : g.quit ? "認輸時的盤面" : "終局盤面");
 
     // 說明
     const who = s => (s === g.side ? "（你）" : "（電腦）");
     let html;
     if (!st) {
-      html = `<p class="rv-title">終局　你 ${g.me}：電腦 ${g.ai}　${g.me > g.ai ? "你贏了" : g.me < g.ai ? "你輸了" : "和局"}</p>` +
+      html = (g.quit ? `<p class="rv-title">第 ${S + 1} 手認輸　你 ${g.me}：電腦 ${g.ai}</p>`
+        : `<p class="rv-title">終局　你 ${g.me}：電腦 ${g.ai}　${g.me > g.ai ? "你贏了" : g.me < g.ai ? "你輸了" : "和局"}</p>`) +
         "<p>按「上一個失誤」可以從最後一個失誤往回看。</p>";
     } else if (st.pass) {
       html = `<p class="rv-title">第 ${v + 1} 手　${NAME[st.side]}${who(st.side)}無處可下，跳過</p>`;
@@ -3802,8 +3827,9 @@
       if (f.key === v) {
         html += `<p class="rv-key">這是關鍵失誤：${a.solved ? `少了 ${a.db - a.du} 子` : `勝率少了 ${pct(a.rb - a.ru)}`}。</p>`;
       }
-      if (RV_BAD.has(a.grade)) html += `<button class="act" type="button" id="rvRetry" data-retry="${v}">從這手重下</button>`;
     }
+    // 玩家的每一手都可以從那手重下（還沒分析完也行，只是沒有金圈推薦）
+    if (mine) html += `<button class="act" type="button" id="rvRetry" data-retry="${v}">從這手重下</button>`;
     document.getElementById("rvNote").innerHTML = html;
 
     // 勝率曲線：橫軸是盤面（第 k 手下之前在 k，終局在最右邊），玩家每一手畫「下之前 → 下之後」一段，
@@ -3833,11 +3859,11 @@
       return `<li><button type="button" data-k="${k}"${k === v ? ' class="on" aria-current="step"' : ""}>` +
         `<span class="n">${k + 1}</span><span${me ? ' class="pc"' : ""}>${PIP[s.side]}${s.pass ? "跳過" : s.at}</span>${me ? tag(k) : ""}</button></li>`;
     }).join("") + `<li><button type="button" data-k="${S}"${v === S ? ' class="on" aria-current="step"' : ""}>` +
-      `<span class="n">終</span>${g.me}：${g.ai}</button></li>`;
+      `<span class="n">${g.quit ? "認輸" : "終"}</span>${g.me}：${g.ai}</button></li>`;
 
     // 控制列
     const bad = rvMine().filter(k => an[k] && RV_BAD.has(an[k].grade));
-    document.getElementById("rvPos").textContent = st ? `${v + 1} / ${S}` : "終局";
+    document.getElementById("rvPos").textContent = st ? `${v + 1} / ${S}` : g.quit ? "認輸" : "終局";
     document.getElementById("rvFirst").disabled = document.getElementById("rvPrev").disabled = v === 0;
     document.getElementById("rvNext").disabled = document.getElementById("rvLast").disabled = v === S;
     document.getElementById("rvPrevBad").disabled = !bad.some(k => k < v);
@@ -3855,6 +3881,31 @@
     saveRecent();
     fillGames(recentGames.indexOf(g));
     drawReview();
+  });
+  // 刪除：問過再從最近的對局刪掉這局（保留的局也可以刪），接著顯示原本排在它後面的一局；刪光了就關掉覆盤
+  const rvDelBtn = document.getElementById("rvDel");
+  rvDelBtn.addEventListener("click", () => {
+    if (!rv) return;
+    const g = rv.g;
+    askNoRank("刪除這局？", rvDelBtn, () => {
+      const i = recentGames.indexOf(g);
+      if (i < 0) return;
+      recentGames.splice(i, 1);
+      saveRecent();
+      if (reviewPre && reviewPre.at === g.at) reviewPre = null;
+      reviewOpenBtn.hidden = !recentGames.length;
+      if (!recentGames.length) {
+        closeReview();
+        // 開覆盤的按鈕（開局視窗或結果視窗的「覆盤」）跟著隱藏了：焦點改放名字欄或「再來一局」
+        if (setupWait) entryName.focus();
+        else if (over) againBtn.focus();
+        return;
+      }
+      const j = Math.min(i, recentGames.length - 1);
+      fillGames(j);
+      loadReview(j);
+      rvDelBtn.focus({ preventScroll: true });
+    }, g.keep ? "這局有保留，刪除後就找不回來" : "刪除後就找不回來", "刪除");
   });
   document.getElementById("rvGame").addEventListener("change", e => loadReview(Number(e.target.value)));
   document.getElementById("rvFirst").addEventListener("click", () => goReview(0));
@@ -3940,6 +3991,16 @@
     }
   });
 
+  // 認輸並覆盤：問過再認輸，存下目前為止的棋譜，回到開局視窗並打開這局的覆盤（關掉後回開局視窗）
+  quitBtn.addEventListener("click", () => {
+    askNoRank("認輸並覆盤？", quitBtn, () => {
+      cancelAi();
+      pending = null;
+      saveRecentGame(true);
+      start();
+      openReview(0, reviewOpenBtn);
+    }, "這局算輸，結束後一手一手看哪裡下錯", "認輸");
+  });
   restartBtn.addEventListener("click", start);
   againBtn.addEventListener("click", start);
 
