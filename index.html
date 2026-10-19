@@ -1209,7 +1209,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.122</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.123</span></button>
       </div>
     </form>
   </div>
@@ -3338,11 +3338,13 @@
     placeWarn();
     document.getElementById("warnNo").focus({ preventScroll: true }); // 預設停在「取消」，按 Enter 不會誤用
   }
+  // 觸發的按鈕被重畫掉了（覆盤頁背景分析完一手就重畫說明區，「從這手重下」會換成新的一顆）：改用同 id 的新按鈕
+  const liveAnchor = a => (a && a.isConnected === false && a.id && document.getElementById(a.id)) || a;
   // 卡片放在觸發元素下方（放不下就放上方），水平置中對齊它、左右留 16px 不超出畫面
   function placeWarn() {
     if (!warnOpen || !warnAnchor) return;
     const card = document.getElementById("warnCard");
-    const a = warnAnchor.getBoundingClientRect();
+    const a = liveAnchor(warnAnchor).getBoundingClientRect();
     const cw = card.offsetWidth, ch = card.offsetHeight;
     const vw = document.documentElement.clientWidth, vh = window.innerHeight;
     let top = a.bottom + 8;
@@ -3356,7 +3358,7 @@
   addEventListener("scroll", placeWarn, { passive: true });
   function closeWarn(yes) {
     if (!warnOpen) return;
-    const f = warnYes, a = warnAnchor;
+    const f = warnYes, a = liveAnchor(warnAnchor);
     warnYes = null;
     warnAnchor = null;
     warnOpen = false;
@@ -3724,7 +3726,8 @@
     r.v = RV_VER;
     rv.g.an[k] = r;
     saveRecent();
-    if (!rv.moved && rvMine().every(j => rv.g.an[j])) rv.view = startView(); // 分析完跳到敗因
+    // 分析完跳到敗因；確認視窗（重下、刪除）開著時不跳，免得底下的盤面在視窗背後換掉
+    if (!rv.moved && !warnOpen && rvMine().every(j => rv.g.an[j])) rv.view = startView();
     drawReview();
     runReview();
   }
@@ -3764,7 +3767,7 @@
       else if (f.key !== null) sum += jump(f.key, "關鍵失誤");
       else {
         sum += "　本局沒有明顯失誤" +
-          (g.side === "W" && g.level === "expert" && g.me < g.ai ? "（先下的一方，就算每手都下最好，也會輸 4 子）" : "");
+          (!g.quit && g.side === "W" && g.level === "expert" && g.me < g.ai ? "（先下的一方，就算每手都下最好，也會輸 4 子）" : "");
       }
     }
     document.getElementById("rvSum").innerHTML = sum;
@@ -3797,7 +3800,8 @@
     if (!st) {
       html = (g.quit ? `<p class="rv-title">第 ${S + 1} 手認輸　你 ${g.me}：電腦 ${g.ai}</p>`
         : `<p class="rv-title">終局　你 ${g.me}：電腦 ${g.ai}　${g.me > g.ai ? "你贏了" : g.me < g.ai ? "你輸了" : "和局"}</p>`) +
-        "<p>按「上一個失誤」可以從最後一個失誤往回看。</p>";
+        (rvMine().some(k => an[k] && RV_BAD.has(an[k].grade)) ? "<p>按「上一個失誤」可以從最後一個失誤往回看。</p>"
+          : f.done === f.total ? "<p>這局沒有下錯的手。</p>" : "");
     } else if (st.pass) {
       html = `<p class="rv-title">第 ${v + 1} 手　${NAME[st.side]}${who(st.side)}無處可下，跳過</p>`;
     } else if (!mine) {
@@ -3984,6 +3988,7 @@
     const t = e.target.closest && e.target.closest("[data-retry]");
     if (!t) return;
     const k = Number(t.getAttribute("data-retry"));
+    rv.moved = true; // 玩家選了這手：之後分析完也不自動跳到敗因
     askNoRank(`從第 ${k + 1} 手重下？`, t, () => replayFrom(k));
   });
 
