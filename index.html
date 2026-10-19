@@ -278,7 +278,7 @@
   }
   .setup-card { width: min(100%, 320px); margin: 0; text-align: left; }
   .setup-card strong { text-align: center; }
-  /* 標題列：「開始對局」維持正中，「覆盤」（有存對局才顯示）靠最右邊；小字、黃色連結，和左下兩個按鈕同色 */
+  /* 標題列：「開始對局」維持正中，「覆盤」（一直顯示，還沒有存的對局時變淡、不能按）靠最右邊；小字、黃色連結，和左下兩個按鈕同色 */
   .setup-title { display: grid; grid-template-columns: 1fr auto 1fr; align-items: baseline; gap: 8px; }
   .setup-title strong { grid-column: 2; }
   .setup-title button.linkbtn { grid-column: 3; justify-self: end; margin: 0; font-size: 18px; font-weight: 700; color: var(--brass); }
@@ -1179,7 +1179,7 @@
     <form class="result-card setup-card" id="setupForm">
       <div class="setup-title">
         <strong id="setupTitle">開始對局</strong>
-        <button class="linkbtn" type="button" id="reviewOpenBtn" aria-haspopup="dialog" aria-controls="review" hidden>覆盤</button>
+        <button class="linkbtn" type="button" id="reviewOpenBtn" aria-haspopup="dialog" aria-controls="review">覆盤</button>
       </div>
       <div class="entry">
         <label for="entryName">輸入名字</label>
@@ -1209,7 +1209,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.121</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.122</span></button>
       </div>
     </form>
   </div>
@@ -2804,7 +2804,7 @@
     markLevel(LEVELS[lv] ? lv : aiLevel);
     markSide(side === "B" || side === "W" ? side : curSide()); // 以前存的「兩人對下」改回上次的執色
     setupEl.hidden = false;
-    reviewOpenBtn.hidden = !recentGames.length;
+    syncReviewLink();
     syncShared(); // 每局開始順便更新共用計分板
     setTimeout(() => {
       if (!setupWait || !reviewEl.hidden) return; // 認輸後直接開覆盤：焦點留在覆盤頁
@@ -3872,6 +3872,11 @@
 
   reviewBtn.addEventListener("click", () => openReview(0, reviewBtn));
   reviewOpenBtn.addEventListener("click", () => openReview(0, reviewOpenBtn));
+  // 開局視窗的「覆盤」一直顯示（藏起來會以為功能不見了）；還沒有存的對局（或都刪光了）就變淡、不能按
+  function syncReviewLink() {
+    reviewOpenBtn.disabled = !recentGames.length;
+    reviewOpenBtn.title = recentGames.length ? `回放最近 ${recentGames.length} 局` : "還沒有對局：和電腦下完一局（或認輸）後就能覆盤";
+  }
   document.getElementById("rvClose").addEventListener("click", closeReview);
   document.getElementById("rvKeep").addEventListener("click", () => {
     if (!rv) return;
@@ -3893,10 +3898,10 @@
       recentGames.splice(i, 1);
       saveRecent();
       if (reviewPre && reviewPre.at === g.at) reviewPre = null;
-      reviewOpenBtn.hidden = !recentGames.length;
+      syncReviewLink();
       if (!recentGames.length) {
         closeReview();
-        // 開覆盤的按鈕（開局視窗或結果視窗的「覆盤」）跟著隱藏了：焦點改放名字欄或「再來一局」
+        // 開覆盤的按鈕跟著停用（開局視窗）或隱藏（結果視窗）了：焦點改放名字欄或「再來一局」
         if (setupWait) entryName.focus();
         else if (over) againBtn.focus();
         return;
