@@ -293,7 +293,7 @@
   /* 結果視窗的「改名字」：名字欄＋確定＋取消排一行 */
   .result-card .rename { margin-top: 6px; padding-top: 8px; }
   .result-card .rename input { font-size: 15px; padding: 6px; width: 7em; }
-  .result-card .rename .act { margin-top: 0; padding: 6px 10px; font-size: 14px; }
+  .result-card .rename .act { flex: none; margin-top: 0; padding: 6px 10px; font-size: 14px; white-space: nowrap; }
   .records {
     list-style: none;
     margin: 0;
@@ -1236,7 +1236,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.2.128</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.2.129</span></button>
       </div>
     </form>
   </div>
@@ -1247,7 +1247,7 @@
     <div class="result-card" id="warnCard">
       <p class="result-eyebrow">注意</p>
       <strong id="warnTitle">開啟提示？</strong>
-      <p class="result-note" id="warnNote">贏了將「不」寫進排名</p>
+      <p class="result-note" id="warnNote">這局將「不」寫進排名</p>
       <div class="warn-acts">
         <button class="act alt" id="warnNo" type="button">取消</button>
         <button class="act" id="warnYes" type="button">照樣使用</button>
@@ -2508,7 +2508,7 @@
     for (let k = 0; k < n; k++) knock(ac, t + dur * 0.45 + k * 0.035, 0.55, 1500 + k * 90);
   }
 
-  // 計分板：贏了電腦的每一局記下名字、難易度、比分與時間（輸、和局不記錄），存在這台瀏覽器裡。
+  // 計分板：贏了電腦或和局的每一局記下名字、難易度、比分與時間（輸棋不記錄），存在這台瀏覽器裡。
   // 讀寫都包在 try 裡：無痕視窗或封鎖網站資料時照樣能玩，只是不保留紀錄。
   // 有設定 SHEET_API 時改用共用計分板（Google 試算表，見 scoreboard_apps_script.gs）：
   // 所有人讀寫同一份，這台瀏覽器的紀錄只當快取；連不上時先記在 PENDING_KEY，下次連上再補送。
@@ -2641,10 +2641,11 @@
             : await fetch(SHEET_API, { cache: "no-store" });
           const data = await res.json();
           if (!data || !data.ok || !Array.isArray(data.records)) throw new Error("bad reply");
-          // 試算表程式還是舊版（POST 沒回 renamed）：它不收改名與和局，這兩種留在待送清單、本機照樣顯示，
-          // 程式更新後下次同步自動補送
-          const oldScript = batch.length > 0 && data.renamed === undefined;
-          const stuck = r => oldScript && (r.ren || r.result === "draw");
+          // 試算表程式還是舊版：POST 沒回 renamed 是不收改名（v2.1.124 以前），沒回 draw 是不收和局（v2.2.128 以前）。
+          // 收不了的留在待送清單、本機照樣顯示，程式更新後下次同步自動補送
+          const noRen = batch.length > 0 && data.renamed === undefined;
+          const noDraw = batch.length > 0 && data.draw !== true;
+          const stuck = r => (noRen && r.ren) || (noDraw && !r.ren && r.result === "draw");
           const lost = batch.filter(stuck);
           pendingUp = pendingUp.filter(r => !batch.includes(r) || stuck(r));
           savePending();
@@ -3415,7 +3416,7 @@
   let warnYes = null;
   function needsWarn() { return aiOn && !over && !hinted; }
   let warnAnchor = null;
-  function askNoRank(title, anchor, onYes, note = "贏了將「不」寫進排名", yes = "照樣使用") {
+  function askNoRank(title, anchor, onYes, note = "這局將「不」寫進排名", yes = "照樣使用") {
     warnYes = onYes;
     warnAnchor = anchor;
     warnOpen = true;
@@ -3660,7 +3661,7 @@
   function saveRecent() {
     try { localStorage.setItem(RECENT_KEY, JSON.stringify(recentGames)); } catch (e) {}
   }
-  // 終局時（commit）無條件存：addRecord 遇到輸、和、開過提示都不記，但這些正是最需要覆盤的局。
+  // 終局時（commit）無條件存：addRecord 遇到輸棋、開過提示都不記，但這些正是最需要覆盤的局。
   // quit：對局中按「覆盤」認輸，存到目前為止的棋譜與子數（quit: true）
   function saveRecentGame(quit = false) {
     if (!aiOn) return;
