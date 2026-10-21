@@ -302,7 +302,7 @@
     overflow-y: auto;
     border-top: 1px solid var(--rule);
   }
-  /* 一局一行（只記勝局，列前 20 名）：名次、名字、難易度、比分、日期、對局長度（手機不顯示）；各欄固定寬度讓上下對齊，
+  /* 一局一行（記勝局與和局，列前 20 名）：名次、名字、難易度、比分、日期、對局長度（手機不顯示）；各欄固定寬度讓上下對齊，
      名字太長以刪節號收尾，滑鼠停留看完整內容（含時分） */
   .records li {
     display: grid;
@@ -677,6 +677,12 @@
     color: var(--ink-soft);
   }
   .result-card .act { margin-top: 8px; }
+  /* 手機：棋盤上的結果／跳過視窗標題縮小、不換行（「黑棋獲勝（玩家）」原本會折成兩行），左右內距也收一點 */
+  @media (max-width: 800px) {
+    .result .result-card { padding-left: 16px; padding-right: 16px; }
+    .result .result-card strong { font-size: 21px; white-space: nowrap; }
+    .result .end-acts .act { white-space: nowrap; } /* 卡片變窄後「再來一局」不折行 */
+  }
   /* 不寫進排名的警告視窗：蓋住整個畫面，卡片由程式放在按下的開關或按鈕旁邊 */
   .warn { position: fixed; inset: 0; z-index: 40; background: rgba(8, 26, 18, .45); animation: fade .2s ease-out; }
   .warn .result-card { position: absolute; width: min(300px, calc(100vw - 32px)); box-sizing: border-box; }
@@ -1068,7 +1074,7 @@
     <aside class="tally" aria-label="排名">
       <section class="card">
         <h2 class="big-title">排名</h2>
-        <ol class="records" id="records"><li class="empty">尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局不記錄）</li></ol>
+        <ol class="records" id="records"><li class="empty">尚無紀錄。開局時輸入名字，贏了電腦或和局就會自動記錄在這裡（輸棋不記錄）</li></ol>
         <div class="tally-acts">
           <button class="linkbtn" id="refreshRecords" type="button" hidden>更新排名</button>
           <button class="linkbtn" id="exportRecords" type="button">匯出排名</button>
@@ -1230,7 +1236,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.125</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.2.128</span></button>
       </div>
     </form>
   </div>
@@ -1280,9 +1286,9 @@
         </ol>
         <p class="help-sub"><b>排名</b>　大家共用一份，按「更新排名」看最新。</p>
         <ol class="help-list">
-          <li><b>只記勝局</b>：輸、和局不記。</li>
-          <li><b>名次</b>：難易度高的在前 → 執白（先下）在前 → 贏得多的在前 → 日期新的在前 → 下得快的在前。</li>
-          <li><b>改名字</b>：贏了之後，在結果視窗按「改名字」（開新局後就不能改）。</li>
+          <li><b>記勝局與和局</b>：輸棋不記。</li>
+          <li><b>名次</b>：難易度高的在前 → 勝局在前、和局在後 → 執白（先下）在前 → 贏得多的在前 → 日期新的在前 → 下得快的在前。</li>
+          <li><b>改名字</b>：贏了（或和局）之後，在結果視窗按「改名字」（開新局後就不能改）。</li>
           <li><b>不記錄</b>：開過「提示」任一項、建議一手第 4 次起、反悔第 2 次起（都會先跳視窗確認）。</li>
           <li><b>看詳細</b>：點任一列展開比分、次數、時間與棋譜；「複製」可把棋譜貼給別人或 AI。</li>
         </ol>
@@ -1343,12 +1349,16 @@
     <div class="help-inner">
       <h2 id="verInfoTitle">版本紀錄</h2>
       <div class="info-body">
-        <p class="note-h">v2.1　加入覆盤（2026-10-18）</p>
+        <p class="note-h">v2.2　修改排名（2026-10-21）</p>
+        <ul class="ver-list">
+          <li>贏棋後，可以按「改名字」。</li>
+          <li>排名（勝局、和局）依序：難易度、執白（先下）優先、贏的子數、日期、對局時間。</li>
+        </ul>
+        <p class="note-h">v2.1　加入覆盤（2026-10-18～19）</p>
         <ul class="ver-list">
           <li>終局或開局視窗按「覆盤」，一手一手回放最近 10 局（可保留），標出下錯的手、該下哪裡與原因。</li>
           <li>可以從自己下的任何一手重下（重下的局不寫進排名）。</li>
           <li>對局中可以「認輸並覆盤」；不要的局可以刪除。</li>
-          <li>排名：贏了可以改名字；名次改為難易度 → 執白優先 → 贏的子數 → 日期 → 對局時間。</li>
         </ul>
         <p class="note-h">v2.0　最強修正到完美（2026-10-15～16）</p>
         <ul class="ver-list">
@@ -2509,12 +2519,13 @@
   const LEVEL_KEY = "othello6.level";
   const SIDE_KEY = "othello6.aiSide"; // 開局視窗選的電腦執色：B／W
   const MAX_RECORDS = 50;
-  // 排名：難易度（最強、強、中、弱）→ 玩家執白（先下，比較難）在前 → 子數差距（玩家減電腦，大的在前）
+  // 排名：難易度（最強、強、中、弱）→ 勝局在前、和局在後 → 玩家執白（先下，比較難）在前 → 子數差距（玩家減電腦，大的在前）
   // → 日期（新的在前，同一天算一樣）→ 對局秒數（少的在前）→ 結束時間（新的在前）。
   // 畫面排序與保留前 50 名都用這個，和試算表 scoreboard_apps_script.gs 的 byRank 一致
   const LEVEL_RANK = { expert: 0, hard: 1, normal: 2, easy: 3 };
   const dayOf = at => { const t = new Date(at); return t.getFullYear() * 10000 + (t.getMonth() + 1) * 100 + t.getDate(); };
   const byRank = (x, y) => (LEVEL_RANK[x.level] ?? 9) - (LEVEL_RANK[y.level] ?? 9) ||
+    (x.me > x.ai ? 0 : 1) - (y.me > y.ai ? 0 : 1) ||
     (x.side === "W" ? 0 : 1) - (y.side === "W" ? 0 : 1) ||
     (y.me - y.ai) - (x.me - x.ai) || dayOf(y.at) - dayOf(x.at) || x.secs - y.secs || y.at - x.at;
   function keepTop() {
@@ -2537,7 +2548,9 @@
   }
   try { records = JSON.parse(localStorage.getItem(TALLY_KEY)) || []; } catch (e) { records = []; }
   if (!Array.isArray(records)) records = [];
-  records = records.filter(r => r && r.result === "win"); // 只記勝局：以前存的輸、和局一併清掉
+  // 排名記勝局與和局（2026-10-21 起記和局）；以前存的輸棋一併清掉
+  const ranked = r => !!r && (r.result === "win" || r.result === "draw");
+  records = records.filter(ranked);
   let pendingUp = [];
   try { pendingUp = JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { pendingUp = []; }
   if (!Array.isArray(pendingUp)) pendingUp = [];
@@ -2550,7 +2563,7 @@
     const me = foe(aiSide);
     const cnt = { B: board.filter(v => v === "B").length, W: board.filter(v => v === "W").length };
     const d = cnt[me] - cnt[aiSide];
-    if (d <= 0) return; // 只記勝局，輸或和局不記錄
+    if (d < 0) return; // 記勝局與和局，輸棋不記錄
     if (hinted) return; // 本局開過提示不記錄
     const rec = {
       name: playerName,
@@ -2587,7 +2600,7 @@
     if (SHEET_API) {
       const p = pendingUp.find(r => !r.ren && r.tok === lastWin.tok);
       if (p) p.name = name;
-      pendingUp.push({ ren: true, tok: lastWin.tok, name });
+      pendingUp.push({ ren: true, tok: lastWin.tok, name, game: gameKey(lastWin.rec) });
       savePending();
       syncShared();
     }
@@ -2628,18 +2641,24 @@
             : await fetch(SHEET_API, { cache: "no-store" });
           const data = await res.json();
           if (!data || !data.ok || !Array.isArray(data.records)) throw new Error("bad reply");
-          pendingUp = pendingUp.filter(r => !batch.includes(r));
+          // 試算表程式還是舊版（POST 沒回 renamed）：它不收改名與和局，這兩種留在待送清單、本機照樣顯示，
+          // 程式更新後下次同步自動補送
+          const oldScript = batch.length > 0 && data.renamed === undefined;
+          const stuck = r => oldScript && (r.ren || r.result === "draw");
+          const lost = batch.filter(stuck);
+          pendingUp = pendingUp.filter(r => !batch.includes(r) || stuck(r));
           savePending();
-          // 試算表程式還是舊版（沒有回 renamed）：改名送不上去，畫面會換回原本的名字
-          if (rens.length && data.renamed === undefined) showTallyMsg("共用排名暫時不能改名字（試算表程式要更新）");
-          const remote = data.records.map(cleanRecord).filter(r => r && r.result === "win");
+          if (lost.length) showTallyMsg("共用排名的試算表程式要更新，改名字與和局先記在這台");
+          const remote = data.records.map(cleanRecord).filter(ranked);
           const have = new Set(remote.map(recordKey));
           records = pendingUp.filter(r => !r.ren && !have.has(recordKey(r))).map(cleanRecord).filter(Boolean).concat(remote);
+          // 還沒送到的改名（例如勝局還在上傳時就改了名字）先套上去，不讓試算表回傳的舊名字蓋回來；依序套用，後改的為準
+          for (const x of pendingUp) if (x.ren && x.game) for (const r of records) if (gameKey(r) === x.game) r.name = x.name;
           keepTop();
           saveRecords();
           sharedOn = true;
           lastSync = Date.now();
-          if (pendingUp.length) syncAgain = true;
+          if (pendingUp.some(r => !stuck(r))) syncAgain = true; // 舊版程式收不了的改名、和局不要一直重送
         } catch (e) {
           sharedOn = false;
           syncAgain = false;
@@ -2747,14 +2766,14 @@
   function drawTally() {
     const list = document.getElementById("records");
     list.innerHTML = "";
-    // 只列勝局（以前記下的輸、和局也不顯示）；依名次（byRank）排，只秀前 20 名
-    const shown = records.filter(r => r.result === "win")
+    // 列勝局與和局（以前記下的輸棋不顯示）；依名次（byRank）排，只秀前 20 名
+    const shown = records.filter(ranked)
       .sort(byRank)
       .slice(0, TOP_N);
     if (!shown.length) {
       const li = document.createElement("li");
       li.className = "empty";
-      li.textContent = "尚無勝局。開局時輸入名字，贏了電腦就會自動記錄在這裡（輸、和局不記錄）";
+      li.textContent = "尚無紀錄。開局時輸入名字，贏了電腦或和局就會自動記錄在這裡（輸棋不記錄）";
       list.appendChild(li);
     }
     for (const [i, r] of shown.entries()) {
@@ -2793,7 +2812,7 @@
           ["電腦難易度", LEVELS[r.level] || r.level, `v-lv ${r.level}`],
           ["玩家執棋", `${SHORT[r.side]}棋（${r.side === "W" ? "先下" : "後下"}）`],
           ["比分", `玩家 ${r.me} : 電腦 ${r.ai}`],
-          ["差距", `贏 ${diff} 子`],
+          ["差距", diff > 0 ? `贏 ${diff} 子` : "和局"],
           // v2.0 以前的勝局沒有記這兩項
           ["建議一手", r.sug == null ? "未記錄" : `${r.sug} 次`, r.sug == null ? "v-none" : ""],
           ["反悔", r.undo == null ? "未記錄" : `${r.undo} 次`, r.undo == null ? "v-none" : ""],
@@ -2981,6 +3000,7 @@
     if (typeof r.name !== "string" || !RESULT_TEXT[r.result] || !LEVELS[r.level] ||
         !SHORT[r.side] || !int(r.me, 0, N * N) || !int(r.ai, 0, N * N) || r.me + r.ai > N * N ||
         (r.result === "win" && r.me <= r.ai) || // 勝局玩家子數一定比電腦多
+        (r.result === "draw" && r.me !== r.ai) || // 和局子數一樣
         !Number.isFinite(r.at) || !int(r.secs, 0, 1e7)) return null;
     return {
       name: r.name.trim().slice(0, 12) || "玩家", result: r.result, level: r.level,
@@ -3020,6 +3040,8 @@
   }
   // 同一局：結束時間只比到秒（試算表存成日期時間，讀回來的毫秒不保證一樣），和 scoreboard_apps_script.gs 的 keyOf 一致
   const recordKey = r => [Math.floor(r.at / 1000), r.name, r.me, r.ai, r.side, r.level].join("|");
+  // 不含名字的同一局：改名後用它找回那一筆
+  const gameKey = r => [Math.floor(r.at / 1000), r.me, r.ai, r.side, r.level].join("|");
 
   // 匯入的紀錄併進現有的：同一局（時間、名字、比分都相同）不重複加，依名次保留前 50 名。
   // 只併進這台瀏覽器，不送上共用計分板：檔案內容可以自己編，送上去等於誰都能灌假的勝局
@@ -3030,11 +3052,11 @@
     const list = Array.isArray(data) ? data : data && Array.isArray(data.records) ? data.records : null;
     if (!list) return "匯入失敗：檔案裡沒有紀錄";
     const seen = new Set(records.map(recordKey));
-    let added = 0, dup = 0, bad = 0, notWin = 0;
+    let added = 0, dup = 0, bad = 0, lose = 0;
     for (const raw of list) {
       const r = cleanRecord(raw);
       if (!r) { bad++; continue; }
-      if (r.result !== "win") { notWin++; continue; } // 只記勝局
+      if (!ranked(r)) { lose++; continue; } // 只記勝局與和局
       const k = recordKey(r);
       if (seen.has(k)) { dup++; continue; }
       seen.add(k);
@@ -3044,7 +3066,7 @@
     const cut = keepTop();
     saveRecords();
     drawTally();
-    const skip = [notWin && `${notWin} 筆輸或和局不匯入`, dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去排名最後 ${cut} 筆`]
+    const skip = [lose && `${lose} 筆輸棋不匯入`, dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去排名最後 ${cut} 筆`]
       .filter(Boolean).join("、");
     return `已匯入 ${added} 筆紀錄` + (skip ? `（${skip}）` : "");
   }
@@ -3328,7 +3350,7 @@
         ? `${NAME[winner]}多 ${Math.abs(b - w)} 子` +
           (placed < N * N ? `，棋盤尚餘 ${N * N - placed} 格但雙方皆無棋可下` : "") +
           (aiOn && hinted && winner !== aiSide ? "（本局用了提示或反悔，不寫進排名）" : "")
-        : `雙方各 ${b} 子`;
+        : `雙方各 ${b} 子` + (aiOn && hinted ? "（本局用了提示或反悔，不寫進排名）" : "");
     } else {
       disc.dataset.side = turn;
       title.innerHTML = `輪到${NAME[turn]}` +
@@ -4039,6 +4061,8 @@
     undoStack = [];
     gameRates = new Map();
     replayStep = k + 1;
+    lastWin = null; // 上一局贏棋的「改名字」不帶進重下的局
+    renaming = false;
     moves = legalMoves(board, turn);
     aiLevel = g.level;
     setAiSide(foe(g.side)); // 也會清掉 pending、tip 並重畫
