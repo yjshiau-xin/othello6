@@ -287,6 +287,9 @@
   /* 結果視窗「已記錄（名字）」＋「改名字」按鈕排一行 */
   .result-card .entry-done { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; font-size: 17px; }
   .result-card .entry-done .act { flex: none; margin: 0; padding: 4px 10px; font-size: 14px; white-space: nowrap; }
+  /* 「改名字」：和建議一手同色（暗橘底白字） */
+  .result-card .entry-done button#renameBtn { background: #A84B16; border-color: #7A360F; color: #FFFFFF; }
+  .result-card .entry-done button#renameBtn:hover:not(:disabled) { background: #6A2B08; border-color: #4A1E05; opacity: 1; }
   /* 結果視窗的「改名字」：名字欄＋確定＋取消排一行 */
   .result-card .rename { margin-top: 6px; padding-top: 8px; }
   .result-card .rename input { font-size: 15px; padding: 6px; width: 7em; }
@@ -1227,7 +1230,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.124</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.125</span></button>
       </div>
     </form>
   </div>
