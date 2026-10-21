@@ -284,6 +284,13 @@
   .setup-title button.linkbtn { grid-column: 3; justify-self: end; margin: 0; font-size: 18px; font-weight: 700; color: var(--brass); }
   .setup-card > .act { margin-top: 12px; padding: 9px; font-size: 16px; }
   .entry-done { margin: 6px 0 0; font-size: 13px; color: var(--brass); font-weight: 700; }
+  /* 結果視窗「已記錄（名字）」＋「改名字」按鈕排一行 */
+  .result-card .entry-done { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 10px; font-size: 17px; }
+  .result-card .entry-done .act { flex: none; margin: 0; padding: 4px 10px; font-size: 14px; white-space: nowrap; }
+  /* 結果視窗的「改名字」：名字欄＋確定＋取消排一行 */
+  .result-card .rename { margin-top: 6px; padding-top: 8px; }
+  .result-card .rename input { font-size: 15px; padding: 6px; width: 7em; }
+  .result-card .rename .act { margin-top: 0; padding: 6px 10px; font-size: 14px; }
   .records {
     list-style: none;
     margin: 0;
@@ -292,7 +299,7 @@
     overflow-y: auto;
     border-top: 1px solid var(--rule);
   }
-  /* 一局一行（只記勝局，列前 20 名）：名次、名字、難易度、比分、日期、對局長度；各欄固定寬度讓上下對齊，
+  /* 一局一行（只記勝局，列前 20 名）：名次、名字、難易度、比分、日期、對局長度（手機不顯示）；各欄固定寬度讓上下對齊，
      名字太長以刪節號收尾，滑鼠停留看完整內容（含時分） */
   .records li {
     display: grid;
@@ -366,6 +373,11 @@
     color: var(--ink-soft);
   }
   .records .du { text-align: right; }
+  /* 手機：拿掉最後一欄（對局長度），名字才看得到；長度仍在展開的詳細資訊與滑鼠提示裡 */
+  @media (max-width: 800px) {
+    .records li { grid-template-columns: 22px minmax(0, 1fr) 36px 46px 46px; }
+    .records .du { display: none; }
+  }
   .badge { flex: none; font-size: 12px; font-weight: 700; padding: 2px 7px; color: #FFFFFF; }
   .badge.win { background: #A84B16; }
   .badge.lose { background: #5D6862; }
@@ -1074,11 +1086,17 @@
         <div class="board" id="board">
           <div class="result" id="result" hidden>
             <div class="result-card">
-              <p class="result-eyebrow">終局</p>
               <strong id="resultTitle">黑棋獲勝</strong>
               <p class="result-score" id="resultScore">● 2 ： 2 ○</p>
               <p class="result-note" id="resultNote"></p>
-              <p class="entry-done" id="entryDone" hidden>已記錄</p>
+              <p class="entry-done" id="entryDone" hidden><span id="doneText">已記錄</span><button class="act alt" type="button" id="renameBtn" aria-controls="renameForm">改名字</button></p>
+              <form class="entry rename" id="renameForm" hidden>
+                <div class="row">
+                  <input id="renameInput" maxlength="12" autocomplete="off" enterkeyhint="done" aria-label="新的名字">
+                  <button class="act" type="submit">確定</button>
+                  <button class="act alt" type="button" id="renameCancel">取消</button>
+                </div>
+              </form>
               <div class="end-acts">
                 <button class="act alt" id="reviewBtn" type="button" aria-haspopup="dialog" aria-controls="review">覆盤</button>
                 <button class="act" id="again">再來一局</button>
@@ -1209,7 +1227,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.123</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.1.124</span></button>
       </div>
     </form>
   </div>
@@ -1260,6 +1278,8 @@
         <p class="help-sub"><b>排名</b>　大家共用一份，按「更新排名」看最新。</p>
         <ol class="help-list">
           <li><b>只記勝局</b>：輸、和局不記。</li>
+          <li><b>名次</b>：難易度高的在前 → 執白（先下）在前 → 贏得多的在前 → 日期新的在前 → 下得快的在前。</li>
+          <li><b>改名字</b>：贏了之後，在結果視窗按「改名字」（開新局後就不能改）。</li>
           <li><b>不記錄</b>：開過「提示」任一項、建議一手第 4 次起、反悔第 2 次起（都會先跳視窗確認）。</li>
           <li><b>看詳細</b>：點任一列展開比分、次數、時間與棋譜；「複製」可把棋譜貼給別人或 AI。</li>
         </ol>
@@ -1325,6 +1345,7 @@
           <li>終局或開局視窗按「覆盤」，一手一手回放最近 10 局（可保留），標出下錯的手、該下哪裡與原因。</li>
           <li>可以從自己下的任何一手重下（重下的局不寫進排名）。</li>
           <li>對局中可以「認輸並覆盤」；不要的局可以刪除。</li>
+          <li>排名：贏了可以改名字；名次改為難易度 → 執白優先 → 贏的子數 → 日期 → 對局時間。</li>
         </ul>
         <p class="note-h">v2.0　最強修正到完美（2026-10-15～16）</p>
         <ul class="ver-list">
@@ -1396,6 +1417,7 @@
   const undoBtn = document.getElementById("undo");
   const reviewBtn = document.getElementById("reviewBtn");     // 終局視窗的「覆盤」
   const againBtn = document.getElementById("again");
+  const renameForm = document.getElementById("renameForm"); // 結果視窗：贏了之後改名字
   const reviewOpenBtn = document.getElementById("reviewOpenBtn"); // 開局視窗標題「開始對局」右邊的「覆盤」
   const quitBtn = document.getElementById("quitReview");        // 操作區「重新開始」左邊的「認輸並覆盤」
 
@@ -2351,6 +2373,8 @@
 
   function start() {
     cancelAi(); // 也結束背景執行緒裡還沒算完的殘局
+    lastWin = null;
+    renaming = false;
     gameStartAt = Date.now();
     saved = false;
     // 新局重新落子：清掉沿用的棋子，開局四子重播落下動畫
@@ -2482,11 +2506,14 @@
   const LEVEL_KEY = "othello6.level";
   const SIDE_KEY = "othello6.aiSide"; // 開局視窗選的電腦執色：B／W
   const MAX_RECORDS = 50;
-  // 排名：難易度（最強、強、中、弱）→ 子數差距（玩家減電腦，大的在前）→ 對局秒數（少的在前）→ 時間（新的在前）。
+  // 排名：難易度（最強、強、中、弱）→ 玩家執白（先下，比較難）在前 → 子數差距（玩家減電腦，大的在前）
+  // → 日期（新的在前，同一天算一樣）→ 對局秒數（少的在前）→ 結束時間（新的在前）。
   // 畫面排序與保留前 50 名都用這個，和試算表 scoreboard_apps_script.gs 的 byRank 一致
   const LEVEL_RANK = { expert: 0, hard: 1, normal: 2, easy: 3 };
+  const dayOf = at => { const t = new Date(at); return t.getFullYear() * 10000 + (t.getMonth() + 1) * 100 + t.getDate(); };
   const byRank = (x, y) => (LEVEL_RANK[x.level] ?? 9) - (LEVEL_RANK[y.level] ?? 9) ||
-    (y.me - y.ai) - (x.me - x.ai) || x.secs - y.secs || y.at - x.at;
+    (x.side === "W" ? 0 : 1) - (y.side === "W" ? 0 : 1) ||
+    (y.me - y.ai) - (x.me - x.ai) || dayOf(y.at) - dayOf(x.at) || x.secs - y.secs || y.at - x.at;
   function keepTop() {
     records.sort(byRank);
     const cut = Math.max(0, records.length - MAX_RECORDS);
@@ -2497,6 +2524,14 @@
   let gameStartAt = Date.now();
   // 名字在開局視窗輸入；贏了電腦就自動登上計分板。saved 表示這局已登錄
   let playerName = "玩家", saved = false;
+  // 剛贏的這局 { rec（目前的名字與比分）, tok }：結果視窗按「改名字」改的就是它。
+  // tok 是隨機的改名碼，跟著紀錄送上試算表（不會再傳回來），改名時憑它找到那一列，別人改不到
+  let lastWin = null, renaming = false;
+  function newTok() {
+    const a = new Uint32Array(4);
+    try { crypto.getRandomValues(a); } catch (e) { for (let i = 0; i < 4; i++) a[i] = Math.floor(Math.random() * 2 ** 32); }
+    return [...a].map(x => x.toString(16).padStart(8, "0")).join("");
+  }
   try { records = JSON.parse(localStorage.getItem(TALLY_KEY)) || []; } catch (e) { records = []; }
   if (!Array.isArray(records)) records = [];
   records = records.filter(r => r && r.result === "win"); // 只記勝局：以前存的輸、和局一併清掉
@@ -2531,8 +2566,33 @@
     keepTop();
     saveRecords();
     saved = true;
+    lastWin = { rec: { ...rec }, tok: newTok() };
     drawTally();
-    upload([rec]);
+    upload([{ ...rec, tok: lastWin.tok }]);
+  }
+
+  // 贏了之後改名字：本機紀錄、還沒送出的紀錄直接改；共用計分板另外送一筆改名（憑改名碼），連不上就排隊補送。
+  // 之後開新局也預設用新名字
+  function renameWin(raw) {
+    const name = String(raw).trim().slice(0, 12) || "玩家";
+    if (!lastWin || name === lastWin.rec.name) return;
+    const oldKey = recordKey(lastWin.rec);
+    lastWin.rec.name = name;
+    const newKey = recordKey(lastWin.rec);
+    for (const r of records) if (recordKey(r) === oldKey) r.name = name;
+    if (openRec === oldKey) openRec = newKey;
+    if (SHEET_API) {
+      const p = pendingUp.find(r => !r.ren && r.tok === lastWin.tok);
+      if (p) p.name = name;
+      pendingUp.push({ ren: true, tok: lastWin.tok, name });
+      savePending();
+      syncShared();
+    }
+    saveRecords();
+    playerName = name;
+    try { localStorage.setItem(NAME_KEY, name); } catch (e) {}
+    showPlayer();
+    drawTally();
   }
 
   // 共用計分板：有待送的紀錄就 POST（回傳最新名單），沒有就 GET；以試算表為準，
@@ -2554,21 +2614,24 @@
       do {
         syncAgain = false;
         const batch = pendingUp.slice(0, 50);
+        const recs = batch.filter(r => !r.ren), rens = batch.filter(r => r.ren).map(r => ({ tok: r.tok, name: r.name }));
         try {
           const res = batch.length
             ? await fetch(SHEET_API, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" }, // 免預檢（Apps Script 不回應 OPTIONS）
-                body: JSON.stringify({ records: batch })
+                body: JSON.stringify({ records: recs, renames: rens })
               })
             : await fetch(SHEET_API, { cache: "no-store" });
           const data = await res.json();
           if (!data || !data.ok || !Array.isArray(data.records)) throw new Error("bad reply");
           pendingUp = pendingUp.filter(r => !batch.includes(r));
           savePending();
+          // 試算表程式還是舊版（沒有回 renamed）：改名送不上去，畫面會換回原本的名字
+          if (rens.length && data.renamed === undefined) showTallyMsg("共用排名暫時不能改名字（試算表程式要更新）");
           const remote = data.records.map(cleanRecord).filter(r => r && r.result === "win");
           const have = new Set(remote.map(recordKey));
-          records = pendingUp.filter(r => !have.has(recordKey(r))).concat(remote);
+          records = pendingUp.filter(r => !r.ren && !have.has(recordKey(r))).map(cleanRecord).filter(Boolean).concat(remote);
           keepTop();
           saveRecords();
           sharedOn = true;
@@ -3209,8 +3272,9 @@
     resultEl.hidden = !over;
     document.getElementById("playerTag").hidden = over || isAiTurn(); // 輪到電腦時只標「電腦」，不顯示玩家名字
     const doneEl = document.getElementById("entryDone");
-    doneEl.hidden = !(over && saved);
-    doneEl.textContent = `已記錄（${playerName}）`;
+    doneEl.hidden = !(over && saved) || renaming;
+    document.getElementById("doneText").textContent = `已記錄（${lastWin ? lastWin.rec.name : playerName}）`;
+    renameForm.hidden = !(over && saved && renaming);
     // 終局的「覆盤」：兩人對下不存、沒有覆盤
     reviewBtn.hidden = !over || !aiOn || !recentGames.length; // 覆盤頁把局都刪光了就不顯示
     // 「認輸並覆盤」：對局中、玩家下過至少一手才能按（終局改用結果視窗的「覆盤」）
@@ -4013,6 +4077,31 @@
   });
   restartBtn.addEventListener("click", start);
   againBtn.addEventListener("click", start);
+
+  // 結果視窗「改名字」：換成名字欄（預填目前的名字、全選），確定（或 Enter）改名，取消（或 Esc）收起
+  const renameInput = document.getElementById("renameInput");
+  document.getElementById("renameBtn").addEventListener("click", () => {
+    if (!lastWin) return;
+    renaming = true;
+    renameInput.value = lastWin.rec.name;
+    render();
+    renameInput.focus();
+    renameInput.select();
+  });
+  const endRename = () => {
+    renaming = false;
+    render();
+    document.getElementById("renameBtn").focus();
+  };
+  renameForm.addEventListener("submit", e => {
+    e.preventDefault();
+    renameWin(renameInput.value);
+    endRename();
+  });
+  document.getElementById("renameCancel").addEventListener("click", endRename);
+  renameInput.addEventListener("keydown", e => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); endRename(); }
+  });
 
   start();
   syncHelp();
