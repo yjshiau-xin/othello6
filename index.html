@@ -294,7 +294,7 @@
   .result-card .rename { margin-top: 6px; padding-top: 8px; }
   .result-card .rename input { font-size: 15px; padding: 6px; width: 7em; }
   .result-card .rename .act { flex: none; margin-top: 0; padding: 6px 10px; font-size: 14px; white-space: nowrap; }
-  /* 雙週排名的分頁：「本期排名」「上次排名」，選中的黃色加底線；右邊小字是這一期的日期 */
+  /* 雙週排名的分頁：「本期排名」「上期排名」，選中的黃色加底線；右邊小字是這一期的日期 */
   .rank-tabs { display: flex; align-items: flex-end; gap: 2px; }
   .rank-tabs button {
     font: 700 14px var(--sans);
@@ -1092,7 +1092,7 @@
         <h2 class="big-title">雙週排名</h2>
         <div class="rank-tabs" role="tablist" aria-label="哪一期的排名">
           <button type="button" role="tab" id="tabCur" aria-selected="true" aria-controls="rankPanel">本期排名</button>
-          <button type="button" role="tab" id="tabPrev" aria-selected="false" aria-controls="rankPanel">上次排名</button>
+          <button type="button" role="tab" id="tabPrev" aria-selected="false" aria-controls="rankPanel">上期排名</button>
           <span class="rank-span" id="rankSpan"></span>
         </div>
         <div role="tabpanel" id="rankPanel" aria-labelledby="tabCur">
@@ -1259,7 +1259,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.2.130</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.2.131</span></button>
       </div>
     </form>
   </div>
@@ -1309,7 +1309,7 @@
         </ol>
         <p class="help-sub"><b>排名</b>　大家共用一份，按「更新排名」看最新。</p>
         <ol class="help-list">
-          <li><b>雙週排名</b>：每兩週（星期一到下星期日）重新排一次；上一期的排名在「上次排名」分頁。</li>
+          <li><b>雙週排名</b>：每兩週（星期一到下星期日）重新排一次；上一期的排名在「上期排名」分頁。</li>
           <li><b>記勝局與和局</b>：輸棋不記。</li>
           <li><b>名次</b>：難易度高的在前 → 勝局在前、和局在後 → 執白（先下）在前 → 贏得多的在前 → 日期新的在前 → 下得快的在前。</li>
           <li><b>改名字</b>：贏了（或和局）之後，在結果視窗按「改名字」（開新局後就不能改）。</li>
@@ -1377,7 +1377,7 @@
         <ul class="ver-list">
           <li>贏棋後，可以按「改名字」。</li>
           <li>排名（勝局、和局）依序：難易度、執白（先下）優先、贏的子數、日期、對局時間。</li>
-          <li>改成雙週排名（星期一到下星期日），上一期的排名放在「上次排名」。</li>
+          <li>改成雙週排名（星期一到下星期日）。</li>
         </ul>
         <p class="note-h">v2.1　加入覆盤（2026-10-18～19）</p>
         <ul class="ver-list">
@@ -2540,7 +2540,7 @@
   const SHEET_API = "https://script.google.com/macros/s/AKfycbytkZyrotupW6CSBqUWsUompOAgivUp7NUd3yIucGIMkUXooX0jyRggwM7w51h9dLqO/exec";
   const PENDING_KEY = "othello6.pending";
   const TALLY_KEY = "othello6.tally"; // 本期排名
-  const PREV_KEY = "othello6.tallyPrev"; // 上次排名
+  const PREV_KEY = "othello6.tallyPrev"; // 上期排名
   const PERIOD_KEY = "othello6.period"; // 這台的排名換到第幾期了
   const NAME_KEY = "othello6.player";
   const LEVEL_KEY = "othello6.level";
@@ -2569,8 +2569,8 @@
     return cut;
   }
   let records = [];     // 本期排名
-  let prevRecords = []; // 上次排名
-  let rankTab = "cur";  // 排名卡片看哪一期：cur 本期、prev 上次
+  let prevRecords = []; // 上期排名
+  let rankTab = "cur";  // 排名卡片看哪一期：cur 本期、prev 上期
   let gameStartAt = Date.now();
   // 名字在開局視窗輸入；贏了電腦就自動登上計分板。saved 表示這局已登錄
   let playerName = "玩家", saved = false;
@@ -2592,7 +2592,7 @@
   prevRecords = prevRecords.filter(ranked);
   let rolled = null; // 排名換到第幾期（字串）；null＝還沒換過（改成雙週排名以前）
   try { rolled = localStorage.getItem(PERIOD_KEY); } catch (e) {}
-  // 換期：本期的紀錄裡，上一期的移到上次排名、更早的不留。第一次（改成雙週排名時）本期以前的全部算上次排名。
+  // 換期：本期的紀錄裡，上一期的移到上期排名、更早的不留。第一次（改成雙週排名時）本期以前的全部算上期排名。
   // 共用計分板連上後以試算表為準，這裡只是讓這台的快取（和離線時的畫面）跟著換
   function rollLocal() {
     const p = periodOf(Date.now());
@@ -2849,7 +2849,7 @@
     if (!shown.length) {
       const li = document.createElement("li");
       li.className = "empty";
-      li.textContent = prevTab ? "上次沒有紀錄。"
+      li.textContent = prevTab ? "上期沒有紀錄。"
         : "本期還沒有紀錄。開局時輸入名字，贏了電腦或和局就會自動記錄在這裡（輸棋不記錄）";
       list.appendChild(li);
     }
@@ -3042,7 +3042,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  // 「本期排名」「上次排名」分頁：點一下或在分頁上按左右方向鍵切換
+  // 「本期排名」「上期排名」分頁：點一下或在分頁上按左右方向鍵切換
   const rankTabs = [["tabCur", "cur"], ["tabPrev", "prev"]];
   function showRankTab(k, focus) {
     if (rankTab !== k) {
@@ -3078,7 +3078,7 @@
     const t = new Date();
     const stamp = `${t.getFullYear()}${pad2(t.getMonth() + 1)}${pad2(t.getDate())}-${pad2(t.getHours())}${pad2(t.getMinutes())}`;
     const data = { app: "othello6", kind: "tally", version: 1, exportedAt: t.toISOString(), records: list };
-    const filename = `othello6-${rankTab === "prev" ? "上次排名" : "排名"}-${stamp}.json`;
+    const filename = `othello6-${rankTab === "prev" ? "上期排名" : "排名"}-${stamp}.json`;
     const text = JSON.stringify(data, null, 2);
     const count = list.length;
     const downloads = claudeRT ? await downloadsReady : null;
@@ -3148,7 +3148,7 @@
   // 不含名字的同一局：改名後用它找回那一筆
   const gameKey = r => [Math.floor(r.at / 1000), r.me, r.ai, r.side, r.level].join("|");
 
-  // 匯入的紀錄依結束時間併進本期或上次排名：同一局（時間、名字、比分都相同）不重複加，各依名次保留前 50 名。
+  // 匯入的紀錄依結束時間併進本期或上期排名：同一局（時間、名字、比分都相同）不重複加，各依名次保留前 50 名。
   // 只併進這台瀏覽器，不送上共用計分板：檔案內容可以自己編，送上去等於誰都能灌假的勝局
   // （連上共用計分板後，畫面會以試算表為準，匯入的紀錄只在離線時看得到）
   function importRecords(text) {
@@ -3157,7 +3157,7 @@
     const list = Array.isArray(data) ? data : data && Array.isArray(data.records) ? data.records : null;
     if (!list) return "匯入失敗：檔案裡沒有紀錄";
     const seen = new Set(records.concat(prevRecords).map(recordKey));
-    const start = periodStart(periodOf(Date.now())); // 本期以前的併進上次排名
+    const start = periodStart(periodOf(Date.now())); // 本期以前的併進上期排名
     let added = 0, dup = 0, bad = 0, lose = 0;
     for (const raw of list) {
       const r = cleanRecord(raw);
