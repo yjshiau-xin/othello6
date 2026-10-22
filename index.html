@@ -294,6 +294,22 @@
   .result-card .rename { margin-top: 6px; padding-top: 8px; }
   .result-card .rename input { font-size: 15px; padding: 6px; width: 7em; }
   .result-card .rename .act { flex: none; margin-top: 0; padding: 6px 10px; font-size: 14px; white-space: nowrap; }
+  /* 雙週排名的分頁：「本期排名」「上次排名」，選中的黃色加底線；右邊小字是這一期的日期 */
+  .rank-tabs { display: flex; align-items: flex-end; gap: 2px; }
+  .rank-tabs button {
+    font: 700 14px var(--sans);
+    color: var(--ink-soft);
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: 4px 8px 6px;
+    cursor: pointer;
+  }
+  .rank-tabs button:first-child { padding-left: 0; }
+  .rank-tabs button[aria-selected="true"] { color: var(--brass); border-bottom-color: var(--brass); }
+  .rank-tabs button:hover { color: var(--ink); }
+  .rank-tabs button[aria-selected="true"]:hover { color: var(--brass); }
+  .rank-span { margin-left: auto; padding-bottom: 7px; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
   .records {
     list-style: none;
     margin: 0;
@@ -1073,8 +1089,15 @@
   <main class="game">
     <aside class="tally" aria-label="排名">
       <section class="card">
-        <h2 class="big-title">排名</h2>
-        <ol class="records" id="records"><li class="empty">尚無紀錄。開局時輸入名字，贏了電腦或和局就會自動記錄在這裡（輸棋不記錄）</li></ol>
+        <h2 class="big-title">雙週排名</h2>
+        <div class="rank-tabs" role="tablist" aria-label="哪一期的排名">
+          <button type="button" role="tab" id="tabCur" aria-selected="true" aria-controls="rankPanel">本期排名</button>
+          <button type="button" role="tab" id="tabPrev" aria-selected="false" aria-controls="rankPanel">上次排名</button>
+          <span class="rank-span" id="rankSpan"></span>
+        </div>
+        <div role="tabpanel" id="rankPanel" aria-labelledby="tabCur">
+          <ol class="records" id="records"><li class="empty">本期還沒有紀錄。開局時輸入名字，贏了電腦或和局就會自動記錄在這裡（輸棋不記錄）</li></ol>
+        </div>
         <div class="tally-acts">
           <button class="linkbtn" id="refreshRecords" type="button" hidden>更新排名</button>
           <button class="linkbtn" id="exportRecords" type="button">匯出排名</button>
@@ -1236,7 +1259,7 @@
           <button class="linkbtn" type="button" id="aboutAiBtn" aria-haspopup="dialog" aria-controls="aboutAi">演算法邏輯</button>
           <button class="linkbtn" type="button" id="winTipsBtn" aria-haspopup="dialog" aria-controls="winTips">必勝口訣</button>
         </span>
-        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.2.129</span></button>
+        <button class="linkbtn ver-btn" type="button" id="verBtn" aria-haspopup="dialog" aria-controls="verInfo" title="版本紀錄"><span class="ver">v2.2.130</span></button>
       </div>
     </form>
   </div>
@@ -1286,6 +1309,7 @@
         </ol>
         <p class="help-sub"><b>排名</b>　大家共用一份，按「更新排名」看最新。</p>
         <ol class="help-list">
+          <li><b>雙週排名</b>：每兩週（星期一到下星期日）重新排一次；上一期的排名在「上次排名」分頁。</li>
           <li><b>記勝局與和局</b>：輸棋不記。</li>
           <li><b>名次</b>：難易度高的在前 → 勝局在前、和局在後 → 執白（先下）在前 → 贏得多的在前 → 日期新的在前 → 下得快的在前。</li>
           <li><b>改名字</b>：贏了（或和局）之後，在結果視窗按「改名字」（開新局後就不能改）。</li>
@@ -1349,10 +1373,11 @@
     <div class="help-inner">
       <h2 id="verInfoTitle">版本紀錄</h2>
       <div class="info-body">
-        <p class="note-h">v2.2　修改排名（2026-10-21）</p>
+        <p class="note-h">v2.2　修改排名（2026-10-21～22）</p>
         <ul class="ver-list">
           <li>贏棋後，可以按「改名字」。</li>
           <li>排名（勝局、和局）依序：難易度、執白（先下）優先、贏的子數、日期、對局時間。</li>
+          <li>改成雙週排名（星期一到下星期日），上一期的排名放在「上次排名」。</li>
         </ul>
         <p class="note-h">v2.1　加入覆盤（2026-10-18～19）</p>
         <ul class="ver-list">
@@ -2514,7 +2539,9 @@
   // 所有人讀寫同一份，這台瀏覽器的紀錄只當快取；連不上時先記在 PENDING_KEY，下次連上再補送。
   const SHEET_API = "https://script.google.com/macros/s/AKfycbytkZyrotupW6CSBqUWsUompOAgivUp7NUd3yIucGIMkUXooX0jyRggwM7w51h9dLqO/exec";
   const PENDING_KEY = "othello6.pending";
-  const TALLY_KEY = "othello6.tally";
+  const TALLY_KEY = "othello6.tally"; // 本期排名
+  const PREV_KEY = "othello6.tallyPrev"; // 上次排名
+  const PERIOD_KEY = "othello6.period"; // 這台的排名換到第幾期了
   const NAME_KEY = "othello6.player";
   const LEVEL_KEY = "othello6.level";
   const SIDE_KEY = "othello6.aiSide"; // 開局視窗選的電腦執色：B／W
@@ -2528,13 +2555,22 @@
     (x.me > x.ai ? 0 : 1) - (y.me > y.ai ? 0 : 1) ||
     (x.side === "W" ? 0 : 1) - (y.side === "W" ? 0 : 1) ||
     (y.me - y.ai) - (x.me - x.ai) || dayOf(y.at) - dayOf(x.at) || x.secs - y.secs || y.at - x.at;
-  function keepTop() {
-    records.sort(byRank);
-    const cut = Math.max(0, records.length - MAX_RECORDS);
-    records.length = Math.min(records.length, MAX_RECORDS);
+  // 雙週排名：第 0 期從 2026-10-19（星期一）0 點起，每期 14 天（星期一到下星期日）；
+  // 和 scoreboard_apps_script.gs 的 periodOf、periodStart 一致
+  const periodOf = at => {
+    const t = new Date(at);
+    return Math.floor(Math.round((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) - Date.UTC(2026, 9, 19)) / 864e5) / 14);
+  };
+  const periodStart = p => new Date(2026, 9, 19 + 14 * p).getTime();
+  function keepTop(list = records) {
+    list.sort(byRank);
+    const cut = Math.max(0, list.length - MAX_RECORDS);
+    list.length = Math.min(list.length, MAX_RECORDS);
     return cut;
   }
-  let records = [];
+  let records = [];     // 本期排名
+  let prevRecords = []; // 上次排名
+  let rankTab = "cur";  // 排名卡片看哪一期：cur 本期、prev 上次
   let gameStartAt = Date.now();
   // 名字在開局視窗輸入；贏了電腦就自動登上計分板。saved 表示這局已登錄
   let playerName = "玩家", saved = false;
@@ -2551,6 +2587,23 @@
   // 排名記勝局與和局（2026-10-21 起記和局）；以前存的輸棋一併清掉
   const ranked = r => !!r && (r.result === "win" || r.result === "draw");
   records = records.filter(ranked);
+  try { prevRecords = JSON.parse(localStorage.getItem(PREV_KEY)) || []; } catch (e) { prevRecords = []; }
+  if (!Array.isArray(prevRecords)) prevRecords = [];
+  prevRecords = prevRecords.filter(ranked);
+  let rolled = null; // 排名換到第幾期（字串）；null＝還沒換過（改成雙週排名以前）
+  try { rolled = localStorage.getItem(PERIOD_KEY); } catch (e) {}
+  // 換期：本期的紀錄裡，上一期的移到上次排名、更早的不留。第一次（改成雙週排名時）本期以前的全部算上次排名。
+  // 共用計分板連上後以試算表為準，這裡只是讓這台的快取（和離線時的畫面）跟著換
+  function rollLocal() {
+    const p = periodOf(Date.now());
+    if (rolled === String(p)) return;
+    const start = periodStart(p), prevStart = rolled === null ? -Infinity : periodStart(p - 1);
+    prevRecords = records.filter(r => r.at < start && r.at >= prevStart);
+    records = records.filter(r => !(r.at < start));
+    keepTop(prevRecords);
+    rolled = String(p);
+    saveRecords();
+  }
   let pendingUp = [];
   try { pendingUp = JSON.parse(localStorage.getItem(PENDING_KEY)) || []; } catch (e) { pendingUp = []; }
   if (!Array.isArray(pendingUp)) pendingUp = [];
@@ -2581,6 +2634,7 @@
     records.push(rec);
     keepTop();
     saveRecords();
+    rankTab = "cur"; // 排名切回本期，看得到剛記的這局
     saved = true;
     lastWin = { rec: { ...rec }, tok: newTok() };
     drawTally();
@@ -2595,7 +2649,7 @@
     const oldKey = recordKey(lastWin.rec);
     lastWin.rec.name = name;
     const newKey = recordKey(lastWin.rec);
-    for (const r of records) if (recordKey(r) === oldKey) r.name = name;
+    for (const r of records.concat(prevRecords)) if (recordKey(r) === oldKey) r.name = name;
     if (openRec === oldKey) openRec = newKey;
     if (SHEET_API) {
       const p = pendingUp.find(r => !r.ren && r.tok === lastWin.tok);
@@ -2653,9 +2707,18 @@
           const remote = data.records.map(cleanRecord).filter(ranked);
           const have = new Set(remote.map(recordKey));
           records = pendingUp.filter(r => !r.ren && !have.has(recordKey(r))).map(cleanRecord).filter(Boolean).concat(remote);
+          if (Array.isArray(data.prev)) prevRecords = data.prev.map(cleanRecord).filter(ranked);
+          else {
+            // 試算表程式還是舊版（v2.2.129 以前，不分期、沒回 prev）：依結束時間自己分
+            const start = periodStart(periodOf(Date.now()));
+            prevRecords = records.filter(r => r.at < start);
+            records = records.filter(r => !(r.at < start));
+          }
           // 還沒送到的改名（例如勝局還在上傳時就改了名字）先套上去，不讓試算表回傳的舊名字蓋回來；依序套用，後改的為準
-          for (const x of pendingUp) if (x.ren && x.game) for (const r of records) if (gameKey(r) === x.game) r.name = x.name;
+          for (const x of pendingUp) if (x.ren && x.game) for (const r of records.concat(prevRecords)) if (gameKey(r) === x.game) r.name = x.name;
           keepTop();
+          keepTop(prevRecords);
+          rolled = String(periodOf(Date.now())); // 試算表已經換好期
           saveRecords();
           sharedOn = true;
           lastSync = Date.now();
@@ -2765,16 +2828,29 @@
   }
 
   function drawTally() {
+    rollLocal();
+    const prevTab = rankTab === "prev";
+    // 分頁：選中的那個可用 Tab 鍵進入，左右方向鍵換分頁；右邊小字是這一期的日期
+    for (const [id, k] of [["tabCur", "cur"], ["tabPrev", "prev"]]) {
+      const b = document.getElementById(id);
+      b.setAttribute("aria-selected", String(rankTab === k));
+      b.tabIndex = rankTab === k ? 0 : -1;
+    }
+    document.getElementById("rankPanel").setAttribute("aria-labelledby", prevTab ? "tabPrev" : "tabCur");
+    const p = periodOf(Date.now()) - (prevTab ? 1 : 0);
+    document.getElementById("rankSpan").textContent = p < 0 ? "261021以前"
+      : `${fmtDay(periodStart(p))}～${fmtDay(periodStart(p + 1) - 1)}`;
     const list = document.getElementById("records");
     list.innerHTML = "";
     // 列勝局與和局（以前記下的輸棋不顯示）；依名次（byRank）排，只秀前 20 名
-    const shown = records.filter(ranked)
+    const shown = (prevTab ? prevRecords : records).filter(ranked)
       .sort(byRank)
       .slice(0, TOP_N);
     if (!shown.length) {
       const li = document.createElement("li");
       li.className = "empty";
-      li.textContent = "尚無紀錄。開局時輸入名字，贏了電腦或和局就會自動記錄在這裡（輸棋不記錄）";
+      li.textContent = prevTab ? "上次沒有紀錄。"
+        : "本期還沒有紀錄。開局時輸入名字，贏了電腦或和局就會自動記錄在這裡（輸棋不記錄）";
       list.appendChild(li);
     }
     for (const [i, r] of shown.entries()) {
@@ -2834,8 +2910,8 @@
       li.dataset.key = key;
       list.appendChild(li);
     }
-    document.getElementById("clearRecords").disabled = !records.length;
-    document.getElementById("exportRecords").disabled = !records.length;
+    document.getElementById("clearRecords").disabled = !records.length && !prevRecords.length;
+    document.getElementById("exportRecords").disabled = !(prevTab ? prevRecords : records).length; // 匯出正在看的那一期
     // 共用時清除只會清掉本機快取、下次又讀回來，所以不提供；要刪請到試算表
     document.getElementById("clearRecords").hidden = !!SHEET_API;
     // 共用時可手動重讀試算表，看別人剛登上的成績；讀取中停用避免連按
@@ -2943,7 +3019,11 @@
     tallyMsg.hidden = !text;
   }
   function saveRecords() {
-    try { localStorage.setItem(TALLY_KEY, JSON.stringify(records)); } catch (e) {}
+    try {
+      localStorage.setItem(TALLY_KEY, JSON.stringify(records));
+      localStorage.setItem(PREV_KEY, JSON.stringify(prevRecords));
+      if (rolled !== null) localStorage.setItem(PERIOD_KEY, rolled);
+    } catch (e) {}
   }
 
   // 線上頁面（claude.ai）不允許一般下載連結，要改走平台的下載功能（會先跳出確認）；
@@ -2962,6 +3042,29 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  // 「本期排名」「上次排名」分頁：點一下或在分頁上按左右方向鍵切換
+  const rankTabs = [["tabCur", "cur"], ["tabPrev", "prev"]];
+  function showRankTab(k, focus) {
+    if (rankTab !== k) {
+      rankTab = k;
+      openRec = null;
+      openKifu = false;
+      showTallyMsg("");
+      drawTally();
+    }
+    if (focus) document.getElementById(rankTabs.find(t => t[1] === k)[0]).focus();
+  }
+  for (const [id, k] of rankTabs) {
+    const b = document.getElementById(id);
+    b.addEventListener("click", () => showRankTab(k));
+    b.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        showRankTab(e.key === "Home" ? "cur" : e.key === "End" ? "prev" : k === "cur" ? "prev" : "cur", true);
+      }
+    });
+  }
+
   document.getElementById("refreshRecords").addEventListener("click", () => {
     if (syncing) return;
     sharedOn = null;
@@ -2970,13 +3073,14 @@
 
   const exportBtn = document.getElementById("exportRecords");
   exportBtn.addEventListener("click", async () => {
-    if (!records.length) return;
+    const list = rankTab === "prev" ? prevRecords : records; // 匯出正在看的那一期
+    if (!list.length) return;
     const t = new Date();
     const stamp = `${t.getFullYear()}${pad2(t.getMonth() + 1)}${pad2(t.getDate())}-${pad2(t.getHours())}${pad2(t.getMinutes())}`;
-    const data = { app: "othello6", kind: "tally", version: 1, exportedAt: t.toISOString(), records };
-    const filename = `othello6-排名-${stamp}.json`;
+    const data = { app: "othello6", kind: "tally", version: 1, exportedAt: t.toISOString(), records: list };
+    const filename = `othello6-${rankTab === "prev" ? "上次排名" : "排名"}-${stamp}.json`;
     const text = JSON.stringify(data, null, 2);
-    const count = records.length;
+    const count = list.length;
     const downloads = claudeRT ? await downloadsReady : null;
     if (!downloads) {
       saveByLink(filename, text);
@@ -3044,7 +3148,7 @@
   // 不含名字的同一局：改名後用它找回那一筆
   const gameKey = r => [Math.floor(r.at / 1000), r.me, r.ai, r.side, r.level].join("|");
 
-  // 匯入的紀錄併進現有的：同一局（時間、名字、比分都相同）不重複加，依名次保留前 50 名。
+  // 匯入的紀錄依結束時間併進本期或上次排名：同一局（時間、名字、比分都相同）不重複加，各依名次保留前 50 名。
   // 只併進這台瀏覽器，不送上共用計分板：檔案內容可以自己編，送上去等於誰都能灌假的勝局
   // （連上共用計分板後，畫面會以試算表為準，匯入的紀錄只在離線時看得到）
   function importRecords(text) {
@@ -3052,7 +3156,8 @@
     try { data = JSON.parse(text); } catch (e) { return "匯入失敗：不是 JSON 檔"; }
     const list = Array.isArray(data) ? data : data && Array.isArray(data.records) ? data.records : null;
     if (!list) return "匯入失敗：檔案裡沒有紀錄";
-    const seen = new Set(records.map(recordKey));
+    const seen = new Set(records.concat(prevRecords).map(recordKey));
+    const start = periodStart(periodOf(Date.now())); // 本期以前的併進上次排名
     let added = 0, dup = 0, bad = 0, lose = 0;
     for (const raw of list) {
       const r = cleanRecord(raw);
@@ -3061,10 +3166,10 @@
       const k = recordKey(r);
       if (seen.has(k)) { dup++; continue; }
       seen.add(k);
-      records.push(r);
+      (r.at < start ? prevRecords : records).push(r);
       added++;
     }
-    const cut = keepTop();
+    const cut = keepTop() + keepTop(prevRecords);
     saveRecords();
     drawTally();
     const skip = [lose && `${lose} 筆輸棋不匯入`, dup && `${dup} 筆重複`, bad && `${bad} 筆格式不符`, cut && `超過 ${MAX_RECORDS} 筆刪去排名最後 ${cut} 筆`]
@@ -3087,7 +3192,8 @@
   document.getElementById("clearRecords").addEventListener("click", () => {
     if (!confirm("確定清除所有排名？")) return;
     records = [];
-    try { localStorage.removeItem(TALLY_KEY); } catch (e) {}
+    prevRecords = [];
+    try { localStorage.removeItem(TALLY_KEY); localStorage.removeItem(PREV_KEY); } catch (e) {}
     showTallyMsg("");
     drawTally();
   });
